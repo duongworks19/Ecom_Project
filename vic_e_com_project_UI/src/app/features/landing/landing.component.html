@@ -1,0 +1,49 @@
+<div class="landing-page-wrapper">
+  <!-- 1. Header Navigation -->
+  <app-header-nav
+    [categories]="categories()"
+    [activeCategoryId]="activeCategoryId()"
+    (categorySelected)="onCategorySelected($event)"
+    (searchQueryChanged)="onSearchQueryChanged($event)"
+  />
+
+  <!-- 2. Hero Section (Headline, CTA, Category Chips) -->
+  <app-hero-banner
+    [categories]="categories()"
+    [activeCategoryId]="activeCategoryId()"
+    (categorySelected)="onCategorySelected($event)"
+  />
+
+  <!-- 3. Value Props (Trust & Guarantee Pillars) -->
+  <app-value-props />
+
+  <!-- 4. Flash Sale Live Countdown Section (Giờ vàng săn deal cho người dùng mới) -->
+  <app-flash-sale />
+
+  <!-- 5. Pinterest-Style Masonry Product Grid (Được lọc mượt mà theo danh mục đang chọn) -->
+  <app-product-masonry
+    [products]="filteredProducts()"
+    [activeCategory]="currentCategory()"
+    [isLoading]="isLoading()"
+    (resetCategory)="onResetCategory()"
+    (saveToggled)="onSaveToggled($event)"
+  />
+
+  <!-- 6. Editorial Magazine Alternating Showcase -->
+  <app-editorial-magazine
+    (categorySelected)="onCategorySelected($event)"
+  />
+
+  <!-- 7. Bottom Hero CTA Dark Strip -->
+  <app-cta-banner />
+
+  <!-- 8. Magazine Footer -->
+  <app-footer />
+
+  <!-- 9. Interactive Toast Message Feedback -->
+  @if (toastMessage(); as msg) {
+    <div class="toast-floating" role="status">
+      <span>{{ msg }}</span>
+    </div>
+  }
+</div>
