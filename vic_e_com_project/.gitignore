@@ -31,3 +31,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Không đẩy cấu hình nhạy cảm lên git
+src/main/resources/application.properties
