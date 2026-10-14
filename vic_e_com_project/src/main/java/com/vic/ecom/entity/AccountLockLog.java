@@ -4,13 +4,13 @@ import com.vic.ecom.enums.AccountAction;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "account_lock_logs")
-@Getter @Setter @NoArgsConstructor
+@Getter
+@Setter
 public class AccountLockLog {
 
     @Id
@@ -34,4 +34,7 @@ public class AccountLockLog {
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    public AccountLockLog() {
+    }
 }

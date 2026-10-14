@@ -104,6 +104,25 @@
   }
 }
 
+.hero-btn-seller {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #fff0f1;
+  color: #e60023;
+  border: 1.5px solid rgba(230, 0, 35, 0.25);
+  font-size: 15px;
+  font-weight: 700;
+  padding: 13px 22px;
+  border-radius: var(--rounded-full);
+  transition: all var(--transition-fast);
+
+  &:hover {
+    background-color: #ffe0e3;
+    transform: translateY(-1px);
+  }
+}
+
 .filter-chip-strip {
   display: flex;
   align-items: center;

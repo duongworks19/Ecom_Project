@@ -1,0 +1,81 @@
+<header class="top">
+  <a class="logo" routerLink="/seller/dashboard">
+    <i>P</i>
+    <span>VIC<b>MART</b></span>
+    <span class="tag">SELLER</span>
+  </a>
+
+  <div class="sp"></div>
+
+  <button class="pill hide-s" type="button" (click)="viewShopAsGuest.emit()">
+    Xem trước shop
+  </button>
+
+  <a class="pill hide-s" routerLink="/" title="Về trang chủ mua sắm VIC MART">
+    Trang chủ mua sắm
+  </a>
+
+  <a class="pill hide-s" routerLink="/seller/onboarding" title="Trang đăng ký mở gian hàng">
+    Đăng ký Shop
+  </a>
+
+  <a class="pill hide-s" routerLink="/seller/shop" title="Mở Trang chủ Shop">
+    Xem shop như khách
+  </a>
+
+  <div class="notif-wrap">
+    <button
+      class="bell"
+      aria-label="Thông báo"
+      type="button"
+      (click)="toggleNotifications()">
+      🔔
+      @if (unreadCount() > 0) {
+        <s>{{ unreadCount() }}</s>
+      }
+    </button>
+
+    @if (isNotifOpen()) {
+      <div
+        class="notif-backdrop"
+        tabindex="0"
+        (click)="closeNotifications()"
+        (keydown.escape)="closeNotifications()"></div>
+      <div class="notif-dropdown" aria-label="Danh sách thông báo">
+        <div class="notif-head">
+          <strong>Thông báo ({{ unreadCount() }} chưa đọc)</strong>
+          @if (unreadCount() > 0) {
+            <button type="button" class="link-btn" (click)="onMarkAllRead($event)">
+              Đọc tất cả
+            </button>
+          }
+        </div>
+        <div class="notif-list">
+          @for (item of notifications(); track item.id) {
+            <button
+              type="button"
+              class="notif-item"
+              [class.unread]="!item.read"
+              (click)="onNotificationClick(item)">
+              <span class="dot" [class.active]="!item.read"></span>
+              <div class="notif-body">
+                <p>{{ item.title }}</p>
+                <small>{{ item.desc }}</small>
+                <em>{{ item.time }}</em>
+              </div>
+            </button>
+          }
+        </div>
+      </div>
+    }
+  </div>
+
+  <button
+    class="shop"
+    type="button"
+    title="Hồ sơ gian hàng"
+    (click)="openShopProfile.emit('profile')">
+    <div class="av">{{ shopAvatarLetter() }}</div>
+    <span>{{ shopName() }}</span>
+  </button>
+</header>

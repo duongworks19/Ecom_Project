@@ -4,13 +4,13 @@ import com.vic.ecom.enums.LoginStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "login_history")
-@Getter @Setter @NoArgsConstructor
+@Getter
+@Setter
 public class LoginHistory {
 
     @Id
@@ -27,4 +27,7 @@ public class LoginHistory {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private LoginStatus status;
+
+    public LoginHistory() {
+    }
 }

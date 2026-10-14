@@ -37,6 +37,23 @@ export const routes: Routes = [
     loadChildren: () => import('./features/admin/admin.routes').then((m) => m.ADMIN_ROUTES),
   },
   {
+    path: 'seller',
+    loadChildren: () =>
+      import('./features/seller-onboarding/seller-onboarding.routes').then(
+        (m) => m.SELLER_ONBOARDING_ROUTES
+      ),
+  },
+  {
+    path: 'seller-center/dashboard',
+    redirectTo: 'seller/dashboard',
+    pathMatch: 'full',
+  },
+  {
+    path: 'shop',
+    redirectTo: 'seller/shop',
+    pathMatch: 'full',
+  },
+  {
     path: '**',
     redirectTo: '',
   },
