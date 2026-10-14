@@ -1,0 +1,248 @@
+<div class="step-card">
+  <div class="step-header">
+    <span class="step-badge">Bước 3 / 4</span>
+    <h2 class="step-title">Xác minh danh tính (KYC) &amp; Ngân hàng</h2>
+    <p class="step-subtitle">Tuân thủ quy định thương mại điện tử và phục vụ việc đối soát, thanh toán doanh thu hàng tuần.</p>
+  </div>
+
+  <form class="step-form" (ngSubmit)="onContinue()">
+    <!-- 1. Giấy tờ định danh CCCD -->
+    <div class="section-title-box">
+      <span class="sec-icon">🪪</span>
+      <h3 class="sec-heading">Căn cước công dân / Hộ chiếu người đại diện</h3>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label required" for="id-number">Số CCCD / Hộ chiếu (12 số)</label>
+      <input
+        id="id-number"
+        type="text"
+        class="form-control"
+        placeholder="001201004567"
+        maxlength="12"
+        [(ngModel)]="kycInfo.idCardNumber"
+        (ngModelChange)="emitChange()"
+        name="idCardNumber"
+        [disabled]="readOnly"
+        required
+      />
+    </div>
+
+    <div class="form-row-2">
+      <!-- Mặt trước CCCD -->
+      <div class="form-group">
+        <label class="form-label required">Ảnh CCCD Mặt trước</label>
+        <!-- Toàn bộ dropzone là một <label> trỏ đến input file, kích hoạt được khi click vào bất cứ đâu -->
+        <label
+          for="front-id-upload"
+          class="upload-dropzone"
+          [class.has-file]="!!kycInfo.idCardFrontUrl"
+          [class.read-only]="readOnly"
+          role="button"
+          tabindex="0"
+          (keydown.enter)="!readOnly && frontInput.click()"
+          aria-label="Tải lên ảnh mặt trước CCCD"
+        >
+          @if (kycInfo.idCardFrontUrl) {
+            <img [src]="kycInfo.idCardFrontUrl" alt="Mặt trước CCCD" class="doc-preview" />
+            @if (!readOnly) {
+              <span class="change-overlay-btn">Đổi ảnh</span>
+            }
+          } @else {
+            <div class="dropzone-empty">
+              <span class="upload-icon">📷</span>
+              <p class="dropzone-text">Nhấn để tải ảnh mặt trước</p>
+              <span class="dropzone-sub">Rõ nét, không lóa sáng, đủ 4 góc</span>
+              <span class="upload-cta">Chọn ảnh từ thiết bị</span>
+            </div>
+          }
+          <input
+            #frontInput
+            type="file"
+            id="front-id-upload"
+            class="file-input-hidden"
+            accept="image/*"
+            (change)="onFrontImageUpload($event)"
+            [disabled]="readOnly"
+          />
+        </label>
+      </div>
+
+      <!-- Mặt sau CCCD -->
+      <div class="form-group">
+        <label class="form-label required">Ảnh CCCD Mặt sau</label>
+        <label
+          for="back-id-upload"
+          class="upload-dropzone"
+          [class.has-file]="!!kycInfo.idCardBackUrl"
+          [class.read-only]="readOnly"
+          role="button"
+          tabindex="0"
+          (keydown.enter)="!readOnly && backInput.click()"
+          aria-label="Tải lên ảnh mặt sau CCCD"
+        >
+          @if (kycInfo.idCardBackUrl) {
+            <img [src]="kycInfo.idCardBackUrl" alt="Mặt sau CCCD" class="doc-preview" />
+            @if (!readOnly) {
+              <span class="change-overlay-btn">Đổi ảnh</span>
+            }
+          } @else {
+            <div class="dropzone-empty">
+              <span class="upload-icon">📷</span>
+              <p class="dropzone-text">Nhấn để tải ảnh mặt sau</p>
+              <span class="dropzone-sub">Rõ nét, thấy rõ mã QR/vân tay</span>
+              <span class="upload-cta">Chọn ảnh từ thiết bị</span>
+            </div>
+          }
+          <input
+            #backInput
+            type="file"
+            id="back-id-upload"
+            class="file-input-hidden"
+            accept="image/*"
+            (change)="onBackImageUpload($event)"
+            [disabled]="readOnly"
+          />
+        </label>
+      </div>
+    </div>
+
+    <!-- 2. Giấy phép kinh doanh (Nếu là Công ty hoặc Hộ KD) -->
+    @if (businessType === 'COMPANY' || businessType === 'HOUSEHOLD') {
+      <div class="section-title-box mt-28">
+        <span class="sec-icon">📜</span>
+        <h3 class="sec-heading">Giấy phép đăng ký kinh doanh &amp; Mã số thuế</h3>
+      </div>
+
+      <div class="form-row-2">
+        <div class="form-group">
+          <label class="form-label required" for="tax-code">Mã số thuế doanh nghiệp / hộ KD</label>
+          <input
+            id="tax-code"
+            type="text"
+            class="form-control"
+            placeholder="0109887766"
+            [(ngModel)]="kycInfo.taxCode"
+            (ngModelChange)="emitChange()"
+            name="taxCode"
+            [disabled]="readOnly"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label required">Ảnh chụp Giấy phép ĐKKD</label>
+          <label
+            for="license-upload"
+            class="upload-dropzone small"
+            [class.has-file]="!!kycInfo.businessLicenseUrl"
+            [class.read-only]="readOnly"
+            role="button"
+            tabindex="0"
+            aria-label="Tải lên ảnh giấy phép kinh doanh"
+          >
+            @if (kycInfo.businessLicenseUrl) {
+              <img [src]="kycInfo.businessLicenseUrl" alt="Giấy phép kinh doanh" class="doc-preview" />
+              @if (!readOnly) {
+                <span class="change-overlay-btn">Đổi ảnh</span>
+              }
+            } @else {
+              <div class="dropzone-empty">
+                <span class="upload-icon">📄</span>
+                <p class="dropzone-text">Tải ảnh/bản scan GPKD</p>
+                <span class="upload-cta">Chọn ảnh từ thiết bị</span>
+              </div>
+            }
+            <input
+              type="file"
+              id="license-upload"
+              class="file-input-hidden"
+              accept="image/*, application/pdf"
+              (change)="onLicenseUpload($event)"
+              [disabled]="readOnly"
+            />
+          </label>
+        </div>
+      </div>
+    }
+
+    <!-- 3. Tài khoản ngân hàng nhận tiền -->
+    <div class="section-title-box mt-28">
+      <span class="sec-icon">🏦</span>
+      <h3 class="sec-heading">Tài khoản ngân hàng nhận doanh thu</h3>
+    </div>
+
+    <div class="form-row-3">
+      <div class="form-group">
+        <label class="form-label required" for="bank-select">Ngân hàng thụ hưởng</label>
+        <select
+          id="bank-select"
+          class="form-control select"
+          [(ngModel)]="kycInfo.bankName"
+          (ngModelChange)="emitChange()"
+          name="bankName"
+          [disabled]="readOnly"
+        >
+          @for (bank of popularBanks; track bank) {
+            <option [value]="bank">{{ bank }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label required" for="bank-acc-num">Số tài khoản ngân hàng</label>
+        <input
+          id="bank-acc-num"
+          type="text"
+          class="form-control"
+          placeholder="19036789123"
+          [(ngModel)]="kycInfo.bankAccountNumber"
+          (ngModelChange)="emitChange()"
+          name="bankAccountNumber"
+          [disabled]="readOnly"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label required" for="bank-acc-name">Tên chủ tài khoản</label>
+        <input
+          id="bank-acc-name"
+          type="text"
+          class="form-control uppercase"
+          placeholder="NGUYEN VAN A"
+          [ngModel]="kycInfo.bankAccountName"
+          (ngModelChange)="onAccountNameInput($event)"
+          name="bankAccountName"
+          [disabled]="readOnly"
+          required
+        />
+        <span class="form-hint">Viết in hoa, khớp với tên trên CCCD/GPKD.</span>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    @if (!readOnly) {
+      <div class="step-footer-actions space-between">
+        <button type="button" class="btn-secondary-pill" (click)="back.emit()">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+          <span>Quay lại</span>
+        </button>
+
+        <button
+          type="submit"
+          class="btn-primary-pill"
+          [disabled]="!isValid()"
+          id="btn-step3-continue"
+        >
+          <span>Tiếp tục: Xem lại &amp; Gửi</span>
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+      </div>
+    }
+  </form>
+</div>

@@ -161,6 +161,27 @@
     &:hover {
       background-color: var(--color-surface-card);
     }
+
+    &.seller-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background-color: #fff0f1;
+      color: #e60023;
+      font-weight: 700;
+      border: 1px solid rgba(230, 0, 35, 0.18);
+
+      .seller-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background-color: #e60023;
+      }
+
+      &:hover {
+        background-color: #ffe0e3;
+      }
+    }
   }
 }
 

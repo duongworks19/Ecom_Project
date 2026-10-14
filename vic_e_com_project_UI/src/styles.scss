@@ -101,7 +101,7 @@ body {
 /* Base Headings matching Pinterest Typography Token Hierarchy */
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-family-display);
-  color: var(--color-ink);
+  color: inherit;
   font-weight: 700;
 }
 

@@ -1,0 +1,101 @@
+<div class="wizard-page-layout">
+  <!-- Top Navigation & Auto-save status -->
+  <header class="wizard-header">
+    <div class="header-inner">
+      <a routerLink="/seller/onboarding" class="brand-link">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+            <path d="M12 2C6.48 2 2 6.48 2 12c0 4.24 2.63 7.87 6.4 9.28-.09-.79-.17-2 .03-2.86.19-.78 1.21-5.14 1.21-5.14s-.31-.62-.31-1.53c0-1.43.83-2.51 1.87-2.51.88 0 1.31.66 1.31 1.45 0 .89-.57 2.21-.86 3.44-.24 1.03.52 1.88 1.54 1.88 1.84 0 3.27-1.94 3.27-4.75 0-2.49-1.79-4.22-4.33-4.22-2.95 0-4.69 2.21-4.69 4.5 0 .89.34 1.84.78 2.37.09.1.1.19.07.3-.09.34-.28 1.12-.31 1.28-.04.2-.17.24-.38.14-1.42-.66-2.31-2.74-2.31-4.42 0-3.6 2.61-6.91 7.54-6.91 3.96 0 7.03 2.82 7.03 6.59 0 3.93-2.48 7.1-5.92 7.1-1.16 0-2.24-.6-2.62-1.31l-.71 2.72c-.26.99-.96 2.22-1.42 2.99 1.14.35 2.35.55 3.61.55 5.52 0 10-4.48 10-10S17.52 2 12 2z"/>
+          </svg>
+        </div>
+        <span class="brand-text">VIC<span>MART</span> <span class="badge-seller">ĐĂNG KÝ SHOP</span></span>
+      </a>
+
+      <div class="save-indicator">
+        @if (isSavingDraft()) {
+          <span class="save-status saving">
+            <span class="dot-spinner"></span>
+            Đang tự động lưu nháp...
+          </span>
+        } @else {
+          <span class="save-status saved">
+            <span class="check-icon">✓</span>
+            Đã lưu nháp tự động
+          </span>
+        }
+      </div>
+    </div>
+  </header>
+
+  <main class="wizard-main">
+    <div class="wizard-container">
+      <!-- Stepper Nav Bar -->
+      <nav class="stepper-nav" aria-label="Tiến trình đăng ký">
+        <div class="step-nav-item" [class.active]="currentStep() === 1" [class.completed]="currentStep() > 1" (click)="goToStep(1)">
+          <div class="step-circle">{{ currentStep() > 1 ? '✓' : '1' }}</div>
+          <span class="step-label">Thông tin gian hàng</span>
+        </div>
+
+        <div class="step-nav-line" [class.active]="currentStep() > 1"></div>
+
+        <div class="step-nav-item" [class.active]="currentStep() === 2" [class.completed]="currentStep() > 2" (click)="goToStep(2)">
+          <div class="step-circle">{{ currentStep() > 2 ? '✓' : '2' }}</div>
+          <span class="step-label">Kho & Người liên hệ</span>
+        </div>
+
+        <div class="step-nav-line" [class.active]="currentStep() > 2"></div>
+
+        <div class="step-nav-item" [class.active]="currentStep() === 3" [class.completed]="currentStep() > 3" (click)="goToStep(3)">
+          <div class="step-circle">{{ currentStep() > 3 ? '✓' : '3' }}</div>
+          <span class="step-label">Xác minh KYC</span>
+        </div>
+
+        <div class="step-nav-line" [class.active]="currentStep() > 3"></div>
+
+        <div class="step-nav-item" [class.active]="currentStep() === 4" [class.completed]="currentStep() > 4" (click)="goToStep(4)">
+          <div class="step-circle">4</div>
+          <span class="step-label">Xem lại & Gửi</span>
+        </div>
+      </nav>
+
+      <!-- Active Step Component -->
+      <div class="wizard-step-content">
+        @switch (currentStep()) {
+          @case (1) {
+            <app-step-shop-info
+              [shopInfo]="applicationData().shopInfo"
+              (shopInfoChange)="onShopInfoChange($event)"
+              (next)="goToStep(2)"
+            />
+          }
+          @case (2) {
+            <app-step-contact-warehouse
+              [contactInfo]="applicationData().contactInfo"
+              (contactInfoChange)="onContactInfoChange($event)"
+              (next)="goToStep(3)"
+              (back)="goToStep(1)"
+            />
+          }
+          @case (3) {
+            <app-step-kyc
+              [kycInfo]="applicationData().kycInfo"
+              [businessType]="applicationData().shopInfo.businessType"
+              (kycInfoChange)="onKycInfoChange($event)"
+              (next)="goToStep(4)"
+              (back)="goToStep(2)"
+            />
+          }
+          @case (4) {
+            <app-step-review
+              [data]="applicationData()"
+              [isSubmitting]="isSubmitting()"
+              (jumpToStep)="goToStep($event)"
+              (back)="goToStep(3)"
+              (submit)="onSubmitApplication()"
+            />
+          }
+        }
+      </div>
+    </div>
+  </main>
+</div>

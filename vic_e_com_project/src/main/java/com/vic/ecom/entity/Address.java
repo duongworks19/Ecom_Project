@@ -3,11 +3,11 @@ package com.vic.ecom.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "addresses")
-@Getter @Setter @NoArgsConstructor
+@Getter
+@Setter
 public class Address {
 
     @Id
@@ -29,4 +29,7 @@ public class Address {
 
     @Column(name = "is_default", nullable = false)
     private boolean isDefault = false;
+
+    public Address() {
+    }
 }

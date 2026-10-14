@@ -1,0 +1,170 @@
+<div class="step-card">
+  <div class="step-header">
+    <span class="step-badge">Bước 1 / 4</span>
+    <h2 class="step-title">Thiết lập thông tin gian hàng</h2>
+    <p class="step-subtitle">Thông tin định danh sẽ hiển thị công khai tới khách hàng trên sàn VIC MART.</p>
+  </div>
+
+  <form class="step-form" (ngSubmit)="onContinue()">
+    <!-- 1. Tên shop + Realtime check -->
+    <div class="form-group">
+      <label class="form-label required" for="shop-name-input">Tên gian hàng / Thương hiệu</label>
+      <div class="input-with-feedback" [class.valid]="nameCheckStatus() === 'AVAILABLE'" [class.invalid]="nameCheckStatus() === 'TAKEN'">
+        <input
+          id="shop-name-input"
+          type="text"
+          class="form-control"
+          placeholder="Ví dụ: VIC Studio, Thời Trang Vintage..."
+          [ngModel]="shopInfo.shopName"
+          (ngModelChange)="onNameInput($event)"
+          name="shopName"
+          [disabled]="readOnly"
+          required
+        />
+        <div class="feedback-indicator">
+          @if (isCheckingName()) {
+            <span class="spinner-small" aria-label="Đang kiểm tra..."></span>
+          } @else if (nameCheckStatus() === 'AVAILABLE') {
+            <span class="icon-success" title="Tên shop khả dụng">✓</span>
+          } @else if (nameCheckStatus() === 'TAKEN') {
+            <span class="icon-error" title="Tên shop đã tồn tại">✕</span>
+          }
+        </div>
+      </div>
+      @if (nameCheckMessage()) {
+        <p class="feedback-msg" [class.success]="nameCheckStatus() === 'AVAILABLE'" [class.error]="nameCheckStatus() === 'TAKEN'">
+          {{ nameCheckMessage() }}
+        </p>
+      }
+      <span class="form-hint">Tên shop từ 3 - 50 ký tự, không chứa ký tự đặc biệt vi phạm chính sách.</span>
+    </div>
+
+    <!-- 2. Loại hình kinh doanh -->
+    <div class="form-group">
+      <label class="form-label required">Mô hình kinh doanh của bạn</label>
+      <div class="business-type-grid">
+        <div
+          class="type-card"
+          [class.selected]="shopInfo.businessType === 'INDIVIDUAL'"
+          (click)="selectBusinessType('INDIVIDUAL')"
+          id="type-individual"
+        >
+          <div class="type-icon">👤</div>
+          <div class="type-info">
+            <h4 class="type-name">Cá nhân</h4>
+            <p class="type-desc">Dành cho cá nhân bán lẻ, chỉ cần CCCD/Hộ chiếu định danh.</p>
+          </div>
+          <div class="radio-check"></div>
+        </div>
+
+        <div
+          class="type-card"
+          [class.selected]="shopInfo.businessType === 'HOUSEHOLD'"
+          (click)="selectBusinessType('HOUSEHOLD')"
+          id="type-household"
+        >
+          <div class="type-icon">🏬</div>
+          <div class="type-info">
+            <h4 class="type-name">Hộ kinh doanh</h4>
+            <p class="type-desc">Có Giấy chứng nhận Đăng ký hộ kinh doanh cá thể.</p>
+          </div>
+          <div class="radio-check"></div>
+        </div>
+
+        <div
+          class="type-card"
+          [class.selected]="shopInfo.businessType === 'COMPANY'"
+          (click)="selectBusinessType('COMPANY')"
+          id="type-company"
+        >
+          <div class="type-icon">🏢</div>
+          <div class="type-info">
+            <h4 class="type-name">Công ty / Doanh nghiệp</h4>
+            <p class="type-desc">Công ty TNHH, CP có Mã số thuế & Giấy phép đăng ký kinh doanh.</p>
+          </div>
+          <div class="radio-check"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Ngành hàng chính -->
+    <div class="form-group">
+      <label class="form-label required">Danh mục sản phẩm chính</label>
+      <div class="chips-grid">
+        @for (cat of categories; track cat) {
+          <button
+            type="button"
+            class="chip-btn"
+            [class.active]="shopInfo.primaryCategory === cat"
+            (click)="selectCategory(cat)"
+            [disabled]="readOnly"
+          >
+            {{ cat }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- 4. Mô tả gian hàng -->
+    <div class="form-group">
+      <label class="form-label" for="shop-desc">Giới thiệu ngắn về gian hàng</label>
+      <textarea
+        id="shop-desc"
+        class="form-control textarea"
+        rows="3"
+        placeholder="Mô tả phong cách, sản phẩm tiêu biểu và thông điệp bạn muốn gửi gắm tới người mua..."
+        [(ngModel)]="shopInfo.description"
+        (ngModelChange)="emitChange()"
+        name="description"
+        maxlength="300"
+        [disabled]="readOnly"
+      ></textarea>
+      <div class="char-count">{{ (shopInfo.description?.length || 0) }}/300 ký tự</div>
+    </div>
+
+    <!-- 5. Logo gian hàng -->
+    <div class="form-group">
+      <label class="form-label">Logo gian hàng (Tùy chọn)</label>
+      <div class="logo-upload-wrapper">
+        <div class="logo-preview-box">
+          @if (shopInfo.logoUrl) {
+            <img [src]="shopInfo.logoUrl" alt="Logo shop" class="logo-preview" />
+          } @else {
+            <div class="logo-placeholder">🏪</div>
+          }
+        </div>
+        <div class="logo-upload-action">
+          <input
+            type="file"
+            id="logo-file"
+            class="file-input-hidden"
+            accept="image/png, image/jpeg, image/webp"
+            (change)="onLogoUpload($event)"
+            [disabled]="readOnly"
+          />
+          <label for="logo-file" class="btn-secondary-pill" [class.disabled]="readOnly">
+            Tải ảnh logo lên
+          </label>
+          <span class="file-hint">Định dạng JPG, PNG, WEBP. Dung lượng tối đa 2MB. Tỉ lệ 1:1 đẹp nhất.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Action -->
+    @if (!readOnly) {
+      <div class="step-footer-actions">
+        <button
+          type="submit"
+          class="btn-primary-pill"
+          [disabled]="!shopInfo.shopName || nameCheckStatus() === 'TAKEN' || isCheckingName()"
+          id="btn-step1-continue"
+        >
+          <span>Tiếp tục: Địa chỉ lấy hàng</span>
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+      </div>
+    }
+  </form>
+</div>

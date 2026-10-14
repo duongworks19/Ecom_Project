@@ -5,13 +5,13 @@ import com.vic.ecom.enums.UserStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users")
-@Getter @Setter @NoArgsConstructor
+@Getter
+@Setter
 public class User {
 
     @Id
@@ -22,8 +22,19 @@ public class User {
     @Column(nullable = false)
     private UserRole role;
 
-    @Column(name = "full_name", length = 100)
+    @Column(name = "name", length = 100)
     private String fullName;
+
+    public User() {
+    }
+
+    public String getName() {
+        return this.fullName;
+    }
+
+    public void setName(String name) {
+        this.fullName = name;
+    }
 
     @Column(unique = true, length = 255)
     private String email;
