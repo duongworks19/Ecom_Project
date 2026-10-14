@@ -1,0 +1,121 @@
+.activities-card {
+  background-color: var(--color-canvas, #ffffff);
+  border: 1px solid var(--color-hairline-soft, #e5e5e0);
+  border-radius: var(--rounded-md, 16px);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-ink, #000000);
+}
+
+.btn-view-all {
+  background-color: var(--color-secondary-bg, #e5e5e0);
+  color: var(--color-ink, #000000);
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 16px;
+  border-radius: var(--rounded-full, 9999px);
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+
+  &:hover {
+    background-color: var(--color-secondary-pressed, #c8c8c1);
+  }
+}
+
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.activity-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background-color: var(--color-surface-card, #f6f6f3);
+  border-radius: var(--rounded-md, 16px);
+  transition: background-color 0.15s ease;
+
+  &:hover {
+    background-color: var(--color-hairline-soft, #e5e5e0);
+  }
+}
+
+.activity-main {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.badge-type {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 12px;
+  background-color: var(--color-canvas, #ffffff);
+  border: 1px solid var(--color-hairline, #dadad3);
+  border-radius: var(--rounded-full, 9999px);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-ink, #000000);
+  min-width: 72px;
+}
+
+.activity-desc {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-body, #33332e);
+}
+
+.activity-time {
+  font-size: 13px;
+  color: var(--color-mute, #62625b);
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+  .activities-card {
+    padding: 16px;
+  }
+
+  .card-title {
+    font-size: 16px;
+  }
+
+  .activity-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 10px 12px;
+  }
+
+  .activity-main {
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .activity-desc {
+    font-size: 13px;
+  }
+
+  .activity-time {
+    align-self: flex-end;
+    font-size: 12px;
+  }
+}

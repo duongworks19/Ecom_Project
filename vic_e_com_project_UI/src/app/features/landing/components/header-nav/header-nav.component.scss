@@ -288,10 +288,39 @@
   .hide-mobile {
     display: none;
   }
+  .category-dropdown-panel .category-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media (max-width: 600px) {
   .brand-text {
     display: none;
   }
+
+  .nav-pill-btn {
+    padding: 6px 10px;
+    font-size: 13px;
+    height: 36px;
+  }
+
+  .search-bar {
+    height: 40px;
+    padding: 0 12px;
+    input {
+      font-size: 13px;
+    }
+  }
+
+  .category-dropdown-panel {
+    padding: 12px;
+    max-height: calc(100vh - 64px);
+    overflow-y: auto;
+
+    .category-grid {
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+  }
 }
+

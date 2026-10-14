@@ -26,7 +26,14 @@
     padding: 32px;
     gap: 32px;
   }
+
+  @media (max-width: 600px) {
+    padding: 20px 16px;
+    gap: 20px;
+    border-radius: var(--rounded-md);
+  }
 }
+
 
 .feature-content {
   .feature-tag {

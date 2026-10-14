@@ -1,0 +1,44 @@
+@if (overviewData(); as data) {
+  <div class="users-page">
+    <header class="page-header">
+      <h1 class="page-title">Quản lý người dùng</h1>
+      <p class="page-subtitle">
+        Danh sách Customer: xem thông tin, tìm kiếm, khóa hoặc mở khóa tài khoản.
+      </p>
+    </header>
+
+    <section class="section-kpis">
+      <vic-users-kpi [kpis]="data.kpis"></vic-users-kpi>
+    </section>
+
+    <section class="section-filters">
+      <vic-users-filter-bar
+        (filterChange)="onFilterChanged($event)"
+      ></vic-users-filter-bar>
+    </section>
+
+    <section class="section-content-grid">
+      <div class="col-table">
+        <vic-users-table
+          [customers]="data.customers"
+          [totalCount]="data.totalCount"
+          [selectedCustomerId]="selectedCustomer()?.id ?? null"
+          (selectCustomer)="selectedCustomer.set($event)"
+        ></vic-users-table>
+      </div>
+
+      <div class="col-detail">
+        <vic-user-detail-panel
+          [customer]="selectedCustomer()"
+          (requestStatusToggle)="modalTargetCustomer.set($event)"
+        ></vic-user-detail-panel>
+      </div>
+    </section>
+
+    <vic-user-status-modal
+      [customer]="modalTargetCustomer()"
+      (close)="modalTargetCustomer.set(null)"
+      (confirm)="onConfirmStatusChange($event)"
+    ></vic-user-status-modal>
+  </div>
+}

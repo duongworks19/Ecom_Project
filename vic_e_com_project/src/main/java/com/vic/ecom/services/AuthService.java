@@ -1,4 +1,4 @@
-package com.vic.ecom.serivces;
+package com.vic.ecom.services;
 
 import com.vic.ecom.dto.AuthResponse;
 import com.vic.ecom.dto.LoginRequest;

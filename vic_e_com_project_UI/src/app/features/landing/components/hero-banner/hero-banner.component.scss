@@ -144,7 +144,32 @@
 }
 
 @media (max-width: 600px) {
+  .hero-section {
+    padding: 36px 16px 24px;
+  }
+
   .hero-title {
-    font-size: 34px;
+    font-size: 32px;
+    letter-spacing: -0.8px;
+  }
+
+  .hero-subtitle {
+    font-size: 15px;
+    margin-bottom: 24px;
+  }
+
+  .hero-actions {
+    flex-direction: column;
+    width: 100%;
+    gap: 12px;
+
+    .hero-btn-primary,
+    .hero-btn-secondary {
+      width: 100%;
+      justify-content: center;
+      padding: 12px 20px;
+      font-size: 15px;
+    }
   }
 }
+

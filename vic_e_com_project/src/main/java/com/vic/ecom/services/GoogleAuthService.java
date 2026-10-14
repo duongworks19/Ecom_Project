@@ -1,4 +1,4 @@
-package com.vic.ecom.serivces;
+package com.vic.ecom.services;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;

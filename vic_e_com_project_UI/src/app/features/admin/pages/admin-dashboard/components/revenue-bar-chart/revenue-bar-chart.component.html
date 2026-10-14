@@ -1,0 +1,24 @@
+<div class="chart-card">
+  <h3 class="card-title">Doanh thu 7 ngày (triệu đồng)</h3>
+
+  <div class="bars-container">
+    @for (item of revenueData; track item.date) {
+      <div class="bar-column">
+        <!-- Label top -->
+        <span class="bar-value">{{ formatAmount(item.amount) }}</span>
+
+        <!-- Column Bar -->
+        <div class="bar-track">
+          <div
+            class="bar-fill"
+            [class.current-day]="item.isCurrentDay"
+            [style.height.%]="getBarHeightPercentage(item.amount)"
+          ></div>
+        </div>
+
+        <!-- Date label bottom -->
+        <span class="bar-date">{{ item.date }}</span>
+      </div>
+    }
+  </div>
+</div>

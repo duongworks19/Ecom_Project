@@ -1,4 +1,4 @@
-package com.vic.ecom.serivces;
+package com.vic.ecom.services;
 
 import com.vic.ecom.entity.User;
 import com.vic.ecom.repository.UserRepository;

@@ -77,12 +77,17 @@ export class AuthComponent implements OnInit {
     this.isLoading.set(true);
 
     if (this.isLogin()) {
-      // Đăng nhập — gọi API thực
+      // Đăng nhập — gọi API thực hoặc MockAuthService
       this.authService.login({ username: this.email(), password: this.password() }).subscribe({
-        next: () => {
+        next: (res) => {
           this.isLoading.set(false);
+          if (res.data?.mustChangePassword) {
+            void this.router.navigateByUrl('/change-password');
+            return;
+          }
           this.showToast('✨ Đăng nhập thành công!', false);
-          setTimeout(() => this.router.navigate(['/']), 1200);
+          const target = res.data?.role === 'ADMIN' ? '/admin' : '/';
+          setTimeout(() => void this.router.navigateByUrl(target), 800);
         },
         error: (err: HttpErrorResponse) => {
           this.isLoading.set(false);
