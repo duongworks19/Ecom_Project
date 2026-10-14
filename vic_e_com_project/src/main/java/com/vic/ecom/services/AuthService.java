@@ -55,7 +55,6 @@ public class AuthService {
                 .or(() -> userRepository.findByPhone(req.getUsername()))
                 .orElse(null);
 
-        // Record failed attempt even if user not found (use dummy user ref safely)
         if (user == null || !passwordEncoder.matches(req.getPassword(), user.getPasswordHash())) {
             if (user != null) recordLogin(user, LoginStatus.FAILED);
             throw new BadCredentialsException("Invalid credentials");
