@@ -1,8 +1,8 @@
 package com.vic.ecom.controller;
 
 import com.vic.ecom.dto.*;
-import com.vic.ecom.serivces.AuthService;
-import com.vic.ecom.serivces.GoogleAuthService;
+import com.vic.ecom.services.AuthService;
+import com.vic.ecom.services.GoogleAuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

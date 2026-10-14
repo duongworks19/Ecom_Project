@@ -1,0 +1,23 @@
+<aside class="admin-sidebar">
+  <nav class="sidebar-nav">
+    @for (group of navGroups; track group.groupTitle) {
+      <div class="nav-group">
+        <h3 class="group-title">{{ group.groupTitle }}</h3>
+        <ul class="nav-list">
+          @for (item of group.items; track item.label) {
+            <li class="nav-item">
+              <a
+                [routerLink]="item.route"
+                routerLinkActive="active"
+                [routerLinkActiveOptions]="{ exact: item.exact ?? false }"
+                class="nav-link"
+              >
+                {{ item.label }}
+              </a>
+            </li>
+          }
+        </ul>
+      </div>
+    }
+  </nav>
+</aside>

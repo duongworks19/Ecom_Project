@@ -1,0 +1,49 @@
+.users-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.page-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.page-title {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--color-ink, #000000);
+  letter-spacing: -0.6px;
+  margin: 0;
+}
+
+.page-subtitle {
+  font-size: 14px;
+  color: var(--color-mute, #62625b);
+  margin: 0;
+}
+
+.section-content-grid {
+  display: grid;
+  grid-template-columns: 1.85fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+.col-table,
+.col-detail {
+  min-width: 0;
+}
+
+@media (max-width: 1024px) {
+  .section-content-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .page-title {
+    font-size: 22px;
+  }
+}

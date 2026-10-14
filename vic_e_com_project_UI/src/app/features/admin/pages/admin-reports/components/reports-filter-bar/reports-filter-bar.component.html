@@ -1,0 +1,34 @@
+<div class="filter-bar">
+  <!-- Period Pills -->
+  <div class="period-pills">
+    @for (period of periods; track period.id) {
+      <button
+        type="button"
+        class="pill-btn"
+        [class.active]="selectedPeriod() === period.id"
+        (click)="selectPeriod(period.id)"
+      >
+        {{ period.label }}
+      </button>
+    }
+  </div>
+
+  <!-- Select Dropdowns -->
+  <div class="filter-dropdowns">
+    <div class="dropdown-wrapper">
+      <select class="filter-select">
+        <option value="all">Vendor: Tất cả</option>
+        <option value="thoitrang">Shop Thời Trang</option>
+        <option value="dientu">Shop Điện Tử</option>
+      </select>
+    </div>
+
+    <div class="dropdown-wrapper">
+      <select class="filter-select">
+        <option value="all">Danh mục: Tất cả</option>
+        <option value="fashion">Thời trang</option>
+        <option value="tech">Công nghệ</option>
+      </select>
+    </div>
+  </div>
+</div>

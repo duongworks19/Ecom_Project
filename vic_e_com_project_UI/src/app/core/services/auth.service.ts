@@ -1,11 +1,13 @@
-import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, tap } from 'rxjs';
+import { Injectable, inject, signal } from '@angular/core';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Observable, delay, of, tap, throwError } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 export interface AuthResponse {
   token: string;
   role: string;
   userId: number;
+  mustChangePassword?: boolean;
 }
 
 export interface ApiResponse<T> {
@@ -25,7 +27,11 @@ export interface LoginRequest {
   password: string;
 }
 
-// Khai báo kiểu cho Google Identity Services SDK (load từ CDN)
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+}
+
 declare const google: {
   accounts: {
     id: {
@@ -36,13 +42,75 @@ declare const google: {
   };
 };
 
-@Injectable({ providedIn: 'root' })
-export class AuthService {
-  private readonly http = inject(HttpClient);
-  private readonly API = 'http://localhost:9090/api/auth';
-
-  // Client ID phải khớp với application.properties bên backend
+@Injectable({
+  providedIn: 'root',
+  useFactory: () => (environment.useMockApi ? new MockAuthService() : new HttpAuthService()),
+})
+export abstract class AuthService {
   readonly GOOGLE_CLIENT_ID = '760753983454-o49qigi8rrhrbl68ji3a5dmrf5k65m5b.apps.googleusercontent.com';
+  readonly mustChangePasswordSignal = signal<boolean>(localStorage.getItem('mustChangePassword') === 'true');
+
+  abstract register(req: RegisterRequest): Observable<ApiResponse<AuthResponse>>;
+  abstract login(req: LoginRequest): Observable<ApiResponse<AuthResponse>>;
+  abstract googleLogin(idToken: string): Observable<ApiResponse<AuthResponse>>;
+  abstract changePassword(req: ChangePasswordRequest): Observable<ApiResponse<null>>;
+
+  initGoogleSignIn(onSuccess: (idToken: string) => void): void {
+    if (typeof google === 'undefined') {
+      setTimeout(() => this.initGoogleSignIn(onSuccess), 500);
+      return;
+    }
+    google.accounts.id.initialize({
+      client_id: this.GOOGLE_CLIENT_ID,
+      callback: (response) => onSuccess(response.credential),
+    });
+    google.accounts.id.prompt();
+  }
+
+  protected saveSession(data: AuthResponse): void {
+    sessionStorage.removeItem('explicit_logout');
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('role', data.role);
+    localStorage.setItem('userId', String(data.userId));
+    this.setMustChangePassword(!!data.mustChangePassword);
+  }
+
+  setMustChangePassword(required: boolean): void {
+    localStorage.setItem('mustChangePassword', String(required));
+    this.mustChangePasswordSignal.set(required);
+  }
+
+  mustChangePassword(): boolean {
+    return localStorage.getItem('mustChangePassword') === 'true';
+  }
+
+  logout(): void {
+    sessionStorage.setItem('explicit_logout', '1');
+    localStorage.removeItem('token');
+    localStorage.removeItem('role');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('mustChangePassword');
+    localStorage.removeItem('currentUsername');
+    this.mustChangePasswordSignal.set(false);
+  }
+
+  isLoggedIn(): boolean {
+    return !!localStorage.getItem('token');
+  }
+
+  getToken(): string | null {
+    return localStorage.getItem('token');
+  }
+
+  getRole(): string | null {
+    return localStorage.getItem('role');
+  }
+}
+
+@Injectable()
+export class HttpAuthService extends AuthService {
+  private readonly http = inject(HttpClient);
+  private readonly API = `${environment.apiUrl}/auth`;
 
   register(req: RegisterRequest): Observable<ApiResponse<AuthResponse>> {
     return this.http.post<ApiResponse<AuthResponse>>(`${this.API}/register`, req).pipe(
@@ -56,52 +124,100 @@ export class AuthService {
     );
   }
 
-  /**
-   * Gửi Google ID Token lên Backend để xác thực và nhận JWT
-   */
   googleLogin(idToken: string): Observable<ApiResponse<AuthResponse>> {
     return this.http.post<ApiResponse<AuthResponse>>(`${this.API}/google`, { idToken }).pipe(
       tap((res) => this.saveSession(res.data))
     );
   }
 
-  /**
-   * Khởi tạo Google Sign-In và xử lý kết quả qua callback
-   */
-  initGoogleSignIn(onSuccess: (idToken: string) => void): void {
-    if (typeof google === 'undefined') {
-      console.warn('Google GIS SDK chưa load xong, thử lại sau...');
-      setTimeout(() => this.initGoogleSignIn(onSuccess), 500);
-      return;
+  changePassword(req: ChangePasswordRequest): Observable<ApiResponse<null>> {
+    return this.http.post<ApiResponse<null>>(`${this.API}/change-password`, req).pipe(
+      tap(() => this.setMustChangePassword(false))
+    );
+  }
+}
+
+@Injectable()
+export class MockAuthService extends AuthService {
+  private readonly latencyMs = 300;
+  private readonly accounts = new Map<string, { password: string; role: string; userId: number; mustChangePassword: boolean }>([
+    ['admin@demo.local', { password: 'Admin@123', role: 'ADMIN', userId: 1, mustChangePassword: false }],
+    ['shipper@demo.local', { password: 'Temp@12345', role: 'SHIPPER', userId: 2, mustChangePassword: true }],
+  ]);
+
+  constructor() {
+    super();
+    // ponytail: auto-seed ADMIN session in mock mode when not in first-login flow or explicit logout so /admin works out-of-the-box
+    const isFirstLoginFlow = localStorage.getItem('mustChangePassword') === 'true';
+    if (!isFirstLoginFlow && !sessionStorage.getItem('explicit_logout') && localStorage.getItem('role') !== 'ADMIN') {
+      localStorage.setItem('currentUsername', 'admin@demo.local');
+      this.saveSession({ token: 'mock-jwt-admin', role: 'ADMIN', userId: 1, mustChangePassword: false });
     }
-    google.accounts.id.initialize({
-      client_id: this.GOOGLE_CLIENT_ID,
-      callback: (response) => onSuccess(response.credential),
-    });
-    google.accounts.id.prompt();
   }
 
-  private saveSession(data: AuthResponse): void {
-    localStorage.setItem('token', data.token);
-    localStorage.setItem('role', data.role);
-    localStorage.setItem('userId', String(data.userId));
+  register(req: RegisterRequest): Observable<ApiResponse<AuthResponse>> {
+    const email = req.email.trim().toLowerCase();
+    this.accounts.set(email, { password: req.password, role: 'CUSTOMER', userId: Date.now(), mustChangePassword: false });
+    const data: AuthResponse = { token: 'mock-jwt-customer', role: 'CUSTOMER', userId: 99, mustChangePassword: false };
+    return of({ message: 'Đăng ký thành công', data }).pipe(
+      delay(this.latencyMs),
+      tap((res) => {
+        localStorage.setItem('currentUsername', email);
+        this.saveSession(res.data);
+      })
+    );
   }
 
-  logout(): void {
-    localStorage.removeItem('token');
-    localStorage.removeItem('role');
-    localStorage.removeItem('userId');
+  login(req: LoginRequest): Observable<ApiResponse<AuthResponse>> {
+    const key = req.username.trim().toLowerCase();
+    const acc = this.accounts.get(key);
+    if (!acc || acc.password !== req.password) {
+      return throwError(
+        () => new HttpErrorResponse({ status: 401, error: { message: 'Email hoặc mật khẩu không đúng' } })
+      );
+    }
+    const data: AuthResponse = {
+      token: `mock-jwt-${acc.role.toLowerCase()}`,
+      role: acc.role,
+      userId: acc.userId,
+      mustChangePassword: acc.mustChangePassword,
+    };
+    return of({ message: 'Đăng nhập thành công', data }).pipe(
+      delay(this.latencyMs),
+      tap((res) => {
+        localStorage.setItem('currentUsername', key);
+        this.saveSession(res.data);
+      })
+    );
   }
 
-  isLoggedIn(): boolean {
-    return !!localStorage.getItem('token');
+  googleLogin(): Observable<ApiResponse<AuthResponse>> {
+    const data: AuthResponse = { token: 'mock-jwt-google', role: 'CUSTOMER', userId: 100, mustChangePassword: false };
+    return of({ message: 'Đăng nhập Google thành công', data }).pipe(
+      delay(this.latencyMs),
+      tap((res) => this.saveSession(res.data))
+    );
   }
 
-  getToken(): string | null {
-    return localStorage.getItem('token');
-  }
-
-  getRole(): string | null {
-    return localStorage.getItem('role');
+  changePassword(req: ChangePasswordRequest): Observable<ApiResponse<null>> {
+    const username = localStorage.getItem('currentUsername') ?? 'shipper@demo.local';
+    const acc = this.accounts.get(username);
+    if (acc && acc.password !== req.currentPassword) {
+      return throwError(
+        () =>
+          new HttpErrorResponse({
+            status: 400,
+            error: { field: 'currentPassword', message: 'Mật khẩu hiện tại không chính xác' },
+          })
+      );
+    }
+    if (acc) {
+      acc.password = req.newPassword;
+      acc.mustChangePassword = false;
+    }
+    return of({ message: 'Đổi mật khẩu thành công', data: null }).pipe(
+      delay(this.latencyMs),
+      tap(() => this.setMustChangePassword(false))
+    );
   }
 }
