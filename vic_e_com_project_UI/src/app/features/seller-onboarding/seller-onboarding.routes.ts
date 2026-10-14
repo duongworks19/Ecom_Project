@@ -2,7 +2,6 @@ import { Routes } from '@angular/router';
 import { SellerLandingComponent } from './pages/seller-landing/seller-landing.component';
 import { SellerWizardComponent } from './pages/seller-wizard/seller-wizard.component';
 import { SellerStatusComponent } from './pages/seller-status/seller-status.component';
-import { requireLoginForOnboardingGuard } from './guards/seller-gatekeeper.guard';
 
 export const SELLER_ONBOARDING_ROUTES: Routes = [
   {

@@ -249,7 +249,10 @@
             </small>
           </div>
           <div class="toolbar">
+            <label for="seller-product-search" class="sr-only">Tìm theo tên sản phẩm, mã SKU</label>
             <input
+              id="seller-product-search"
+              aria-label="Tìm theo tên sản phẩm, mã SKU"
               type="search"
               class="search-input"
               placeholder="Tìm theo tên sản phẩm, mã SKU..."
@@ -390,7 +393,11 @@
                   </div>
                 } @else {
                   <div class="rv-reply-form">
+                    <label for="reply-input" class="sr-only">Nhập câu trả lời cho khách hàng</label>
                     <input
+                      id="reply-input"
+                      [attr.id]="'reply-input-' + rv.id"
+                      aria-label="Nhập câu trả lời cho khách hàng"
                       type="text"
                       class="search-input"
                       placeholder="Nhập câu trả lời cho khách hàng..."
@@ -461,15 +468,23 @@
 <!-- MODAL 1: THÊM SẢN PHẨM MỚI (CÓ CHỌN ẢNH SẢN PHẨM)        -->
 <!-- ========================================================= -->
 @if (showAddProductModal()) {
-  <div class="modal-backdrop" (click)="showAddProductModal.set(false)">
-    <div class="modal-box" (click)="$event.stopPropagation()">
+  <div
+    class="modal-backdrop"
+    tabindex="0"
+    (click)="showAddProductModal.set(false)"
+    (keydown.escape)="showAddProductModal.set(false)">
+    <div
+      class="modal-box"
+      tabindex="0"
+      (click)="$event.stopPropagation()"
+      (keydown)="$event.stopPropagation()">
       <div class="modal-head">
         <h3>Đăng sản phẩm mới</h3>
         <button type="button" class="close-btn" (click)="showAddProductModal.set(false)">✕</button>
       </div>
 
       <div class="modal-body">
-        <label class="block-label">Chọn ảnh sản phẩm phù hợp (hoặc dán URL):</label>
+        <div class="block-label">Chọn ảnh sản phẩm phù hợp (hoặc dán URL):</div>
         <div class="preset-picker">
           @for (preset of presetImages; track preset.url) {
             <button
@@ -528,8 +543,16 @@
 <!-- MODAL 2: CẬP NHẬT KHO NHANH (RESTOCK)                     -->
 <!-- ========================================================= -->
 @if (selectedProductForRestock(); as restockProd) {
-  <div class="modal-backdrop" (click)="selectedProductForRestock.set(null)">
-    <div class="modal-box small" (click)="$event.stopPropagation()">
+  <div
+    class="modal-backdrop"
+    tabindex="0"
+    (click)="selectedProductForRestock.set(null)"
+    (keydown.escape)="selectedProductForRestock.set(null)">
+    <div
+      class="modal-box small"
+      tabindex="0"
+      (click)="$event.stopPropagation()"
+      (keydown)="$event.stopPropagation()">
       <div class="modal-head">
         <h3>Nhập thêm hàng vào kho</h3>
         <button type="button" class="close-btn" (click)="selectedProductForRestock.set(null)">✕</button>
@@ -567,8 +590,16 @@
 <!-- MODAL 3: CHI TIẾT ĐƠN HÀNG                                -->
 <!-- ========================================================= -->
 @if (selectedOrderForModal(); as ord) {
-  <div class="modal-backdrop" (click)="selectedOrderForModal.set(null)">
-    <div class="modal-box small" (click)="$event.stopPropagation()">
+  <div
+    class="modal-backdrop"
+    tabindex="0"
+    (click)="selectedOrderForModal.set(null)"
+    (keydown.escape)="selectedOrderForModal.set(null)">
+    <div
+      class="modal-box small"
+      tabindex="0"
+      (click)="$event.stopPropagation()"
+      (keydown)="$event.stopPropagation()">
       <div class="modal-head">
         <h3>Chi tiết đơn hàng {{ ord.orderCode }}</h3>
         <button type="button" class="close-btn" (click)="selectedOrderForModal.set(null)">✕</button>
@@ -625,8 +656,16 @@
 <!-- MODAL 4: TẠO VOUCHER MỚI                                  -->
 <!-- ========================================================= -->
 @if (showCreateVoucherModal()) {
-  <div class="modal-backdrop" (click)="showCreateVoucherModal.set(false)">
-    <div class="modal-box small" (click)="$event.stopPropagation()">
+  <div
+    class="modal-backdrop"
+    tabindex="0"
+    (click)="showCreateVoucherModal.set(false)"
+    (keydown.escape)="showCreateVoucherModal.set(false)">
+    <div
+      class="modal-box small"
+      tabindex="0"
+      (click)="$event.stopPropagation()"
+      (keydown)="$event.stopPropagation()">
       <div class="modal-head">
         <h3>Tạo mã giảm giá mới</h3>
         <button type="button" class="close-btn" (click)="showCreateVoucherModal.set(false)">✕</button>
@@ -669,8 +708,16 @@
 <!-- MODAL 5: XEM SHOP NHƯ KHÁCH (GUEST STOREFRONT PREVIEW)    -->
 <!-- ========================================================= -->
 @if (showShopPreviewModal()) {
-  <div class="modal-backdrop" (click)="showShopPreviewModal.set(false)">
-    <div class="modal-box large" (click)="$event.stopPropagation()">
+  <div
+    class="modal-backdrop"
+    tabindex="0"
+    (click)="showShopPreviewModal.set(false)"
+    (keydown.escape)="showShopPreviewModal.set(false)">
+    <div
+      class="modal-box large"
+      tabindex="0"
+      (click)="$event.stopPropagation()"
+      (keydown)="$event.stopPropagation()">
       <div class="modal-head">
         <h3>Giao diện khách hàng — {{ data().shopName }}</h3>
         <button type="button" class="close-btn" (click)="showShopPreviewModal.set(false)">✕</button>

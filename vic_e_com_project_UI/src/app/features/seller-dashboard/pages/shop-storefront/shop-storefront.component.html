@@ -18,7 +18,10 @@
     </div>
 
     <div class="search-box">
+      <label for="storefront-search-input" class="sr-only">Tìm sản phẩm trong shop</label>
       <input
+        id="storefront-search-input"
+        aria-label="Tìm sản phẩm trong shop"
         type="search"
         placeholder="Tìm sản phẩm trong {{ data().shopName }}..."
         [ngModel]="searchQuery()"
@@ -114,7 +117,11 @@
     <!-- Product Grid -->
     <section class="product-grid" aria-label="Danh sách sản phẩm của shop">
       @for (prod of filteredProducts(); track prod.id) {
-        <article class="product-card" (click)="openProductDetail(prod)">
+        <article
+          class="product-card"
+          tabindex="0"
+          (click)="openProductDetail(prod)"
+          (keydown.enter)="openProductDetail(prod)">
           <div class="img-wrap" [style.background]="prod.thumbnailColor">
             <img [src]="prod.imageUrl" [alt]="prod.name" loading="lazy" />
             @if (prod.stock <= 10) {
@@ -186,8 +193,16 @@
 
 <!-- Quick Product Modal -->
 @if (selectedProduct(); as item) {
-  <div class="modal-backdrop" (click)="selectedProduct.set(null)">
-    <div class="modal-card" (click)="$event.stopPropagation()">
+  <div
+    class="modal-backdrop"
+    tabindex="0"
+    (click)="selectedProduct.set(null)"
+    (keydown.escape)="selectedProduct.set(null)">
+    <div
+      class="modal-card"
+      tabindex="0"
+      (click)="$event.stopPropagation()"
+      (keydown)="$event.stopPropagation()">
       <button type="button" class="close-btn" (click)="selectedProduct.set(null)">✕</button>
       <div class="modal-grid">
         <div class="modal-img">

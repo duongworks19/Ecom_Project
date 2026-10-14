@@ -145,10 +145,11 @@ export class SellerDashboardComponent {
 
   onAddProduct(event?: Event): void {
     event?.preventDefault();
+    const randomSuffix = 100 + (Date.now() % 900);
     this.newProductForm = {
       name: '',
       variant: 'Trắng kem Minimal',
-      sku: `LM-${Math.floor(100 + Math.random() * 899)}`,
+      sku: `LM-${randomSuffix}`,
       category: 'Đèn trang trí',
       price: 320000,
       stock: 25,

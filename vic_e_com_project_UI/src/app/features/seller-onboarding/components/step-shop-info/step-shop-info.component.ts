@@ -91,7 +91,7 @@ export class StepShopInfoComponent implements OnInit {
   onLogoUpload(event: Event): void {
     if (this.readOnly) return;
     const input = event.target as HTMLInputElement;
-    if (input.files && input.files[0]) {
+    if (input.files?.[0]) {
       const file = input.files[0];
       const reader = new FileReader();
       reader.onload = (e) => {

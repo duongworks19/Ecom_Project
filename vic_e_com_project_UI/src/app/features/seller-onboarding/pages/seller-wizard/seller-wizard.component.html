@@ -31,28 +31,52 @@
     <div class="wizard-container">
       <!-- Stepper Nav Bar -->
       <nav class="stepper-nav" aria-label="Tiến trình đăng ký">
-        <div class="step-nav-item" [class.active]="currentStep() === 1" [class.completed]="currentStep() > 1" (click)="goToStep(1)">
+        <div
+          class="step-nav-item"
+          tabindex="0"
+          [class.active]="currentStep() === 1"
+          [class.completed]="currentStep() > 1"
+          (click)="goToStep(1)"
+          (keydown.enter)="goToStep(1)">
           <div class="step-circle">{{ currentStep() > 1 ? '✓' : '1' }}</div>
           <span class="step-label">Thông tin gian hàng</span>
         </div>
 
         <div class="step-nav-line" [class.active]="currentStep() > 1"></div>
 
-        <div class="step-nav-item" [class.active]="currentStep() === 2" [class.completed]="currentStep() > 2" (click)="goToStep(2)">
+        <div
+          class="step-nav-item"
+          tabindex="0"
+          [class.active]="currentStep() === 2"
+          [class.completed]="currentStep() > 2"
+          (click)="goToStep(2)"
+          (keydown.enter)="goToStep(2)">
           <div class="step-circle">{{ currentStep() > 2 ? '✓' : '2' }}</div>
           <span class="step-label">Kho & Người liên hệ</span>
         </div>
 
         <div class="step-nav-line" [class.active]="currentStep() > 2"></div>
 
-        <div class="step-nav-item" [class.active]="currentStep() === 3" [class.completed]="currentStep() > 3" (click)="goToStep(3)">
+        <div
+          class="step-nav-item"
+          tabindex="0"
+          [class.active]="currentStep() === 3"
+          [class.completed]="currentStep() > 3"
+          (click)="goToStep(3)"
+          (keydown.enter)="goToStep(3)">
           <div class="step-circle">{{ currentStep() > 3 ? '✓' : '3' }}</div>
           <span class="step-label">Xác minh KYC</span>
         </div>
 
         <div class="step-nav-line" [class.active]="currentStep() > 3"></div>
 
-        <div class="step-nav-item" [class.active]="currentStep() === 4" [class.completed]="currentStep() > 4" (click)="goToStep(4)">
+        <div
+          class="step-nav-item"
+          tabindex="0"
+          [class.active]="currentStep() === 4"
+          [class.completed]="currentStep() > 4"
+          (click)="goToStep(4)"
+          (keydown.enter)="goToStep(4)">
           <div class="step-circle">4</div>
           <span class="step-label">Xem lại & Gửi</span>
         </div>
@@ -91,7 +115,7 @@
               [isSubmitting]="isSubmitting()"
               (jumpToStep)="goToStep($event)"
               (back)="goToStep(3)"
-              (submit)="onSubmitApplication()"
+              (submitApplication)="onSubmitApplication()"
             />
           }
         }

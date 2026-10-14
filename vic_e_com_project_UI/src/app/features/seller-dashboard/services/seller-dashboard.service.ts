@@ -381,7 +381,7 @@ export class SellerDashboardService {
       id: Date.now(),
       name: payload.name.trim(),
       variant: payload.variant.trim() || 'Tiêu chuẩn',
-      sku: payload.sku.trim().toUpperCase() || `LM-${Math.floor(100 + Math.random() * 900)}`,
+      sku: payload.sku.trim().toUpperCase() || `LM-${100 + (Date.now() % 900)}`,
       category: payload.category || 'Đèn trang trí',
       price: Number(payload.price) || 150000,
       stock: Number(payload.stock) || 20,
@@ -406,7 +406,7 @@ export class SellerDashboardService {
       .post<{ code?: number; data?: SellerProduct }>(`${this.API_URL}/products`, newProd)
       .pipe(catchError(() => of(null)))
       .subscribe((res) => {
-        if (res && res.data && res.data.id) {
+        if (res?.data?.id) {
           const savedProduct: SellerProduct = {
             ...newProd,
             ...res.data,
@@ -452,7 +452,7 @@ export class SellerDashboardService {
       .post<{ code?: number; data?: SellerVoucher }>(`${this.API_URL}/vouchers`, newVoucher)
       .pipe(catchError(() => of(null)))
       .subscribe((res) => {
-        if (res && res.data && res.data.id) {
+        if (res?.data?.id) {
           this.vouchers.update((list) =>
             list.map((v) =>
               v.id === newVoucher.id

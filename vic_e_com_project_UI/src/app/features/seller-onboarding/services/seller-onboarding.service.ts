@@ -85,7 +85,7 @@ export class SellerOnboardingService {
       this.http.get<any>(`${this.API}/me`).pipe(
         catchError(() => of(null))
       ).subscribe((res) => {
-        if (res && res.data) {
+        if (res?.data) {
           const v = res.data;
           this.currentStatus.set(v.approvalStatus || 'PENDING');
         }

@@ -31,17 +31,14 @@
     <div class="form-row-2">
       <!-- Mặt trước CCCD -->
       <div class="form-group">
-        <label class="form-label required">Ảnh CCCD Mặt trước</label>
+        <span class="form-label required">Ảnh CCCD Mặt trước</span>
         <!-- Toàn bộ dropzone là một <label> trỏ đến input file, kích hoạt được khi click vào bất cứ đâu -->
         <label
           for="front-id-upload"
           class="upload-dropzone"
           [class.has-file]="!!kycInfo.idCardFrontUrl"
           [class.read-only]="readOnly"
-          role="button"
-          tabindex="0"
           (keydown.enter)="!readOnly && frontInput.click()"
-          aria-label="Tải lên ảnh mặt trước CCCD"
         >
           @if (kycInfo.idCardFrontUrl) {
             <img [src]="kycInfo.idCardFrontUrl" alt="Mặt trước CCCD" class="doc-preview" />
@@ -70,16 +67,13 @@
 
       <!-- Mặt sau CCCD -->
       <div class="form-group">
-        <label class="form-label required">Ảnh CCCD Mặt sau</label>
+        <span class="form-label required">Ảnh CCCD Mặt sau</span>
         <label
           for="back-id-upload"
           class="upload-dropzone"
           [class.has-file]="!!kycInfo.idCardBackUrl"
           [class.read-only]="readOnly"
-          role="button"
-          tabindex="0"
           (keydown.enter)="!readOnly && backInput.click()"
-          aria-label="Tải lên ảnh mặt sau CCCD"
         >
           @if (kycInfo.idCardBackUrl) {
             <img [src]="kycInfo.idCardBackUrl" alt="Mặt sau CCCD" class="doc-preview" />
@@ -131,15 +125,13 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label required">Ảnh chụp Giấy phép ĐKKD</label>
+          <span class="form-label required">Ảnh chụp Giấy phép ĐKKD</span>
           <label
             for="license-upload"
             class="upload-dropzone small"
             [class.has-file]="!!kycInfo.businessLicenseUrl"
             [class.read-only]="readOnly"
-            role="button"
-            tabindex="0"
-            aria-label="Tải lên ảnh giấy phép kinh doanh"
+            (keydown.enter)="!readOnly && licenseInput.click()"
           >
             @if (kycInfo.businessLicenseUrl) {
               <img [src]="kycInfo.businessLicenseUrl" alt="Giấy phép kinh doanh" class="doc-preview" />
@@ -154,6 +146,7 @@
               </div>
             }
             <input
+              #licenseInput
               type="file"
               id="license-upload"
               class="file-input-hidden"

@@ -36,8 +36,12 @@
     </button>
 
     @if (isNotifOpen()) {
-      <div class="notif-backdrop" (click)="closeNotifications()"></div>
-      <div class="notif-dropdown" role="dialog" aria-label="Danh sách thông báo">
+      <div
+        class="notif-backdrop"
+        tabindex="0"
+        (click)="closeNotifications()"
+        (keydown.escape)="closeNotifications()"></div>
+      <div class="notif-dropdown" aria-label="Danh sách thông báo">
         <div class="notif-head">
           <strong>Thông báo ({{ unreadCount() }} chưa đọc)</strong>
           @if (unreadCount() > 0) {

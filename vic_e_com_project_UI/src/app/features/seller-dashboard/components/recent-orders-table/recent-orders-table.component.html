@@ -19,7 +19,12 @@
       </thead>
       <tbody>
         @for (order of orders(); track order.orderCode) {
-          <tr class="order-row" (click)="onRowClick(order)" title="Nhấn để xem chi tiết đơn hàng">
+          <tr
+            class="order-row"
+            tabindex="0"
+            (click)="onRowClick(order)"
+            (keydown.enter)="onRowClick(order)"
+            title="Nhấn để xem chi tiết đơn hàng">
             <td class="font-semibold">{{ order.orderCode }}</td>
             <td>{{ order.customerName }}</td>
             <td>

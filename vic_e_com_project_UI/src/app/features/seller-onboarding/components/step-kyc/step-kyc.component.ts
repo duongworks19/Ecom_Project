@@ -57,7 +57,7 @@ export class StepKycComponent {
 
   private handleFileUpload(event: Event, callback: (base64: string) => void): void {
     const input = event.target as HTMLInputElement;
-    if (input.files && input.files[0]) {
+    if (input.files?.[0]) {
       const file = input.files[0];
       const reader = new FileReader();
       reader.onload = (e) => {

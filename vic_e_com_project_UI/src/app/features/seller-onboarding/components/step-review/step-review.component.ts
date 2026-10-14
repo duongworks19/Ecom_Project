@@ -14,7 +14,7 @@ export class StepReviewComponent {
   @Input({ required: true }) data!: VendorApplicationData;
   @Input() isSubmitting = false;
   @Output() jumpToStep = new EventEmitter<number>();
-  @Output() submit = new EventEmitter<void>();
+  @Output() submitApplication = new EventEmitter<void>();
   @Output() back = new EventEmitter<void>();
 
   agreeTerms = false;
@@ -53,6 +53,6 @@ export class StepReviewComponent {
 
   onSubmit(): void {
     if (!this.canSubmit()) return;
-    this.submit.emit();
+    this.submitApplication.emit();
   }
 }

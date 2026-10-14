@@ -5,7 +5,12 @@
   </div>
   <div class="low-stock-list">
     @for (prod of products(); track prod.id) {
-      <div class="low" (click)="onRestockProduct(prod, $event)" title="Nhấn để nhập thêm hàng">
+      <div
+        class="low"
+        tabindex="0"
+        (click)="onRestockProduct(prod, $event)"
+        (keydown.enter)="onRestockProduct(prod, $event)"
+        title="Nhấn để nhập thêm hàng">
         <div
           class="th"
           [style.background-color]="prod.thumbnailColor">

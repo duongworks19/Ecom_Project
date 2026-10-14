@@ -41,12 +41,14 @@
 
     <!-- 2. Loại hình kinh doanh -->
     <div class="form-group">
-      <label class="form-label required">Mô hình kinh doanh của bạn</label>
+      <span class="form-label required">Mô hình kinh doanh của bạn</span>
       <div class="business-type-grid">
         <div
           class="type-card"
+          tabindex="0"
           [class.selected]="shopInfo.businessType === 'INDIVIDUAL'"
           (click)="selectBusinessType('INDIVIDUAL')"
+          (keydown.enter)="selectBusinessType('INDIVIDUAL')"
           id="type-individual"
         >
           <div class="type-icon">👤</div>
@@ -59,8 +61,10 @@
 
         <div
           class="type-card"
+          tabindex="0"
           [class.selected]="shopInfo.businessType === 'HOUSEHOLD'"
           (click)="selectBusinessType('HOUSEHOLD')"
+          (keydown.enter)="selectBusinessType('HOUSEHOLD')"
           id="type-household"
         >
           <div class="type-icon">🏬</div>
@@ -73,8 +77,10 @@
 
         <div
           class="type-card"
+          tabindex="0"
           [class.selected]="shopInfo.businessType === 'COMPANY'"
           (click)="selectBusinessType('COMPANY')"
+          (keydown.enter)="selectBusinessType('COMPANY')"
           id="type-company"
         >
           <div class="type-icon">🏢</div>
@@ -89,7 +95,7 @@
 
     <!-- 3. Ngành hàng chính -->
     <div class="form-group">
-      <label class="form-label required">Danh mục sản phẩm chính</label>
+      <span class="form-label required">Danh mục sản phẩm chính</span>
       <div class="chips-grid">
         @for (cat of categories; track cat) {
           <button
@@ -124,7 +130,7 @@
 
     <!-- 5. Logo gian hàng -->
     <div class="form-group">
-      <label class="form-label">Logo gian hàng (Tùy chọn)</label>
+      <span class="form-label">Logo gian hàng (Tùy chọn)</span>
       <div class="logo-upload-wrapper">
         <div class="logo-preview-box">
           @if (shopInfo.logoUrl) {
