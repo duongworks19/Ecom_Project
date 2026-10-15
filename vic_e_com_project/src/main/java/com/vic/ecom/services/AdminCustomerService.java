@@ -1,0 +1,109 @@
+package com.vic.ecom.services;
+
+import com.vic.ecom.dto.CustomerListItemResponse;
+import com.vic.ecom.dto.CustomerPageResponse;
+import com.vic.ecom.dto.CustomerSummaryResponse;
+import com.vic.ecom.enums.UserStatus;
+import com.vic.ecom.repository.AdminCustomerRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.time.Clock;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+
+@Service
+@RequiredArgsConstructor
+public class AdminCustomerService {
+
+    public static final ZoneId VN_ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
+
+    private final AdminCustomerRepository adminCustomerRepository;
+
+    @Setter
+    private Clock clock = Clock.system(VN_ZONE);
+
+    @Transactional(readOnly = true)
+    public CustomerPageResponse<CustomerListItemResponse> getCustomers(
+            String keyword,
+            String statusParam,
+            Integer pageParam,
+            Integer sizeParam,
+            String sortParam
+    ) {
+        int page = pageParam == null ? 0 : pageParam;
+        int size = sizeParam == null ? 8 : sizeParam;
+        if (page < 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid page parameter");
+        }
+        if (size <= 0 || size > 50) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Size must be between 1 and 50");
+        }
+
+        UserStatus statusFilter = parseStatusFilter(statusParam);
+        SortSpec sortSpec = parseSort(sortParam);
+
+        return adminCustomerRepository.findCustomers(
+                keyword,
+                statusFilter,
+                page,
+                size,
+                sortSpec.field(),
+                sortSpec.direction()
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public CustomerSummaryResponse getSummary() {
+        LocalDateTime nowVn = LocalDateTime.now(clock.withZone(VN_ZONE));
+        LocalDateTime sevenDaysAgo = nowVn.minusDays(7);
+        return adminCustomerRepository.findSummary(sevenDaysAgo);
+    }
+
+    private UserStatus parseStatusFilter(String statusParam) {
+        if (statusParam == null || statusParam.isBlank()) {
+            return null;
+        }
+        String normalized = statusParam.trim().toUpperCase();
+        if ("ACTIVE".equals(normalized)) {
+            return UserStatus.ACTIVE;
+        }
+        if ("LOCKED".equals(normalized)) {
+            return UserStatus.LOCKED;
+        }
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid status parameter. Allowed values: ACTIVE, LOCKED");
+    }
+
+    private SortSpec parseSort(String sortParam) {
+        if (sortParam == null || sortParam.isBlank()) {
+            return new SortSpec("createdAt", "DESC");
+        }
+        String trimmed = sortParam.trim();
+        String[] parts = trimmed.split(",");
+        if (parts.length > 2) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid sort parameter");
+        }
+        String field = parts[0].trim();
+        if (!"createdAt".equals(field) && !"fullName".equals(field)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid sort field. Allowed values: createdAt, fullName");
+        }
+        String direction;
+        if (parts.length == 2 && !parts[1].isBlank()) {
+            String dir = parts[1].trim().toUpperCase();
+            if (!"ASC".equals(dir) && !"DESC".equals(dir)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid sort direction. Allowed values: asc, desc");
+            }
+            direction = dir;
+        } else {
+            direction = "createdAt".equals(field) ? "DESC" : "ASC";
+        }
+        return new SortSpec(field, direction);
+    }
+
+    private record SortSpec(String field, String direction) {
+    }
+}
