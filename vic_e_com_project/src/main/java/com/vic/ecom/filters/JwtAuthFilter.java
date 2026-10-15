@@ -1,5 +1,7 @@
 package com.vic.ecom.filters;
 
+import com.vic.ecom.enums.UserStatus;
+import com.vic.ecom.repository.UserRepository;
 import com.vic.ecom.ultis.JwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -9,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -20,6 +23,7 @@ import java.util.List;
 public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
+    private final UserRepository userRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -41,11 +45,31 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         String subject = jwtUtil.extractSubject(token);
         String role = jwtUtil.extractRole(token);
 
-        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
-                subject, null,
-                List.of(new SimpleGrantedAuthority("ROLE_" + role))
-        );
-        SecurityContextHolder.getContext().setAuthentication(auth);
+        if (subject != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            boolean isLocked = userRepository.findByEmail(subject)
+                    .or(() -> userRepository.findByPhone(subject))
+                    .map(u -> u.getStatus() == UserStatus.LOCKED || u.getStatus() == UserStatus.PENDING)
+                    .orElse(false);
+            if (isLocked) {
+                chain.doFilter(request, response);
+                return;
+            }
+            String authorityName = (role != null && role.startsWith("ROLE_"))
+                    ? role
+                    : "ROLE_" + (role != null ? role : "");
+
+            List<SimpleGrantedAuthority> authorities = (role != null && !role.isBlank())
+                    ? List.of(new SimpleGrantedAuthority(authorityName))
+                    : List.of();
+
+            UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                    subject, null, authorities
+            );
+            auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            SecurityContextHolder.getContext().setAuthentication(auth);
+        }
+
         chain.doFilter(request, response);
     }
 }
+
