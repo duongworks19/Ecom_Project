@@ -50,6 +50,8 @@ describe('Auth Guards & Password Change Interceptor', () => {
   });
 
   it('adminGuard allows ADMIN when mustChangePassword is false and blocks non-admin', () => {
+    localStorage.setItem('token', 'test-jwt-admin');
+    localStorage.setItem('role', 'ADMIN');
     authService.setMustChangePassword(false);
     const allowed = TestBed.runInInjectionContext(() =>
       adminGuard({} as ActivatedRouteSnapshot, { url: '/admin/shippers' } as RouterStateSnapshot)

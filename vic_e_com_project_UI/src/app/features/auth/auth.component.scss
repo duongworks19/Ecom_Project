@@ -298,6 +298,13 @@
   gap: 12px;
   margin-bottom: 20px;
 
+  .google-btn-host {
+    display: flex;
+    justify-content: center;
+    min-height: 44px;
+    width: 100%;
+  }
+
   .btn-social {
     height: 44px;
     border-radius: var(--rounded-md);

@@ -62,7 +62,7 @@ public class GoogleAuthService {
         recordLogin(user, LoginStatus.SUCCESS);
         String subject = user.getEmail() != null ? user.getEmail() : email;
         String token = jwtUtil.generateToken(subject, user.getRole().name());
-        return new AuthResponse(token, user.getRole().name(), user.getId());
+        return new AuthResponse(token, user.getRole().name(), user.getId(), user.getFullName(), subject);
     }
 
     private GoogleIdToken.Payload verify(String idToken) {

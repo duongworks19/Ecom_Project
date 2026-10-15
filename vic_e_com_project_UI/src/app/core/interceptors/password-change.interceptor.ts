@@ -7,8 +7,14 @@ import { AuthService } from '../services/auth.service';
 export const passwordChangeInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
   const router = inject(Router);
+  const token = authService.getToken();
 
-  return next(req).pipe(
+  const authReq =
+    token && !req.headers.has('Authorization')
+      ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } })
+      : req;
+
+  return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
       if (error.status === 403 && error.error?.code === 'PASSWORD_CHANGE_REQUIRED') {
         authService.setMustChangePassword(true);

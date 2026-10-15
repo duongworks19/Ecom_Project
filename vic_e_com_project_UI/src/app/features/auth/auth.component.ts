@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -12,10 +12,12 @@ import { AuthService } from '../../core/services/auth.service';
   templateUrl: './auth.component.html',
   styleUrl: './auth.component.scss',
 })
-export class AuthComponent implements OnInit {
+export class AuthComponent implements OnInit, AfterViewInit {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly authService = inject(AuthService);
+
+  @ViewChild('googleBtnContainer') googleBtnContainer?: ElementRef<HTMLElement>;
 
   readonly isLogin = signal<boolean>(true);
   readonly showPassword = signal<boolean>(false);
@@ -45,6 +47,31 @@ export class AuthComponent implements OnInit {
     this.route.url.subscribe((segments) => {
       const path = segments[0]?.path;
       this.isLogin.set(path !== 'register');
+    });
+  }
+
+  ngAfterViewInit() {
+    if (this.googleBtnContainer?.nativeElement) {
+      this.authService.renderGoogleButton(this.googleBtnContainer.nativeElement, (idToken: string) =>
+        this.onGoogleCredential(idToken)
+      );
+    }
+  }
+
+  private onGoogleCredential(idToken: string) {
+    this.isLoading.set(true);
+    this.authService.googleLogin(idToken).subscribe({
+      next: (res) => {
+        this.isLoading.set(false);
+        this.showToast('✨ Đăng nhập Google thành công!', false);
+        const target = res.data?.role === 'ADMIN' ? '/admin' : '/';
+        setTimeout(() => void this.router.navigateByUrl(target), 800);
+      },
+      error: (err: HttpErrorResponse) => {
+        this.isLoading.set(false);
+        const msg = err.error?.message || 'Đăng nhập Google thất bại';
+        this.showToast(msg, true);
+      },
     });
   }
 
@@ -120,20 +147,30 @@ export class AuthComponent implements OnInit {
   handleSocialAuth(provider: string) {
     if (provider === 'Google') {
       this.isLoading.set(true);
-      this.authService.initGoogleSignIn((idToken: string) => {
-        this.authService.googleLogin(idToken).subscribe({
-          next: () => {
-            this.isLoading.set(false);
-            this.showToast('✨ Đăng nhập Google thành công!', false);
-            setTimeout(() => this.router.navigate(['/']), 1200);
-          },
-          error: (err: HttpErrorResponse) => {
-            this.isLoading.set(false);
-            const msg = err.error?.message || 'Đăng nhập Google thất bại';
-            this.showToast(msg, true);
-          },
-        });
-      });
+      this.authService.initGoogleSignIn(
+        (idToken: string) => {
+          this.authService.googleLogin(idToken).subscribe({
+            next: (res) => {
+              this.isLoading.set(false);
+              this.showToast('✨ Đăng nhập Google thành công!', false);
+              const target = res.data?.role === 'ADMIN' ? '/admin' : '/';
+              setTimeout(() => void this.router.navigateByUrl(target), 800);
+            },
+            error: (err: HttpErrorResponse) => {
+              this.isLoading.set(false);
+              const msg = err.error?.message || 'Đăng nhập Google thất bại';
+              this.showToast(msg, true);
+            },
+          });
+        },
+        () => {
+          this.isLoading.set(false);
+          this.showToast(
+            'Google Client ID chưa được cấp phép cho http://localhost:4200 trên Google Cloud Console (Authorized JavaScript origins). Vui lòng đăng nhập bằng Email/Mật khẩu.',
+            true
+          );
+        }
+      );
     } else {
       this.showToast(`Tính năng ${provider} sẽ sớm ra mắt!`, false);
     }

@@ -26,6 +26,33 @@ export interface RecentActivity {
   timeAgo: string;
 }
 
+export interface AdminDashboardApiResponse {
+  pendingTasks: {
+    pendingVendors: number;
+    ordersAwaitingShipper: number;
+    failedDeliveriesAwaitingDecision: number;
+    pendingReturns: number;
+  };
+  orderStatus: {
+    total: number;
+    pending: number;
+    preparing: number;
+    shipping: number;
+    delivered: number;
+    cancelled: number;
+  };
+  revenueLast7Days: {
+    date: string;
+    amount: number;
+  }[];
+  recentActivities: {
+    type: string;
+    title: string;
+    referenceId: number;
+    occurredAt: string;
+  }[];
+}
+
 export interface AdminDashboardData {
   kpis: KpiCard[];
   orderStatusStats: {
