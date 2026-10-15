@@ -45,6 +45,13 @@
     }
   }
 
+  .cta-actions-block {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+
   .btn-primary-large {
     display: inline-flex;
     align-items: center;
@@ -61,6 +68,24 @@
     &:hover {
       background-color: var(--color-primary-pressed);
       transform: scale(1.02);
+    }
+  }
+  .btn-outline-light {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background-color: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+    border: 1.5px solid rgba(255, 255, 255, 0.35);
+    font-size: 15px;
+    font-weight: 700;
+    padding: 15px 26px;
+    border-radius: var(--rounded-full);
+    transition: all var(--transition-fast);
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.22);
+      transform: translateY(-1px);
     }
   }
 
@@ -83,4 +108,3 @@
     }
   }
 }
-
