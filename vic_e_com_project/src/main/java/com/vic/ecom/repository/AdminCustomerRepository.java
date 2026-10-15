@@ -342,6 +342,21 @@ public class AdminCustomerRepository {
         return new CustomerPageResponse<>(items, page, size, totalElements, totalPages);
     }
 
+    public int updateCustomerStatusConditionally(Long customerId, UserStatus expectedCurrentStatus, UserStatus newStatus) {
+        String sql = """
+                UPDATE users
+                SET status = :newStatus
+                WHERE id = :id
+                  AND role = 'CUSTOMER'
+                  AND status = :expectedStatus
+                """;
+        return jdbcClient.sql(sql)
+                .param("newStatus", newStatus.name())
+                .param("id", customerId)
+                .param("expectedStatus", expectedCurrentStatus.name())
+                .update();
+    }
+
     private JdbcClient.StatementSpec bindParams(JdbcClient.StatementSpec spec, Map<String, Object> params) {
         JdbcClient.StatementSpec current = spec;
         for (Map.Entry<String, Object> entry : params.entrySet()) {

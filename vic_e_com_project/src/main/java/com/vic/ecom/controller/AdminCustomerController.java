@@ -3,22 +3,32 @@ package com.vic.ecom.controller;
 import com.vic.ecom.dto.ApiResponse;
 import com.vic.ecom.dto.CustomerDetailResponse;
 import com.vic.ecom.dto.CustomerListItemResponse;
+import com.vic.ecom.dto.CustomerLockRequest;
 import com.vic.ecom.dto.CustomerOrderItemResponse;
 import com.vic.ecom.dto.CustomerPageResponse;
 import com.vic.ecom.dto.CustomerReviewItemResponse;
+import com.vic.ecom.dto.CustomerStatusResponse;
 import com.vic.ecom.dto.CustomerSummaryResponse;
 import com.vic.ecom.services.AdminCustomerService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/admin/customers")
@@ -65,6 +75,36 @@ public class AdminCustomerController {
             @RequestParam(name = "size", defaultValue = "8") Integer size
     ) {
         return ResponseEntity.ok(adminCustomerService.getCustomerReviews(id, page, size));
+    }
+
+    @PostMapping("/{id}/lock")
+    public ResponseEntity<CustomerStatusResponse> lockCustomer(
+            @PathVariable("id") Long id,
+            @Valid @RequestBody(required = false) CustomerLockRequest request,
+            Authentication authentication
+    ) {
+        String reason = request != null ? request.reason() : null;
+        String adminPrincipal = authentication != null ? authentication.getName() : null;
+        return ResponseEntity.ok(adminCustomerService.lockCustomer(id, reason, adminPrincipal));
+    }
+
+    @PostMapping("/{id}/unlock")
+    public ResponseEntity<CustomerStatusResponse> unlockCustomer(
+            @PathVariable("id") Long id,
+            @Valid @RequestBody(required = false) CustomerLockRequest request,
+            Authentication authentication
+    ) {
+        String reason = request != null ? request.reason() : null;
+        String adminPrincipal = authentication != null ? authentication.getName() : null;
+        return ResponseEntity.ok(adminCustomerService.unlockCustomer(id, reason, adminPrincipal));
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiResponse<Void>> handleValidation(MethodArgumentNotValidException ex) {
+        String msg = ex.getBindingResult().getFieldErrors().stream()
+                .map(e -> e.getField() + ": " + e.getDefaultMessage())
+                .collect(Collectors.joining("; "));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.fail(msg));
     }
 
     @ExceptionHandler(ResponseStatusException.class)

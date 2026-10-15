@@ -5,9 +5,15 @@ import com.vic.ecom.dto.CustomerListItemResponse;
 import com.vic.ecom.dto.CustomerOrderItemResponse;
 import com.vic.ecom.dto.CustomerPageResponse;
 import com.vic.ecom.dto.CustomerReviewItemResponse;
+import com.vic.ecom.dto.CustomerStatusResponse;
 import com.vic.ecom.dto.CustomerSummaryResponse;
+import com.vic.ecom.entity.AccountLockLog;
+import com.vic.ecom.entity.User;
+import com.vic.ecom.enums.AccountAction;
 import com.vic.ecom.enums.UserStatus;
+import com.vic.ecom.repository.AccountLockLogRepository;
 import com.vic.ecom.repository.AdminCustomerRepository;
+import com.vic.ecom.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.springframework.http.HttpStatus;
@@ -27,6 +33,8 @@ public class AdminCustomerService {
     public static final ZoneId VN_ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
 
     private final AdminCustomerRepository adminCustomerRepository;
+    private final AccountLockLogRepository accountLockLogRepository;
+    private final UserRepository userRepository;
 
     @Setter
     private Clock clock = Clock.system(VN_ZONE);
@@ -101,6 +109,83 @@ public class AdminCustomerService {
         validatePageAndSize(page, size);
         requireCustomerExists(customerId);
         return adminCustomerRepository.findCustomerReviews(customerId, page, size);
+    }
+
+    @Transactional
+    public CustomerStatusResponse lockCustomer(Long customerId, String reason, String adminPrincipal) {
+        return changeCustomerStatus(
+                customerId,
+                UserStatus.ACTIVE,
+                UserStatus.LOCKED,
+                AccountAction.LOCK,
+                reason,
+                adminPrincipal,
+                "Customer is already locked"
+        );
+    }
+
+    @Transactional
+    public CustomerStatusResponse unlockCustomer(Long customerId, String reason, String adminPrincipal) {
+        return changeCustomerStatus(
+                customerId,
+                UserStatus.LOCKED,
+                UserStatus.ACTIVE,
+                AccountAction.UNLOCK,
+                reason,
+                adminPrincipal,
+                "Customer is not locked"
+        );
+    }
+
+    private CustomerStatusResponse changeCustomerStatus(
+            Long customerId,
+            UserStatus expectedCurrentStatus,
+            UserStatus targetStatus,
+            AccountAction action,
+            String reason,
+            String adminPrincipal,
+            String conflictMessage
+    ) {
+        String normalizedReason = reason != null ? reason.trim() : null;
+        if (normalizedReason != null && normalizedReason.length() > 500) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Reason must not exceed 500 characters");
+        }
+        if (normalizedReason != null && normalizedReason.isEmpty()) {
+            normalizedReason = null;
+        }
+
+        requireCustomerExists(customerId);
+
+        int affectedRows = adminCustomerRepository.updateCustomerStatusConditionally(
+                customerId,
+                expectedCurrentStatus,
+                targetStatus
+        );
+        if (affectedRows == 0) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, conflictMessage);
+        }
+
+        User adminUser = resolveAdminUser(adminPrincipal);
+        User targetCustomerRef = userRepository.getReferenceById(customerId);
+
+        AccountLockLog lockLog = new AccountLockLog();
+        lockLog.setUser(targetCustomerRef);
+        lockLog.setPerformedBy(adminUser);
+        lockLog.setAction(action);
+        lockLog.setReason(normalizedReason);
+        lockLog.setCreatedAt(LocalDateTime.now(clock.withZone(VN_ZONE)));
+        accountLockLogRepository.save(lockLog);
+
+        return new CustomerStatusResponse(customerId, targetStatus.name());
+    }
+
+    private User resolveAdminUser(String adminPrincipal) {
+        if (adminPrincipal == null || adminPrincipal.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Admin user not authenticated");
+        }
+        return userRepository.findByEmail(adminPrincipal)
+                .or(() -> userRepository.findByPhone(adminPrincipal))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Admin account not found"));
     }
 
     private void requireCustomerExists(Long customerId) {
