@@ -48,8 +48,16 @@
     ></vic-user-status-modal>
 
     @if (ordersModalData(); as ordersPage) {
-      <div class="submodal-backdrop" (click)="closeSubModals()">
-        <div class="submodal-box" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+      <div
+        class="submodal-backdrop"
+        tabindex="0"
+        (click)="closeSubModals()"
+        (keydown.escape)="closeSubModals()">
+        <div
+          class="submodal-box"
+          tabindex="0"
+          (click)="$event.stopPropagation()"
+          (keydown)="$event.stopPropagation()">
           <div class="submodal-header">
             <h3 class="submodal-title">Lịch sử đơn hàng — {{ selectedCustomer()?.fullName }}</h3>
             <button type="button" class="submodal-close" (click)="closeSubModals()">✕</button>
@@ -77,8 +85,16 @@
     }
 
     @if (reviewsModalData(); as reviewsPage) {
-      <div class="submodal-backdrop" (click)="closeSubModals()">
-        <div class="submodal-box" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+      <div
+        class="submodal-backdrop"
+        tabindex="0"
+        (click)="closeSubModals()"
+        (keydown.escape)="closeSubModals()">
+        <div
+          class="submodal-box"
+          tabindex="0"
+          (click)="$event.stopPropagation()"
+          (keydown)="$event.stopPropagation()">
           <div class="submodal-header">
             <h3 class="submodal-title">Đánh giá sản phẩm — {{ selectedCustomer()?.fullName }}</h3>
             <button type="button" class="submodal-close" (click)="closeSubModals()">✕</button>

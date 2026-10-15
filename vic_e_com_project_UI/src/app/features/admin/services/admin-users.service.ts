@@ -201,7 +201,7 @@ export class AdminUsersService {
   private formatDate(isoDateTime: string | null | undefined): string {
     if (!isoDateTime) return '—';
     const d = new Date(isoDateTime);
-    if (isNaN(d.getTime())) return isoDateTime;
+    if (Number.isNaN(d.getTime())) return isoDateTime;
     const dd = String(d.getDate()).padStart(2, '0');
     const mm = String(d.getMonth() + 1).padStart(2, '0');
     const yyyy = d.getFullYear();

@@ -121,7 +121,7 @@ export class AdminDashboardService {
   private formatTimeAgo(isoDateTime: string): string {
     if (!isoDateTime) return '';
     const time = new Date(isoDateTime).getTime();
-    if (isNaN(time)) return isoDateTime;
+    if (Number.isNaN(time)) return isoDateTime;
     const diffMinutes = Math.max(0, Math.floor((Date.now() - time) / 60000));
     if (diffMinutes < 1) return 'Vừa xong';
     if (diffMinutes < 60) return `${diffMinutes} phút trước`;

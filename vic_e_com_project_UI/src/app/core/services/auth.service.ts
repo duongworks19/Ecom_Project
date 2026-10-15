@@ -35,19 +35,21 @@ export interface ChangePasswordRequest {
   newPassword: string;
 }
 
-declare const google: {
-  accounts: {
-    id: {
-      initialize: (config: {
-        client_id: string;
-        callback: (response: { credential: string }) => void;
-        use_fedcm_for_prompt?: boolean;
-      }) => void;
-      prompt: (momentListener?: (notification: { isNotDisplayed?: () => boolean; isSkippedMoment?: () => boolean }) => void) => void;
-      renderButton: (parent: HTMLElement, options: object) => void;
-    };
-  };
-};
+declare const google:
+  | {
+      accounts: {
+        id: {
+          initialize: (config: {
+            client_id: string;
+            callback: (response: { credential: string }) => void;
+            use_fedcm_for_prompt?: boolean;
+          }) => void;
+          prompt: (momentListener?: (notification: { isNotDisplayed?: () => boolean; isSkippedMoment?: () => boolean }) => void) => void;
+          renderButton: (parent: HTMLElement, options: object) => void;
+        };
+      };
+    }
+  | undefined;
 
 @Injectable({
   providedIn: 'root',
@@ -73,7 +75,7 @@ export abstract class AuthService {
   }
 
   initGoogleSignIn(onSuccess: (idToken: string) => void, onCancel?: () => void): void {
-    if (typeof google === 'undefined') {
+    if (google === undefined) {
       setTimeout(() => this.initGoogleSignIn(onSuccess, onCancel), 500);
       return;
     }
@@ -90,7 +92,7 @@ export abstract class AuthService {
   }
 
   renderGoogleButton(parent: HTMLElement, onSuccess: (idToken: string) => void): void {
-    if (typeof google === 'undefined') {
+    if (google === undefined) {
       setTimeout(() => this.renderGoogleButton(parent, onSuccess), 500);
       return;
     }
