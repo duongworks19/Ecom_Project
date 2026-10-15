@@ -1,7 +1,10 @@
 package com.vic.ecom.services;
 
+import com.vic.ecom.dto.CustomerDetailResponse;
 import com.vic.ecom.dto.CustomerListItemResponse;
+import com.vic.ecom.dto.CustomerOrderItemResponse;
 import com.vic.ecom.dto.CustomerPageResponse;
+import com.vic.ecom.dto.CustomerReviewItemResponse;
 import com.vic.ecom.dto.CustomerSummaryResponse;
 import com.vic.ecom.enums.UserStatus;
 import com.vic.ecom.repository.AdminCustomerRepository;
@@ -15,6 +18,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -62,6 +66,56 @@ public class AdminCustomerService {
         LocalDateTime nowVn = LocalDateTime.now(clock.withZone(VN_ZONE));
         LocalDateTime sevenDaysAgo = nowVn.minusDays(7);
         return adminCustomerRepository.findSummary(sevenDaysAgo);
+    }
+
+    @Transactional(readOnly = true)
+    public CustomerDetailResponse getCustomerDetail(Long customerId) {
+        CustomerDetailResponse.Profile profile = adminCustomerRepository.findCustomerProfileById(customerId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer not found"));
+        List<CustomerDetailResponse.AddressItem> addresses = adminCustomerRepository.findAddressesByUserId(customerId);
+        CustomerDetailResponse.PurchaseSummary purchaseSummary = adminCustomerRepository.findPurchaseSummary(customerId);
+        return new CustomerDetailResponse(profile, addresses, purchaseSummary);
+    }
+
+    @Transactional(readOnly = true)
+    public CustomerPageResponse<CustomerOrderItemResponse> getCustomerOrders(
+            Long customerId,
+            Integer pageParam,
+            Integer sizeParam
+    ) {
+        int page = pageParam == null ? 0 : pageParam;
+        int size = sizeParam == null ? 8 : sizeParam;
+        validatePageAndSize(page, size);
+        requireCustomerExists(customerId);
+        return adminCustomerRepository.findCustomerOrders(customerId, page, size);
+    }
+
+    @Transactional(readOnly = true)
+    public CustomerPageResponse<CustomerReviewItemResponse> getCustomerReviews(
+            Long customerId,
+            Integer pageParam,
+            Integer sizeParam
+    ) {
+        int page = pageParam == null ? 0 : pageParam;
+        int size = sizeParam == null ? 8 : sizeParam;
+        validatePageAndSize(page, size);
+        requireCustomerExists(customerId);
+        return adminCustomerRepository.findCustomerReviews(customerId, page, size);
+    }
+
+    private void requireCustomerExists(Long customerId) {
+        if (adminCustomerRepository.findCustomerProfileById(customerId).isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer not found");
+        }
+    }
+
+    private void validatePageAndSize(int page, int size) {
+        if (page < 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid page parameter");
+        }
+        if (size <= 0 || size > 50) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Size must be between 1 and 50");
+        }
     }
 
     private UserStatus parseStatusFilter(String statusParam) {

@@ -1,8 +1,11 @@
 package com.vic.ecom.controller;
 
 import com.vic.ecom.dto.ApiResponse;
+import com.vic.ecom.dto.CustomerDetailResponse;
 import com.vic.ecom.dto.CustomerListItemResponse;
+import com.vic.ecom.dto.CustomerOrderItemResponse;
 import com.vic.ecom.dto.CustomerPageResponse;
+import com.vic.ecom.dto.CustomerReviewItemResponse;
 import com.vic.ecom.dto.CustomerSummaryResponse;
 import com.vic.ecom.services.AdminCustomerService;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -38,6 +42,29 @@ public class AdminCustomerController {
     @GetMapping("/summary")
     public ResponseEntity<CustomerSummaryResponse> getSummary() {
         return ResponseEntity.ok(adminCustomerService.getSummary());
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<CustomerDetailResponse> getCustomerDetail(@PathVariable("id") Long id) {
+        return ResponseEntity.ok(adminCustomerService.getCustomerDetail(id));
+    }
+
+    @GetMapping("/{id}/orders")
+    public ResponseEntity<CustomerPageResponse<CustomerOrderItemResponse>> getCustomerOrders(
+            @PathVariable("id") Long id,
+            @RequestParam(name = "page", defaultValue = "0") Integer page,
+            @RequestParam(name = "size", defaultValue = "8") Integer size
+    ) {
+        return ResponseEntity.ok(adminCustomerService.getCustomerOrders(id, page, size));
+    }
+
+    @GetMapping("/{id}/reviews")
+    public ResponseEntity<CustomerPageResponse<CustomerReviewItemResponse>> getCustomerReviews(
+            @PathVariable("id") Long id,
+            @RequestParam(name = "page", defaultValue = "0") Integer page,
+            @RequestParam(name = "size", defaultValue = "8") Integer size
+    ) {
+        return ResponseEntity.ok(adminCustomerService.getCustomerReviews(id, page, size));
     }
 
     @ExceptionHandler(ResponseStatusException.class)
