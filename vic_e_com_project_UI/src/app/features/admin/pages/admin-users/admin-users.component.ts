@@ -4,6 +4,9 @@ import { AdminUsersService } from '../../services/admin-users.service';
 import {
   AdminCustomer,
   AdminUsersOverview,
+  CustomerOrderItemApiResponse,
+  CustomerPageApiResponse,
+  CustomerReviewItemApiResponse,
   CustomerStatusChangePayload,
 } from '../../models/admin-users.model';
 import { UsersKpiComponent } from './components/users-kpi/users-kpi.component';
@@ -32,43 +35,79 @@ export class AdminUsersComponent implements OnInit {
   readonly overviewData = signal<AdminUsersOverview | null>(null);
   readonly selectedCustomer = signal<AdminCustomer | null>(null);
   readonly modalTargetCustomer = signal<AdminCustomer | null>(null);
+  readonly ordersModalData = signal<CustomerPageApiResponse<CustomerOrderItemApiResponse> | null>(null);
+  readonly reviewsModalData = signal<CustomerPageApiResponse<CustomerReviewItemApiResponse> | null>(null);
 
   private currentKeyword = '';
   private currentStatus = 'ALL';
+  private currentPage = 0;
+  private readonly pageSize = 10;
 
   ngOnInit(): void {
-    this.loadOverview(true);
+    this.loadOverview();
   }
 
   onFilterChanged(filter: { keyword: string; status: string }): void {
     this.currentKeyword = filter.keyword;
     this.currentStatus = filter.status;
-    this.loadOverview(false);
+    this.currentPage = 0;
+    this.loadOverview();
+  }
+
+  onPageChanged(page: number): void {
+    this.currentPage = page;
+    this.loadOverview();
+  }
+
+  onSelectCustomer(customer: AdminCustomer): void {
+    this.selectedCustomer.set(customer);
+    this.usersService.getCustomerDetail(customer.id).subscribe({
+      next: (detail) => {
+        if (this.selectedCustomer()?.id === customer.id) {
+          this.selectedCustomer.set(detail);
+        }
+      },
+    });
   }
 
   onConfirmStatusChange(payload: CustomerStatusChangePayload): void {
     this.usersService.changeCustomerStatus(payload).subscribe({
       next: () => {
         this.modalTargetCustomer.set(null);
-        this.loadOverview(false);
+        this.loadOverview();
       },
     });
   }
 
-  private loadOverview(selectDefaultLocked: boolean): void {
+  onViewOrders(customer: AdminCustomer, page = 0): void {
+    this.usersService.getCustomerOrders(customer.id, page, 10).subscribe({
+      next: (res) => this.ordersModalData.set(res),
+    });
+  }
+
+  onViewReviews(customer: AdminCustomer, page = 0): void {
+    this.usersService.getCustomerReviews(customer.id, page, 10).subscribe({
+      next: (res) => this.reviewsModalData.set(res),
+    });
+  }
+
+  closeSubModals(): void {
+    this.ordersModalData.set(null);
+    this.reviewsModalData.set(null);
+  }
+
+  private loadOverview(): void {
     this.usersService
-      .getCustomersOverview(this.currentKeyword, this.currentStatus)
+      .getCustomersOverview(this.currentKeyword, this.currentStatus, this.currentPage, this.pageSize)
       .subscribe({
         next: (data) => {
           this.overviewData.set(data);
-          if (selectDefaultLocked) {
-            const defaultSelected =
-              data.customers.find((c) => c.id === 6) ?? data.customers[0] ?? null;
-            this.selectedCustomer.set(defaultSelected);
+          const curId = this.selectedCustomer()?.id;
+          const target = data.customers.find((c) => c.id === curId) ?? data.customers[0] ?? null;
+          if (target) {
+            this.onSelectCustomer(target);
           } else {
-            const curId = this.selectedCustomer()?.id;
-            const updated = data.customers.find((c) => c.id === curId) ?? data.customers[0] ?? null;
-            this.selectedCustomer.set(updated);
+            this.selectedCustomer.set(null);
           }
         },
       });

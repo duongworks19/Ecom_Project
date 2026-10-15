@@ -13,6 +13,10 @@
         </div>
         <span class="activity-time">{{ act.timeAgo }}</span>
       </div>
+    } @empty {
+      <div class="activity-row">
+        <span class="activity-desc">Chưa có hoạt động nào gần đây.</span>
+      </div>
     }
   </div>
 </div>

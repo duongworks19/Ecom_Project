@@ -12,9 +12,13 @@ import { DailyRevenue } from '../../../../models/admin-dashboard.model';
 export class RevenueBarChartComponent {
   @Input() revenueData: DailyRevenue[] = [];
 
-  private readonly maxAmount = 20; // 20 triệu đồng làm mốc trần 100%
+  get maxAmount(): number {
+    const maxVal = Math.max(0, ...this.revenueData.map((d) => d.amount));
+    return maxVal > 0 ? maxVal : 1;
+  }
 
   getBarHeightPercentage(amount: number): number {
+    if (amount <= 0) return 0;
     return Math.min(100, Math.round((amount / this.maxAmount) * 100));
   }
 

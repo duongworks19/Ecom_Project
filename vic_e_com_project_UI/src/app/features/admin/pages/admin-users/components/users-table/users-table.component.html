@@ -43,11 +43,25 @@
 
   <div class="table-footer">
     <span class="footer-info">
-      Hiển thị {{ customers.length ? 1 : 0 }} đến {{ customers.length }} trên {{ totalCount }} Customer
+      Hiển thị {{ startItem }} đến {{ endItem }} trên {{ totalCount }} Customer
     </span>
     <div class="pagination-btns">
-      <button type="button" class="btn-page btn-prev">Trước</button>
-      <button type="button" class="btn-page btn-next">Sau</button>
+      <button
+        type="button"
+        class="btn-page btn-prev"
+        [disabled]="page <= 0"
+        (click)="onPrevPage()"
+      >
+        Trước
+      </button>
+      <button
+        type="button"
+        class="btn-page btn-next"
+        [disabled]="page + 1 >= totalPages"
+        (click)="onNextPage()"
+      >
+        Sau
+      </button>
     </div>
   </div>
 </div>

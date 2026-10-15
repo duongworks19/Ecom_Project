@@ -23,10 +23,11 @@ export class ProductApiService {
       : `${this.baseUrl}/categories.json`;
 
     return this.http.get<CategoryItem[]>(url).pipe(
-      catchError((error) => {
-        console.info(`[ProductApiService] Không nạp được danh mục từ ${url}:`, error.message);
-        return of(null);
-      })
+      catchError(() =>
+        this.baseUrl.startsWith('http')
+          ? this.http.get<CategoryItem[]>('/api/categories.json').pipe(catchError(() => of(null)))
+          : of(null)
+      )
     );
   }
 
@@ -50,31 +51,34 @@ export class ProductApiService {
       }
     }
 
-    return this.http.get<Product[]>(url, { params }).pipe(
-      map((products) => {
-        if (!products) return null;
-        if (isExternalApi) return products;
+    const applyFilter = (products: Product[] | null) => {
+      if (!products) return null;
+      let list = products;
+      if (filter?.category && filter.category !== 'all') {
+        list = list.filter((p) => p.category === filter.category);
+      }
+      if (filter?.search) {
+        const q = filter.search.toLowerCase();
+        list = list.filter(
+          (p) =>
+            p.name.toLowerCase().includes(q) ||
+            p.categoryLabel.toLowerCase().includes(q) ||
+            p.seller.name.toLowerCase().includes(q)
+        );
+      }
+      return list;
+    };
 
-        // Xử lý bộ lọc nếu đang đọc JSON nội bộ trên dev server
-        let list = products;
-        if (filter?.category && filter.category !== 'all') {
-          list = list.filter((p) => p.category === filter.category);
-        }
-        if (filter?.search) {
-          const q = filter.search.toLowerCase();
-          list = list.filter(
-            (p) =>
-              p.name.toLowerCase().includes(q) ||
-              p.categoryLabel.toLowerCase().includes(q) ||
-              p.seller.name.toLowerCase().includes(q)
-          );
-        }
-        return list;
-      }),
-      catchError((error) => {
-        console.info(`[ProductApiService] Không nạp được sản phẩm từ ${url}:`, error.message);
-        return of(null);
-      })
+    return this.http.get<Product[]>(url, { params }).pipe(
+      map((products) => (isExternalApi ? products : applyFilter(products))),
+      catchError(() =>
+        isExternalApi
+          ? this.http.get<Product[]>('/api/products.json').pipe(
+              map(applyFilter),
+              catchError(() => of(null))
+            )
+          : of(null)
+      )
     );
   }
 
@@ -88,7 +92,11 @@ export class ProductApiService {
       : `${this.baseUrl}/flash-sales.json`;
 
     return this.http.get<FlashDealItem[]>(url).pipe(
-      catchError(() => of(null))
+      catchError(() =>
+        this.baseUrl.startsWith('http')
+          ? this.http.get<FlashDealItem[]>('/api/flash-sales.json').pipe(catchError(() => of(null)))
+          : of(null)
+      )
     );
   }
 

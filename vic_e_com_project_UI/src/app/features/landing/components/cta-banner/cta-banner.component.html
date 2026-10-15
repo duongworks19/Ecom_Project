@@ -1,10 +1,11 @@
-<section class="hero-cta-strip">
-  <div class="cta-strip-inner">
-    <div class="cta-text-block">
-      <span class="badge-cta-white">Gia Nhập Cộng Đồng Mua Sắm</span>
-      <h2>Sẵn sàng khám phá hàng triệu sản phẩm bạn yêu thích?</h2>
-      <p>Đăng ký tài khoản miễn phí chỉ mất vài giây để lưu lại những ý tưởng ghim độc đáo và nhận thông tin sớm nhất.</p>
-    </div>
+@if (!authService.isLoggedInSignal()) {
+  <section class="hero-cta-strip">
+    <div class="cta-strip-inner">
+      <div class="cta-text-block">
+        <span class="badge-cta-white">Gia Nhập Cộng Đồng Mua Sắm</span>
+        <h2>Sẵn sàng khám phá hàng triệu sản phẩm bạn yêu thích?</h2>
+        <p>Đăng ký tài khoản miễn phí chỉ mất vài giây để lưu lại những ý tưởng ghim độc đáo và nhận thông tin sớm nhất.</p>
+      </div>
 
     <div class="cta-actions-block">
       <a
@@ -27,5 +28,6 @@
         <span>Đăng ký mở Shop bán hàng</span>
       </a>
     </div>
-  </div>
-</section>
+    </div>
+  </section>
+}

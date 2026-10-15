@@ -4,9 +4,12 @@ import { Observable, delay, of, tap, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 export interface AuthResponse {
-  token: string;
+  accessToken?: string;
+  token?: string;
   role: string;
   userId: number;
+  fullName?: string;
+  email?: string;
   mustChangePassword?: boolean;
 }
 
@@ -35,8 +38,12 @@ export interface ChangePasswordRequest {
 declare const google: {
   accounts: {
     id: {
-      initialize: (config: { client_id: string; callback: (response: { credential: string }) => void }) => void;
-      prompt: () => void;
+      initialize: (config: {
+        client_id: string;
+        callback: (response: { credential: string }) => void;
+        use_fedcm_for_prompt?: boolean;
+      }) => void;
+      prompt: (momentListener?: (notification: { isNotDisplayed?: () => boolean; isSkippedMoment?: () => boolean }) => void) => void;
       renderButton: (parent: HTMLElement, options: object) => void;
     };
   };
@@ -49,29 +56,77 @@ declare const google: {
 export abstract class AuthService {
   readonly GOOGLE_CLIENT_ID = '760753983454-o49qigi8rrhrbl68ji3a5dmrf5k65m5b.apps.googleusercontent.com';
   readonly mustChangePasswordSignal = signal<boolean>(localStorage.getItem('mustChangePassword') === 'true');
+  readonly isLoggedInSignal = signal<boolean>(this.hasValidToken());
+  readonly currentRoleSignal = signal<string | null>(localStorage.getItem('role'));
+  readonly currentUserNameSignal = signal<string | null>(
+    localStorage.getItem('fullName') || localStorage.getItem('currentUsername')
+  );
 
   abstract register(req: RegisterRequest): Observable<ApiResponse<AuthResponse>>;
   abstract login(req: LoginRequest): Observable<ApiResponse<AuthResponse>>;
   abstract googleLogin(idToken: string): Observable<ApiResponse<AuthResponse>>;
   abstract changePassword(req: ChangePasswordRequest): Observable<ApiResponse<null>>;
 
-  initGoogleSignIn(onSuccess: (idToken: string) => void): void {
+  private hasValidToken(): boolean {
+    const token = localStorage.getItem('token');
+    return !!token && token !== 'undefined' && token !== 'null';
+  }
+
+  initGoogleSignIn(onSuccess: (idToken: string) => void, onCancel?: () => void): void {
     if (typeof google === 'undefined') {
-      setTimeout(() => this.initGoogleSignIn(onSuccess), 500);
+      setTimeout(() => this.initGoogleSignIn(onSuccess, onCancel), 500);
       return;
     }
     google.accounts.id.initialize({
       client_id: this.GOOGLE_CLIENT_ID,
       callback: (response) => onSuccess(response.credential),
+      use_fedcm_for_prompt: false,
     });
-    google.accounts.id.prompt();
+    google.accounts.id.prompt((notification?: { isNotDisplayed?: () => boolean; isSkippedMoment?: () => boolean }) => {
+      if (notification?.isNotDisplayed?.() || notification?.isSkippedMoment?.()) {
+        onCancel?.();
+      }
+    });
   }
 
-  protected saveSession(data: AuthResponse): void {
+  renderGoogleButton(parent: HTMLElement, onSuccess: (idToken: string) => void): void {
+    if (typeof google === 'undefined') {
+      setTimeout(() => this.renderGoogleButton(parent, onSuccess), 500);
+      return;
+    }
+    google.accounts.id.initialize({
+      client_id: this.GOOGLE_CLIENT_ID,
+      callback: (response) => onSuccess(response.credential),
+      use_fedcm_for_prompt: false,
+    });
+    parent.innerHTML = '';
+    google.accounts.id.renderButton(parent, {
+      type: 'standard',
+      theme: 'outline',
+      size: 'large',
+      width: parent.clientWidth || 380,
+      text: 'continue_with',
+      shape: 'rectangular',
+      locale: 'vi',
+    });
+  }
+
+  protected saveSession(data: AuthResponse, fallbackUsername?: string): void {
+    const resolvedToken = data.accessToken ?? data.token ?? '';
+    const displayName = data.fullName || data.email || fallbackUsername || localStorage.getItem('currentUsername') || 'Thành viên';
+
     sessionStorage.removeItem('explicit_logout');
-    localStorage.setItem('token', data.token);
+    localStorage.setItem('token', resolvedToken);
     localStorage.setItem('role', data.role);
     localStorage.setItem('userId', String(data.userId));
+    localStorage.setItem('fullName', displayName);
+    if (data.email || fallbackUsername) {
+      localStorage.setItem('currentUsername', (data.email || fallbackUsername)!);
+    }
+
+    this.isLoggedInSignal.set(!!resolvedToken);
+    this.currentRoleSignal.set(data.role);
+    this.currentUserNameSignal.set(displayName);
     this.setMustChangePassword(!!data.mustChangePassword);
   }
 
@@ -89,17 +144,21 @@ export abstract class AuthService {
     localStorage.removeItem('token');
     localStorage.removeItem('role');
     localStorage.removeItem('userId');
+    localStorage.removeItem('fullName');
     localStorage.removeItem('mustChangePassword');
     localStorage.removeItem('currentUsername');
+    this.isLoggedInSignal.set(false);
+    this.currentRoleSignal.set(null);
+    this.currentUserNameSignal.set(null);
     this.mustChangePasswordSignal.set(false);
   }
 
   isLoggedIn(): boolean {
-    return !!localStorage.getItem('token');
+    return this.hasValidToken();
   }
 
   getToken(): string | null {
-    return localStorage.getItem('token');
+    return this.hasValidToken() ? localStorage.getItem('token') : null;
   }
 
   getRole(): string | null {
@@ -114,13 +173,13 @@ export class HttpAuthService extends AuthService {
 
   register(req: RegisterRequest): Observable<ApiResponse<AuthResponse>> {
     return this.http.post<ApiResponse<AuthResponse>>(`${this.API}/register`, req).pipe(
-      tap((res) => this.saveSession(res.data))
+      tap((res) => this.saveSession(res.data, req.fullName || req.email))
     );
   }
 
   login(req: LoginRequest): Observable<ApiResponse<AuthResponse>> {
     return this.http.post<ApiResponse<AuthResponse>>(`${this.API}/login`, req).pipe(
-      tap((res) => this.saveSession(res.data))
+      tap((res) => this.saveSession(res.data, req.username))
     );
   }
 

@@ -46,7 +46,7 @@ public class AuthService {
         userRepository.save(user);
 
         String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name());
-        return new AuthResponse(token, user.getRole().name(), user.getId());
+        return new AuthResponse(token, user.getRole().name(), user.getId(), user.getFullName(), user.getEmail());
     }
 
     @Transactional
@@ -73,7 +73,7 @@ public class AuthService {
         recordLogin(user, LoginStatus.SUCCESS);
         String subject = user.getEmail() != null ? user.getEmail() : user.getPhone();
         String token = jwtUtil.generateToken(subject, user.getRole().name());
-        return new AuthResponse(token, user.getRole().name(), user.getId());
+        return new AuthResponse(token, user.getRole().name(), user.getId(), user.getFullName(), subject);
     }
 
     private void recordLogin(User user, LoginStatus status) {

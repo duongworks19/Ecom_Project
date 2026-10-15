@@ -42,6 +42,8 @@
           </div>
           <p class="addr-detail">{{ addr.addressDetail }}</p>
         </div>
+      } @empty {
+        <p class="addr-detail">Chưa có địa chỉ giao hàng.</p>
       }
     </div>
 
@@ -76,21 +78,21 @@
         {{ customer.status === 'LOCKED' ? 'Mở khóa tài khoản' : 'Khóa tài khoản' }}
       </button>
 
-      <a
-        [routerLink]="['/admin/orders']"
-        [queryParams]="{ customerId: customer.id }"
+      <button
+        type="button"
         class="btn-action-secondary"
+        (click)="viewOrders.emit(customer)"
       >
         Xem đơn hàng
-      </a>
+      </button>
 
-      <a
-        [routerLink]="['/admin/returns']"
-        [queryParams]="{ customerId: customer.id }"
+      <button
+        type="button"
         class="btn-action-secondary"
+        (click)="viewReviews.emit(customer)"
       >
         Xem đánh giá
-      </a>
+      </button>
     </div>
   </aside>
 }

@@ -22,8 +22,12 @@
         <vic-users-table
           [customers]="data.customers"
           [totalCount]="data.totalCount"
+          [page]="data.page"
+          [size]="data.size"
+          [totalPages]="data.totalPages"
           [selectedCustomerId]="selectedCustomer()?.id ?? null"
-          (selectCustomer)="selectedCustomer.set($event)"
+          (selectCustomer)="onSelectCustomer($event)"
+          (pageChange)="onPageChanged($event)"
         ></vic-users-table>
       </div>
 
@@ -31,6 +35,8 @@
         <vic-user-detail-panel
           [customer]="selectedCustomer()"
           (requestStatusToggle)="modalTargetCustomer.set($event)"
+          (viewOrders)="onViewOrders($event)"
+          (viewReviews)="onViewReviews($event)"
         ></vic-user-detail-panel>
       </div>
     </section>
@@ -40,5 +46,63 @@
       (close)="modalTargetCustomer.set(null)"
       (confirm)="onConfirmStatusChange($event)"
     ></vic-user-status-modal>
+
+    @if (ordersModalData(); as ordersPage) {
+      <div class="submodal-backdrop" (click)="closeSubModals()">
+        <div class="submodal-box" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+          <div class="submodal-header">
+            <h3 class="submodal-title">Lịch sử đơn hàng — {{ selectedCustomer()?.fullName }}</h3>
+            <button type="button" class="submodal-close" (click)="closeSubModals()">✕</button>
+          </div>
+          <div class="submodal-body">
+            @for (order of ordersPage.items; track order.id) {
+              <div class="submodal-item">
+                <div class="submodal-item-top">
+                  <strong>{{ order.orderCode }}</strong>
+                  <span class="submodal-badge">{{ order.status }}</span>
+                </div>
+                <div class="submodal-item-meta">
+                  <span>Tổng tiền: {{ order.totalAmount | number }} đ</span>
+                  <span>Thanh toán: {{ order.paymentMethod ?? '—' }} ({{ order.paymentStatus ?? '—' }})</span>
+                  <span>Vận chuyển: {{ order.shippingStatus ?? '—' }}</span>
+                  <span>Ngày tạo: {{ order.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+                </div>
+              </div>
+            } @empty {
+              <p class="submodal-empty">Khách hàng chưa có đơn hàng nào.</p>
+            }
+          </div>
+        </div>
+      </div>
+    }
+
+    @if (reviewsModalData(); as reviewsPage) {
+      <div class="submodal-backdrop" (click)="closeSubModals()">
+        <div class="submodal-box" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+          <div class="submodal-header">
+            <h3 class="submodal-title">Đánh giá sản phẩm — {{ selectedCustomer()?.fullName }}</h3>
+            <button type="button" class="submodal-close" (click)="closeSubModals()">✕</button>
+          </div>
+          <div class="submodal-body">
+            @for (rev of reviewsPage.items; track rev.id) {
+              <div class="submodal-item">
+                <div class="submodal-item-top">
+                  <strong>{{ rev.productName }} ({{ rev.orderCode }})</strong>
+                  <span class="submodal-badge">★ {{ rev.rating }}/5</span>
+                </div>
+                <p class="submodal-comment">{{ rev.comment || 'Không có nhận xét' }}</p>
+                @if (rev.vendorReply) {
+                  <div class="submodal-reply">
+                    <strong>Phản hồi Shop:</strong> {{ rev.vendorReply.content }}
+                  </div>
+                }
+              </div>
+            } @empty {
+              <p class="submodal-empty">Khách hàng chưa có đánh giá nào.</p>
+            }
+          </div>
+        </div>
+      </div>
+    }
   </div>
 }
