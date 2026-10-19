@@ -1,0 +1,63 @@
+<app-dialog
+  [open]="open()"
+  title="Hủy đơn hàng"
+  dialogId="cancel-order-dialog"
+  maxWidth="480px"
+  (closed)="onClose()"
+>
+  <form
+    class="cancel-order-form"
+    [formGroup]="form"
+    (ngSubmit)="onSubmit()"
+    novalidate
+  >
+    @if (order(); as target) {
+      <p class="cancel-order-form__desc">
+        Bạn đang yêu cầu hủy đơn hàng <strong>{{ target.orderCode }}</strong> tại
+        <strong>{{ target.shopName }}</strong>.
+      </p>
+    }
+
+    <app-form-field
+      label="Lý do hủy đơn"
+      controlId="cancel-order-reason"
+      [required]="true"
+      [error]="reasonError"
+    >
+      <textarea
+        id="cancel-order-reason"
+        aria-label="Lý do hủy đơn"
+        rows="3"
+        class="cancel-order-form__textarea"
+        formControlName="reason"
+        placeholder="Nhập lý do hủy đơn (tối thiểu 5 ký tự)..."
+        [attr.aria-invalid]="!!reasonError"
+        [attr.aria-describedby]="reasonError ? 'cancel-order-reason-error' : null"
+      ></textarea>
+    </app-form-field>
+
+    @if (serverError()) {
+      <p class="cancel-order-form__error" role="alert">
+        {{ serverError() }}
+      </p>
+    }
+
+    <div class="cancel-order-form__actions">
+      <app-button
+        variant="secondary"
+        [disabled]="loading()"
+        (clicked)="onClose()"
+      >
+        Trở lại
+      </app-button>
+
+      <app-button
+        type="submit"
+        variant="primary"
+        [loading]="loading()"
+      >
+        Xác nhận hủy
+      </app-button>
+    </div>
+  </form>
+</app-dialog>
