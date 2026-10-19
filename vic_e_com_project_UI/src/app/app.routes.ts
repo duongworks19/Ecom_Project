@@ -3,6 +3,8 @@ import { LandingComponent } from './features/landing/landing.component';
 import { AuthComponent } from './features/auth/auth.component';
 import { passwordChangeGuard } from './core/guards/password-change.guard';
 import { adminGuard } from './core/guards/admin.guard';
+import { customerAuthGuard } from './core/guards/customer-auth.guard';
+import { CustomerLayoutComponent } from './layouts/customer-layout/customer-layout.component';
 
 export const routes: Routes = [
   {
@@ -52,6 +54,14 @@ export const routes: Routes = [
     path: 'shop',
     redirectTo: 'seller/shop',
     pathMatch: 'full',
+  },
+  {
+    path: 'account',
+    component: CustomerLayoutComponent,
+    canActivate: [passwordChangeGuard, customerAuthGuard],
+    loadChildren: () =>
+      import('./features/account/account.routes').then((m) => m.ACCOUNT_ROUTES),
+    title: 'Tài khoản của tôi — VIC MART',
   },
   {
     path: '**',

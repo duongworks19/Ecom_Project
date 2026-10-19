@@ -5,13 +5,13 @@ import { Pipe, PipeTransform } from '@angular/core';
   standalone: true,
 })
 export class VndCurrencyPipe implements PipeTransform {
+  private readonly numberFormat = new Intl.NumberFormat('vi-VN');
+
   transform(value: number | null | undefined): string {
     if (value === null || value === undefined || Number.isNaN(Number(value))) {
       return '0 ₫';
     }
-    const formatted = Math.round(Number(value))
-      .toString()
-      .replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    const formatted = this.numberFormat.format(Math.round(Number(value)));
     return `${formatted} ₫`;
   }
 }

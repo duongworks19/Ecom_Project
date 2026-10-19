@@ -4,11 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { CategoryItem } from '../../../../core/models/category.model';
 import { AuthService } from '../../../../core/services/auth.service';
+import { UserMenuComponent } from '../../../../layouts/customer-layout/components/user-menu/user-menu.component';
 
 @Component({
   selector: 'app-header-nav',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, UserMenuComponent],
   templateUrl: './header-nav.component.html',
   styleUrl: './header-nav.component.scss',
 })

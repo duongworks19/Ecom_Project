@@ -100,7 +100,7 @@ export class DialogComponent implements OnDestroy {
       return;
     }
     const first = focusables[0];
-    const last = focusables[focusables.length - 1];
+    const last = focusables.at(-1)!;
     const active = document.activeElement as HTMLElement | null;
 
     if (event.shiftKey && active === first) {

@@ -4,13 +4,13 @@
     (click)="onBackdropClick($event)"
     (keydown)="onKeyDown($event)"
   >
-    <div
+    <dialog
       #dialogPanel
       class="dialog-card"
-      role="dialog"
+      open
       aria-modal="true"
       [attr.aria-labelledby]="dialogId() + '-title'"
-      [style.max-width]="maxWidth()"
+      [style.--dialog-max-width]="maxWidth()"
       tabindex="-1"
     >
       <div class="dialog-card__header">
@@ -40,6 +40,6 @@
       <div class="dialog-card__body">
         <ng-content />
       </div>
-    </div>
+    </dialog>
   </div>
 }

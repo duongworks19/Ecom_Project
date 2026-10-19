@@ -17,8 +17,8 @@ describe('DialogComponent', () => {
     fixture.detectChanges();
   });
 
-  it('renders dialog with role="dialog" and aria-modal="true" when open', () => {
-    const dialog = fixture.nativeElement.querySelector('[role="dialog"]') as HTMLElement;
+  it('renders dialog element with aria-modal="true" when open', () => {
+    const dialog = fixture.nativeElement.querySelector('dialog, [role="dialog"]') as HTMLElement;
     expect(dialog).toBeTruthy();
     expect(dialog.getAttribute('aria-modal')).toBe('true');
     expect(fixture.nativeElement.textContent).toContain('Thêm địa chỉ mới');

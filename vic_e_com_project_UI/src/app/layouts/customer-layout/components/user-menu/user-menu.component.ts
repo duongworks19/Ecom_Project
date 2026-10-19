@@ -87,7 +87,7 @@ export class UserMenuComponent implements OnInit {
     if (items.length === 0) {
       return;
     }
-    const activeIndex = items.findIndex((item) => item === document.activeElement);
+    const activeIndex = items.indexOf(document.activeElement as HTMLButtonElement);
 
     if (event.key === 'Escape') {
       event.preventDefault();
