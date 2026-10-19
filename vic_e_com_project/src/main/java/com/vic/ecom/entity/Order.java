@@ -46,6 +46,9 @@ public class Order {
     @Column(name = "delivered_at")
     private LocalDateTime deliveredAt;
 
+    @Column(name = "cancel_reason", columnDefinition = "TEXT")
+    private String reason;
+
     public Order() {
     }
 }

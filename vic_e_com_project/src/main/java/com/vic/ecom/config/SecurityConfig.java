@@ -48,8 +48,11 @@ public class SecurityConfig {
                 })
             )
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**", "/api/vendors/check-name", "/api/shops/**", "/api/seller/**").permitAll()
+                .requestMatchers("/api/auth/**", "/api/vendors/check-name", "/api/shops/**").permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .requestMatchers("/api/seller/**").hasRole("VENDOR")
+                .requestMatchers("/api/customer/**").hasRole("CUSTOMER")
+                .requestMatchers("/uploads/avatars/**").authenticated()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
