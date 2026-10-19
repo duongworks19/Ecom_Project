@@ -1,0 +1,22 @@
+<button
+  [type]="type()"
+  class="vic-btn"
+  [class.vic-btn--primary]="variant() === 'primary'"
+  [class.vic-btn--secondary]="variant() === 'secondary'"
+  [class.vic-btn--dark]="variant() === 'dark'"
+  [class.vic-btn--ghost]="variant() === 'ghost'"
+  [class.vic-btn--sm]="size() === 'sm'"
+  [class.vic-btn--pill]="pill()"
+  [class.vic-btn--full]="fullWidth()"
+  [disabled]="disabled() || loading()"
+  [attr.aria-busy]="loading()"
+  [attr.aria-label]="ariaLabel()"
+  (click)="onClick($event)"
+>
+  @if (loading()) {
+    <span class="vic-btn__spinner" aria-hidden="true"></span>
+  }
+  <span class="vic-btn__label">
+    <ng-content />
+  </span>
+</button>

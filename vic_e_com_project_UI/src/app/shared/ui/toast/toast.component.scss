@@ -1,0 +1,35 @@
+.vic-toast {
+  position: fixed;
+  bottom: var(--spacing-xl, 24px);
+  right: var(--spacing-xl, 24px);
+  z-index: 1100;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-md, 12px);
+  padding: 12px 20px;
+  border-radius: var(--rounded-md, 16px);
+  background-color: var(--color-surface-dark, #262622);
+  color: var(--color-on-dark, #ffffff);
+  box-shadow: 0 0 16px rgba(0, 0, 0, 0.1);
+  font-size: 14px;
+  font-weight: 600;
+  max-width: 420px;
+
+  &--success {
+    background-color: var(--color-success-deep, #103c25);
+  }
+
+  &--error {
+    background-color: var(--color-error, #9e0a0a);
+  }
+
+  &__close {
+    color: inherit;
+    background: none;
+    border: none;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 2px 4px;
+  }
+}
