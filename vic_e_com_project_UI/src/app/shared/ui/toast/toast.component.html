@@ -1,0 +1,19 @@
+@if (toastService.toast(); as item) {
+  <div
+    class="vic-toast"
+    [class.vic-toast--success]="item.type === 'success'"
+    [class.vic-toast--error]="item.type === 'error'"
+    role="status"
+    aria-live="polite"
+  >
+    <span class="vic-toast__text">{{ item.message }}</span>
+    <button
+      type="button"
+      class="vic-toast__close"
+      aria-label="Đóng thông báo"
+      (click)="toastService.dismiss()"
+    >
+      ×
+    </button>
+  </div>
+}
