@@ -1,0 +1,113 @@
+<div class="orders-page">
+  <header class="orders-page__header">
+    <h1 class="orders-page__title">Đơn mua</h1>
+    <p class="orders-page__subtitle">
+      Theo dõi hành trình đơn hàng và lịch sử mua sắm của bạn
+    </p>
+  </header>
+
+  <app-order-status-tabs
+    [activeStatus]="activeStatus()"
+    [counts]="countsByStatus()"
+    (statusChanged)="onStatusChange($event)"
+  />
+
+  <div class="orders-page__search">
+    <label class="sr-only" for="orders-search-input">
+      Tìm kiếm theo mã đơn hàng, tên shop hoặc tên sản phẩm
+    </label>
+    <svg
+      class="orders-page__search-icon"
+      viewBox="0 0 24 24"
+      width="18"
+      height="18"
+      stroke="currentColor"
+      stroke-width="2"
+      fill="none"
+      aria-hidden="true"
+    >
+      <circle cx="11" cy="11" r="8"></circle>
+      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+    </svg>
+    <input
+      id="orders-search-input"
+      type="search"
+      class="orders-page__search-input"
+      [formControl]="searchControl"
+      placeholder="Tìm kiếm theo mã đơn hàng, tên shop hoặc tên sản phẩm..."
+      autocomplete="off"
+    />
+  </div>
+
+  @if (loading()) {
+    <div class="orders-page__list" aria-busy="true" aria-label="Đang tải danh sách đơn hàng">
+      <app-skeleton height="200px" rounded="lg" />
+      <app-skeleton height="200px" rounded="lg" />
+    </div>
+  } @else if (error()) {
+    <app-error-state
+      [message]="error()!.message"
+      (retry)="fetchOrders()"
+    />
+  } @else if (orders().length === 0) {
+    <app-empty-state
+      title="Chưa có đơn hàng nào ở trạng thái này."
+      description="Các đơn đặt mua phù hợp với bộ lọc sẽ hiển thị tại đây."
+    />
+  } @else {
+    <div class="orders-page__list">
+      @for (order of orders(); track order.id) {
+        <app-order-card
+          [order]="order"
+          [rebuying]="rebuyingOrderId() === order.id"
+          (viewDetailClicked)="onViewDetail($event)"
+          (cancelClicked)="promptCancelOrder($event)"
+          (rebuyClicked)="onRebuyOrder($event)"
+        />
+      }
+    </div>
+
+    @if (totalPages() > 1) {
+      <nav class="orders-pagination" aria-label="Phân trang đơn hàng">
+        <app-button
+          variant="secondary"
+          [disabled]="page() === 0"
+          (clicked)="onPageChange(page() - 1)"
+        >
+          Trang trước
+        </app-button>
+
+        <div class="orders-pagination__pages">
+          @for (p of pageNumbers(); track p) {
+            <button
+              type="button"
+              class="orders-pagination__page-btn"
+              [class.orders-pagination__page-btn--active]="p === page()"
+              [attr.aria-current]="p === page() ? 'page' : null"
+              (click)="onPageChange(p)"
+            >
+              {{ p + 1 }}
+            </button>
+          }
+        </div>
+
+        <app-button
+          variant="secondary"
+          [disabled]="page() >= totalPages() - 1"
+          (clicked)="onPageChange(page() + 1)"
+        >
+          Trang sau
+        </app-button>
+      </nav>
+    }
+  }
+
+  <app-cancel-order-dialog
+    [open]="!!cancelingOrder()"
+    [order]="cancelingOrder()"
+    [loading]="cancelingLoading()"
+    [serverError]="cancelError()"
+    (confirmed)="confirmCancelOrder($event)"
+    (cancelled)="closeCancelDialog()"
+  />
+</div>

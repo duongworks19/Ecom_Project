@@ -14,12 +14,13 @@
     <div class="address-dialog-form__row-2">
       <app-form-field
         label="Họ và tên người nhận"
-        fieldId="addr-recipient-name"
+        controlId="addr-recipient-name"
         [required]="true"
         [error]="getError('recipientName')"
       >
         <input
           id="addr-recipient-name"
+          aria-label="Họ và tên người nhận"
           type="text"
           class="vic-dialog-input"
           formControlName="recipientName"
@@ -31,12 +32,13 @@
 
       <app-form-field
         label="Số điện thoại"
-        fieldId="addr-phone"
+        controlId="addr-phone"
         [required]="true"
         [error]="getError('phone')"
       >
         <input
           id="addr-phone"
+          aria-label="Số điện thoại"
           type="tel"
           class="vic-dialog-input"
           formControlName="phone"
@@ -50,12 +52,13 @@
     <div class="address-dialog-form__row-3">
       <app-form-field
         label="Tỉnh / Thành phố"
-        fieldId="addr-province"
+        controlId="addr-province"
         [required]="true"
         [error]="getError('province')"
       >
         <input
           id="addr-province"
+          aria-label="Tỉnh / Thành phố"
           type="text"
           class="vic-dialog-input"
           formControlName="province"
@@ -67,12 +70,13 @@
 
       <app-form-field
         label="Quận / Huyện"
-        fieldId="addr-district"
+        controlId="addr-district"
         [required]="true"
         [error]="getError('district')"
       >
         <input
           id="addr-district"
+          aria-label="Quận / Huyện"
           type="text"
           class="vic-dialog-input"
           formControlName="district"
@@ -84,12 +88,13 @@
 
       <app-form-field
         label="Phường / Xã"
-        fieldId="addr-ward"
+        controlId="addr-ward"
         [required]="true"
         [error]="getError('ward')"
       >
         <input
           id="addr-ward"
+          aria-label="Phường / Xã"
           type="text"
           class="vic-dialog-input"
           formControlName="ward"
@@ -102,12 +107,13 @@
 
     <app-form-field
       label="Địa chỉ cụ thể"
-      fieldId="addr-street"
+      controlId="addr-street"
       [required]="true"
       [error]="getError('streetAddress')"
     >
       <input
         id="addr-street"
+        aria-label="Địa chỉ cụ thể"
         type="text"
         class="vic-dialog-input"
         formControlName="streetAddress"
@@ -117,8 +123,9 @@
       />
     </app-form-field>
 
-    <label class="address-dialog-form__checkbox">
+    <label class="address-dialog-form__checkbox" for="addr-is-default">
       <input
+        id="addr-is-default"
         type="checkbox"
         formControlName="isDefault"
       />

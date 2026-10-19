@@ -46,8 +46,8 @@ describe('ProfilePageComponent', () => {
     fixture.detectChanges();
 
     const emailInput = fixture.nativeElement.querySelector('#profile-email') as HTMLInputElement;
-    expect(emailInput.value).toBe('mi***@gmail.com');
-    expect(fixture.nativeElement.textContent).toContain('*******218');
+    expect(emailInput.value).toBe('mi*****@gmail.com');
+    expect(fixture.nativeElement.textContent).toContain('090****218');
   });
 
   it('switches phone to editable input when Thay đổi is clicked and submits normalized phone', () => {

@@ -1,0 +1,85 @@
+<article class="order-card">
+  <header class="order-card__header">
+    <div class="order-card__shop">
+      <span class="order-card__shop-name">{{ order().shopName }}</span>
+      <span class="order-card__code">Mã đơn: {{ order().orderCode }}</span>
+    </div>
+
+    <app-status-dot
+      [color]="statusPresentation().dotColor"
+      [label]="statusPresentation().label"
+    />
+  </header>
+
+  <div class="order-card__items">
+    @for (item of order().items; track item.productId) {
+      <div class="order-card__item">
+        <div class="order-card__thumb">
+          @if (item.thumbnailUrl && !brokenImages()[item.productId]) {
+            <img
+              [src]="item.thumbnailUrl"
+              [alt]="item.productName"
+              class="order-card__thumb-img"
+              loading="lazy"
+              (error)="onImageError(item.productId)"
+            />
+          } @else {
+            <span class="order-card__thumb-fallback" aria-hidden="true">VIC</span>
+          }
+        </div>
+
+        <div class="order-card__item-info">
+          <h3 class="order-card__item-name">{{ item.productName }}</h3>
+          <p class="order-card__item-meta">
+            @if (item.variantLabel) {
+              Phân loại: {{ item.variantLabel }} · x{{ item.quantity }}
+            } @else {
+              Số lượng: x{{ item.quantity }}
+            }
+          </p>
+        </div>
+
+        <div class="order-card__item-price">
+          {{ item.lineTotal | vndCurrency }}
+        </div>
+      </div>
+    }
+  </div>
+
+  <footer class="order-card__footer">
+    <div class="order-card__total-wrap">
+      <span class="order-card__total-label">Thành tiền:</span>
+      <strong class="order-card__total-amount">
+        {{ order().totalAmount | vndCurrency }}
+      </strong>
+    </div>
+
+    <div class="order-card__actions">
+      <app-button
+        variant="secondary"
+        (clicked)="viewDetailClicked.emit(order())"
+      >
+        Xem chi tiết
+      </app-button>
+
+      @if (showCancelButton()) {
+        <app-button
+          variant="secondary"
+          (clicked)="cancelClicked.emit(order())"
+        >
+          Hủy đơn
+        </app-button>
+      }
+
+      @if (showRebuyButton()) {
+        <app-button
+          variant="primary"
+          [loading]="rebuying()"
+          (clicked)="rebuyClicked.emit(order())"
+        >
+          Mua lại
+        </app-button>
+      }
+    </div>
+  </footer>
+</article>

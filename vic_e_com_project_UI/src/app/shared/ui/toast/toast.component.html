@@ -1,9 +1,8 @@
 @if (toastService.toast(); as item) {
-  <div
+  <output
     class="vic-toast"
     [class.vic-toast--success]="item.type === 'success'"
     [class.vic-toast--error]="item.type === 'error'"
-    role="status"
     aria-live="polite"
   >
     <span class="vic-toast__text">{{ item.message }}</span>
@@ -15,5 +14,5 @@
     >
       ×
     </button>
-  </div>
+  </output>
 }

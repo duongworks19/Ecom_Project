@@ -10,7 +10,11 @@
 }
 
 .dialog-card {
+  position: relative;
+  margin: 0;
+  border: none;
   width: 100%;
+  max-width: var(--dialog-max-width, 520px);
   max-height: calc(100vh - 32px);
   overflow-y: auto;
   background-color: var(--color-canvas, #ffffff);
@@ -77,6 +81,6 @@
 
   .dialog-card {
     padding: var(--spacing-xl, 24px);
-    max-width: 100% !important;
+    max-width: 100%;
   }
 }

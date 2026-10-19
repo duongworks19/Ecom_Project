@@ -37,12 +37,13 @@
         >
           <app-form-field
             label="Họ và tên"
-            fieldId="profile-full-name"
+            controlId="profile-full-name"
             [required]="true"
             [error]="fullNameError"
           >
             <input
               id="profile-full-name"
+              aria-label="Họ và tên"
               type="text"
               class="vic-input"
               formControlName="fullName"
@@ -54,11 +55,12 @@
 
           <app-form-field
             label="Email"
-            fieldId="profile-email"
+            controlId="profile-email"
             hint="Email dùng để đăng nhập và nhận thông báo đơn hàng"
           >
             <input
               id="profile-email"
+              aria-label="Email"
               type="email"
               class="vic-input vic-input--readonly"
               [value]="profile.email | maskEmail"
@@ -72,7 +74,7 @@
               <span class="profile-phone-readonly__label">Số điện thoại</span>
               <div class="profile-phone-readonly__box">
                 <span class="profile-phone-readonly__value">
-                  {{ profile.phone | maskPhone }}
+                  {{ profile.phone | maskPhone:'mask' }}
                 </span>
                 <button
                   type="button"
@@ -86,7 +88,7 @@
           } @else {
             <app-form-field
               label="Số điện thoại"
-              fieldId="profile-phone"
+              controlId="profile-phone"
               [required]="true"
               [error]="phoneError"
             >
@@ -94,6 +96,7 @@
                 <input
                   #phoneInput
                   id="profile-phone"
+                  aria-label="Số điện thoại"
                   type="tel"
                   class="vic-input"
                   formControlName="phone"
