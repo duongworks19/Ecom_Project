@@ -1,0 +1,26 @@
+<app-dialog
+  [open]="open()"
+  [title]="title()"
+  maxWidth="440px"
+  (closed)="onCancel()"
+>
+  <p class="confirm-dialog__message">{{ message() }}</p>
+
+  <div class="confirm-dialog__actions">
+    <app-button
+      variant="secondary"
+      [disabled]="loading()"
+      (clicked)="onCancel()"
+    >
+      {{ cancelLabel() }}
+    </app-button>
+
+    <app-button
+      [variant]="confirmVariant()"
+      [loading]="loading()"
+      (clicked)="onConfirm()"
+    >
+      {{ confirmLabel() }}
+    </app-button>
+  </div>
+</app-dialog>

@@ -1,3 +1,5 @@
+@import './app/shared/styles/tokens.css';
+
 /* ==========================================================================
    VIC MART - DESIGN SYSTEM CORE STYLES (BASED ON DESIGN.MD SPECIFICATION)
    ========================================================================== */
@@ -61,8 +63,15 @@
   --spacing-section: 64px;
 
   /* 4. Typography Stacks */
-  --font-family-base: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-family-display: 'Manrope', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-family-base: 'Be Vietnam Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-family-display: 'Be Vietnam Pro', 'Manrope', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  /* 5. Status & Semantic Tokens */
+  --color-status-available: #103c25;
+  --color-status-busy: #3b5bdb;
+  --color-status-offline: #62625b;
+  --color-status-locked: #9e0a0a;
+  --control-min-height: 44px;
 
   /* Transitions */
   --transition-fast: 0.15s ease;
@@ -94,7 +103,7 @@ body {
 /* Base Headings matching Pinterest Typography Token Hierarchy */
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-family-display);
-  color: var(--color-ink);
+  color: inherit;
   font-weight: 700;
 }
 
@@ -130,8 +139,20 @@ input, textarea, select {
   background: var(--color-ash);
 }
 
-/* Accessibility Focus States as prescribed in DESIGN.MD */
+/* Accessibility Focus States as prescribed in DESIGN.MD (2px black inner + 4px #435ee5 outer) */
 :focus-visible {
-  outline: 2px solid var(--color-focus-outer);
-  outline-offset: 2px;
+  outline: 2px solid var(--color-ink);
+  box-shadow: 0 0 0 4px var(--color-focus-outer);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }

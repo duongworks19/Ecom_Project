@@ -1,0 +1,189 @@
+<div class="shipper-form-page">
+  <header class="page-header">
+    <a routerLink="/admin/shippers" class="back-link">← Quản lý shipper</a>
+    <h1 class="page-title">
+      {{ isEditMode() ? 'Cập nhật thông tin shipper' : 'Tạo tài khoản shipper' }}
+    </h1>
+    <p class="page-subtitle">
+      Shipper không cần duyệt: tài khoản dùng được ngay sau khi Admin tạo.
+    </p>
+  </header>
+
+  @if (generalError(); as err) {
+    <div class="error-banner" role="alert">{{ err }}</div>
+  }
+
+  <div class="form-layout">
+    <form class="form-card" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+      <!-- Section 1: Thông tin cá nhân -->
+      <section class="form-section">
+        <h2 class="section-title">Thông tin cá nhân</h2>
+
+        <div class="grid-two">
+          <div class="field-group">
+            <label for="fullName">Họ và tên</label>
+            <input
+              id="fullName"
+              type="text"
+              formControlName="fullName"
+              placeholder="Nhập họ và tên"
+            />
+            @if (form.controls.fullName.touched && form.controls.fullName.hasError('required')) {
+              <span class="field-error" role="alert">Vui lòng nhập họ và tên</span>
+            }
+          </div>
+
+          <div class="field-group">
+            <label for="phone">Số điện thoại</label>
+            <input
+              id="phone"
+              type="tel"
+              formControlName="phone"
+              placeholder="Nhập số điện thoại"
+            />
+            @if (form.controls.phone.touched && form.controls.phone.hasError('required')) {
+              <span class="field-error" role="alert">Vui lòng nhập số điện thoại</span>
+            } @else if (form.controls.phone.touched && form.controls.phone.hasError('pattern')) {
+              <span class="field-error" role="alert">Số điện thoại gồm 10 chữ số và bắt đầu bằng 0</span>
+            } @else if (form.controls.phone.hasError('duplicate')) {
+              <span class="field-error" role="alert">{{ form.controls.phone.getError('duplicate') }}</span>
+            }
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label for="email">Email</label>
+          <input
+            id="email"
+            type="email"
+            formControlName="email"
+            [readonly]="isEditMode()"
+            [class.readonly-input]="isEditMode()"
+            placeholder="Nhập email để nhận mật khẩu tạm"
+          />
+          @if (form.controls.email.touched && form.controls.email.hasError('required')) {
+            <span class="field-error" role="alert">Vui lòng nhập email</span>
+          } @else if (form.controls.email.touched && form.controls.email.hasError('email')) {
+            <span class="field-error" role="alert">Địa chỉ email không hợp lệ</span>
+          } @else if (form.controls.email.hasError('duplicate')) {
+            <span class="field-error" role="alert">{{ form.controls.email.getError('duplicate') }}</span>
+          }
+        </div>
+      </section>
+
+      <!-- Section 2: Phương tiện và khu vực -->
+      <section class="form-section">
+        <h2 class="section-title">Phương tiện và khu vực</h2>
+
+        <div class="grid-two">
+          <div class="field-group">
+            <label for="vehicleType">Loại xe</label>
+            <select id="vehicleType" formControlName="vehicleType">
+              @for (type of vehicleTypes; track type) {
+                <option [value]="type">{{ type }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="field-group">
+            <label for="licensePlate">Biển số xe</label>
+            <input
+              id="licensePlate"
+              type="text"
+              formControlName="licensePlate"
+              placeholder="Nhập biển số xe"
+            />
+            @if (form.controls.licensePlate.touched && form.controls.licensePlate.hasError('required')) {
+              <span class="field-error" role="alert">Vui lòng nhập biển số xe</span>
+            }
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label for="serviceArea">Khu vực hoạt động</label>
+          <input
+            id="serviceArea"
+            type="text"
+            formControlName="serviceArea"
+            placeholder="Ví dụ: Thanh Xuân, Hà Đông"
+          />
+          @if (form.controls.serviceArea.touched && form.controls.serviceArea.hasError('required')) {
+            <span class="field-error" role="alert">Vui lòng nhập khu vực hoạt động</span>
+          }
+        </div>
+
+        @if (isEditMode()) {
+          <div class="field-group">
+            <label for="workStatus">Trạng thái làm việc</label>
+            <select id="workStatus" formControlName="workStatus">
+              <option value="AVAILABLE">Sẵn sàng nhận đơn</option>
+              <option value="BUSY">Đang giao hàng</option>
+              <option value="OFFLINE">Nghỉ</option>
+            </select>
+          </div>
+        }
+      </section>
+
+      <!-- Section 3: Đăng nhập lần đầu (chỉ hiển thị khi tạo mới) -->
+      @if (!isEditMode()) {
+        <section class="form-section">
+          <h2 class="section-title">Đăng nhập lần đầu</h2>
+
+          <div class="field-group">
+            <label for="tempPassword">Mật khẩu tạm</label>
+            <input
+              id="tempPassword"
+              type="text"
+              value="Hệ thống tự tạo khi lưu"
+              readonly
+              class="readonly-input"
+              aria-readonly="true"
+            />
+          </div>
+
+          <label class="checkbox-row">
+            <input type="checkbox" formControlName="sendTempPasswordByEmail" />
+            <span>Gửi mật khẩu tạm qua email</span>
+          </label>
+
+          <label class="checkbox-row disabled">
+            <input type="checkbox" checked disabled />
+            <span>Bắt buộc đổi mật khẩu ở lần đăng nhập đầu tiên</span>
+          </label>
+        </section>
+      }
+
+      <div class="form-footer">
+        <a routerLink="/admin/shippers" class="btn-cancel">Hủy</a>
+        <button type="submit" class="btn-submit" [disabled]="isSubmitting()">
+          {{ isEditMode() ? 'Lưu thay đổi' : 'Tạo tài khoản' }}
+        </button>
+      </div>
+    </form>
+
+    <aside class="guide-card" aria-label="Quy trình tạo shipper">
+      <h2 class="guide-title">Quy trình tạo shipper</h2>
+      <ol class="guide-steps">
+        <li>
+          <span class="step-num">1</span>
+          <p>Xác minh giấy tờ ngoài hệ thống: CCCD, bằng lái, phương tiện.</p>
+        </li>
+        <li>
+          <span class="step-num">2</span>
+          <p>Admin nhập thông tin và tạo tài khoản.</p>
+        </li>
+        <li>
+          <span class="step-num">3</span>
+          <p>Hệ thống gửi mật khẩu tạm qua email.</p>
+        </li>
+        <li>
+          <span class="step-num">4</span>
+          <p>Shipper đăng nhập, đổi mật khẩu và bắt đầu nhận đơn.</p>
+        </li>
+      </ol>
+      <p class="guide-note">
+        Tài khoản ở trạng thái Hoạt động ngay, không có bước chờ duyệt như Vendor.
+      </p>
+    </aside>
+  </div>
+</div>

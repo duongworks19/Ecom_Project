@@ -16,22 +16,28 @@
       Trải nghiệm mua sắm cảm hứng ghim Pinterest trực quan và tiện lợi.
     </p>
 
-    <!-- Guest Hero Actions -->
+    <!-- Hero Actions -->
     <div class="hero-actions">
-      <a
-        routerLink="/register"
-        class="hero-btn-primary"
-        id="btn-hero-register"
-      >
-        <span>Đăng ký tài khoản mới</span>
-        <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.5" fill="none">
-          <line x1="5" y1="12" x2="19" y2="12"></line>
-          <polyline points="12 5 19 12 12 19"></polyline>
-        </svg>
-      </a>
+      @if (!authService.isLoggedInSignal()) {
+        <a
+          routerLink="/register"
+          class="hero-btn-primary"
+          id="btn-hero-register"
+        >
+          <span>Đăng ký tài khoản mới</span>
+          <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.5" fill="none">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </a>
+      }
 
       <a href="#discovery-grid" class="hero-btn-secondary" id="btn-hero-explore">
         Khám phá sản phẩm
+      </a>
+
+      <a routerLink="/seller/onboarding" class="hero-btn-seller" id="btn-hero-seller-onboarding">
+        <span>🏪 Mở gian hàng bán hàng (0đ)</span>
       </a>
     </div>
 

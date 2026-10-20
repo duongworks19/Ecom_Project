@@ -1,0 +1,69 @@
+.top-card {
+  background-color: var(--color-canvas, #ffffff);
+  border: 1px solid var(--color-hairline-soft, #e5e5e0);
+  border-radius: var(--rounded-md, 16px);
+  padding: 24px;
+  height: 100%;
+}
+
+.card-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-ink, #000000);
+  margin-bottom: 20px;
+}
+
+.vendor-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.vendor-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.vendor-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.rank-circle {
+  width: 26px;
+  height: 26px;
+  border-radius: 9999px;
+  background-color: var(--color-surface-card, #f6f6f3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-ink, #000000);
+}
+
+.vendor-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-ink, #000000);
+}
+
+.vendor-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.revenue-val {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-ink, #000000);
+}
+
+.share-percent {
+  font-size: 11px;
+  color: var(--color-mute, #62625b);
+}

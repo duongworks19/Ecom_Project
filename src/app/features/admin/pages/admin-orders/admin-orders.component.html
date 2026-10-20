@@ -1,0 +1,155 @@
+<div class="admin-page-container">
+  @if (toastMessage()) {
+    <div class="toast-alert success">
+      <span class="toast-icon">✓</span>
+      <span>{{ toastMessage() }}</span>
+    </div>
+  }
+
+  <header class="page-header">
+    <div class="header-left">
+      <h1 class="page-title">Quản lý Đơn hàng toàn sàn</h1>
+      <p class="page-sub">Theo dõi, kiểm tra tình trạng đóng gói, vận chuyển và hoàn tất các đơn mua sắm.</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn-refresh" (click)="loadData()" [disabled]="isLoading()">
+        <span>↻</span> Làm mới dữ liệu
+      </button>
+    </div>
+  </header>
+
+  <!-- KPI Grid -->
+  <section class="kpi-grid">
+    <div class="kpi-card total">
+      <div class="kpi-label">Tổng đơn hàng</div>
+      <div class="kpi-value">{{ response().summaryTotal }}</div>
+      <div class="kpi-sub">Giao dịch mua sắm trên sàn</div>
+    </div>
+    <div class="kpi-card pending">
+      <div class="kpi-label">Chờ xác nhận</div>
+      <div class="kpi-value text-warning">{{ response().summaryPending }}</div>
+      <div class="kpi-sub">Shop chưa xác nhận đơn</div>
+    </div>
+    <div class="kpi-card preparing">
+      <div class="kpi-label">Đang chuẩn bị / Đóng gói</div>
+      <div class="kpi-value text-info">{{ response().summaryPreparing }}</div>
+      <div class="kpi-sub">Đang soạn hàng trong kho</div>
+    </div>
+    <div class="kpi-card delivering">
+      <div class="kpi-label">Đang vận chuyển</div>
+      <div class="kpi-value text-purple">{{ response().summaryShipping }}</div>
+      <div class="kpi-sub">Shipper đang đi giao</div>
+    </div>
+    <div class="kpi-card delivered">
+      <div class="kpi-label">Giao thành công</div>
+      <div class="kpi-value text-success">{{ response().summaryDelivered }}</div>
+      <div class="kpi-sub">Khách đã nhận hàng</div>
+    </div>
+  </section>
+
+  <!-- Toolbar Filters -->
+  <section class="toolbar-section">
+    <div class="status-tabs">
+      <button class="tab-btn" [class.active]="selectedStatus === 'ALL'" (click)="onFilterStatus('ALL')">
+        Tất cả ({{ response().summaryTotal }})
+      </button>
+      <button class="tab-btn" [class.active]="selectedStatus === 'PENDING_CONFIRMATION'" (click)="onFilterStatus('PENDING_CONFIRMATION')">
+        Chờ xác nhận ({{ response().summaryPending }})
+      </button>
+      <button class="tab-btn" [class.active]="selectedStatus === 'PREPARING'" (click)="onFilterStatus('PREPARING')">
+        Chuẩn bị / Đóng gói ({{ response().summaryPreparing }})
+      </button>
+      <button class="tab-btn" [class.active]="selectedStatus === 'SHIPPING'" (click)="onFilterStatus('SHIPPING')">
+        Đang giao ({{ response().summaryShipping }})
+      </button>
+      <button class="tab-btn" [class.active]="selectedStatus === 'DELIVERED'" (click)="onFilterStatus('DELIVERED')">
+        Đã giao ({{ response().summaryDelivered }})
+      </button>
+    </div>
+
+    <div class="search-box">
+      <input
+        type="text"
+        [(ngModel)]="keyword"
+        (keyup.enter)="onSearch()"
+        placeholder="Tìm theo mã đơn (#VM...), tên khách..."
+        class="search-input"
+      />
+      <button class="btn-search" (click)="onSearch()">Tìm kiếm</button>
+    </div>
+  </section>
+
+  <!-- Order Table -->
+  <section class="table-container">
+    @if (isLoading()) {
+      <div class="loading-state">
+        <p>Đang tải danh sách đơn hàng...</p>
+      </div>
+    } @else if (orders().length === 0) {
+      <div class="empty-state">
+        <p>Không tìm thấy đơn hàng nào.</p>
+      </div>
+    } @else {
+      <table class="order-table">
+        <thead>
+          <tr>
+            <th>Mã đơn hàng</th>
+            <th>Khách hàng</th>
+            <th>Sản phẩm đặt mua</th>
+            <th>Tổng tiền</th>
+            <th>Ngày đặt</th>
+            <th>Trạng thái</th>
+            <th class="text-right">Thao tác Admin</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (o of orders(); track o.id) {
+            <tr>
+              <td>
+                <span class="order-code-badge">{{ o.orderCode }}</span>
+              </td>
+              <td>
+                <div class="customer-info">
+                  <div class="c-name">{{ o.customerName }}</div>
+                  <div class="c-phone">{{ o.customerPhone }}</div>
+                  <div class="c-address">{{ o.shippingAddress }}</div>
+                </div>
+              </td>
+              <td>
+                <div class="order-prod-cell">
+                  @if (o.productImage) {
+                    <img [src]="o.productImage" class="mini-prod-img" alt="" />
+                  }
+                  <span>{{ o.productSummary }}</span>
+                </div>
+              </td>
+              <td class="amount-cell">{{ o.totalAmount | number }} đ</td>
+              <td><span class="date-text">{{ o.createdAtLabel }}</span></td>
+              <td>
+                <span class="badge" [ngClass]="'badge-' + o.badgeClass">
+                  {{ o.statusLabel || o.status }}
+                </span>
+              </td>
+              <td class="text-right">
+                <div class="order-actions">
+                  @if (o.status === 'PENDING_CONFIRMATION') {
+                    <button class="btn-sm btn-approve" (click)="changeStatus(o, 'PREPARING')">Xác nhận</button>
+                  } @else if (o.status === 'PREPARING') {
+                    <button class="btn-sm btn-info" (click)="changeStatus(o, 'PACKED')">Đã đóng gói</button>
+                  } @else if (o.status === 'PACKED') {
+                    <button class="btn-sm btn-purple" (click)="changeStatus(o, 'SHIPPING')">Giao cho shipper</button>
+                  } @else if (o.status === 'SHIPPING') {
+                    <button class="btn-sm btn-success" (click)="changeStatus(o, 'DELIVERED')">Hoàn tất giao</button>
+                  }
+                  @if (o.status !== 'CANCELLED' && o.status !== 'DELIVERED') {
+                    <button class="btn-sm btn-cancel" (click)="changeStatus(o, 'CANCELLED')">Hủy đơn</button>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </section>
+</div>

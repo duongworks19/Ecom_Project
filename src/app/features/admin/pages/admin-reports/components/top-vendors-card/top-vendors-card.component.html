@@ -1,0 +1,18 @@
+<div class="top-card">
+  <h3 class="card-title">Top vendor theo doanh thu (triệu đ)</h3>
+
+  <div class="vendor-list">
+    @for (vendor of vendors; track vendor.rank) {
+      <div class="vendor-row">
+        <div class="vendor-left">
+          <span class="rank-circle">{{ vendor.rank }}</span>
+          <span class="vendor-name">{{ vendor.shopName }}</span>
+        </div>
+        <div class="vendor-right">
+          <span class="revenue-val">{{ formatVal(vendor.revenue) }}</span>
+          <span class="share-percent">{{ formatVal(vendor.sharePercent) }}%</span>
+        </div>
+      </div>
+    }
+  </div>
+</div>

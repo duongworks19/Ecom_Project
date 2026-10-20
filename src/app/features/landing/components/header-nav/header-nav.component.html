@@ -61,28 +61,42 @@
       </div>
     </div>
 
-    <!-- Right: Guest Links leading to separate Login / Register pages -->
+    <!-- Right: User Profile or Guest Links -->
     <div class="nav-right">
       <a href="#discovery-grid" class="nav-link hide-mobile">Khám phá</a>
       <a href="#editorial-section" class="nav-link hide-mobile">Bộ sưu tập</a>
-
-      <!-- Link sang trang Đăng nhập riêng biệt -->
-      <a
-        routerLink="/login"
-        class="btn-secondary"
-        id="btn-nav-login"
-      >
-        Đăng nhập
+      <a routerLink="/seller/shop" class="nav-link hide-mobile" id="btn-nav-shop-home">Gian hàng nổi bật</a>
+      <a routerLink="/seller/onboarding" class="nav-link seller-link" id="btn-nav-seller">
+        <span class="seller-dot"></span>
+        <span>Đăng ký bán hàng</span>
       </a>
 
-      <!-- Link sang trang Đăng ký riêng biệt -->
-      <a
-        routerLink="/register"
-        class="btn-primary"
-        id="btn-nav-register"
-      >
-        <span>Đăng ký</span>
-      </a>
+      @if (authService.isLoggedInSignal()) {
+        @if (authService.currentRoleSignal() === 'ADMIN') {
+          <a routerLink="/admin" class="btn-secondary" id="btn-nav-admin">
+            Quản trị
+          </a>
+        }
+        <app-user-menu />
+      } @else {
+        <!-- Link sang trang Đăng nhập riêng biệt -->
+        <a
+          routerLink="/login"
+          class="btn-secondary"
+          id="btn-nav-login"
+        >
+          Đăng nhập
+        </a>
+
+        <!-- Link sang trang Đăng ký riêng biệt -->
+        <a
+          routerLink="/register"
+          class="btn-primary"
+          id="btn-nav-register"
+        >
+          <span>Đăng ký</span>
+        </a>
+      }
     </div>
   </div>
 

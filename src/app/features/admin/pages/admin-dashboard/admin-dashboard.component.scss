@@ -1,0 +1,63 @@
+.dashboard-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.page-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.page-title {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--color-ink, #000000);
+  letter-spacing: -0.6px;
+  margin: 0;
+}
+
+.page-subtitle {
+  font-size: 14px;
+  color: var(--color-mute, #62625b);
+  margin: 0;
+}
+
+.section-kpis {
+  width: 100%;
+}
+
+.section-charts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.chart-col {
+  min-width: 0;
+}
+
+.section-activities {
+  width: 100%;
+}
+
+@media (max-width: 900px) {
+  .section-charts {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .page-title {
+    font-size: 22px;
+  }
+
+  .page-subtitle {
+    font-size: 13px;
+  }
+
+  .dashboard-page {
+    gap: 16px;
+  }
+}

@@ -1,0 +1,45 @@
+<div class="chart-card">
+  <div class="chart-header">
+    <h3 class="chart-title">Doanh thu theo ngày (triệu đ)</h3>
+    <div class="chart-legend">
+      <span class="legend-item current">
+        <span class="line-solid"></span> Kỳ này
+      </span>
+      <span class="legend-item previous">
+        <span class="line-dashed"></span> Kỳ trước
+      </span>
+    </div>
+  </div>
+
+  <div class="svg-container">
+    <svg viewBox="0 0 700 230" class="line-chart-svg">
+      <!-- Grid lines & Y-axis labels -->
+      @for (grid of yGrids; track grid.value) {
+        <text x="24" [attr.y]="grid.y + 4" text-anchor="end" class="axis-label">
+          {{ grid.value }}
+        </text>
+        <line x1="38" [attr.y1]="grid.y" x2="680" [attr.y2]="grid.y" class="grid-line" />
+      }
+
+      <!-- Previous Period Line (Dashed) -->
+      <polyline [attr.points]="previousPolyline" class="polyline-prev" />
+
+      <!-- Current Period Line (Solid Black) -->
+      <polyline [attr.points]="currentPolyline" class="polyline-curr" />
+
+      <!-- Data Points & Values for Current Period -->
+      @for (pt of trendPoints; track pt.date; let i = $index) {
+        <!-- Point Value Label -->
+        <text [attr.x]="getX(i)" [attr.y]="getY(pt.currentAmount) - 10" text-anchor="middle" class="point-value">
+          {{ formatAmount(pt.currentAmount) }}
+        </text>
+        <!-- Dot -->
+        <circle [attr.cx]="getX(i)" [attr.cy]="getY(pt.currentAmount)" r="4.5" class="point-dot" />
+        <!-- Date X-axis label -->
+        <text [attr.x]="getX(i)" y="218" text-anchor="middle" class="date-label" [class.bold]="pt.isCurrentDay">
+          {{ pt.date }}
+        </text>
+      }
+    </svg>
+  </div>
+</div>

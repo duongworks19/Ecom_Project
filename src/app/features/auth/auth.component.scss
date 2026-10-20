@@ -31,12 +31,10 @@
   .visual-bg-overlay {
     position: absolute;
     inset: 0;
-    background: linear-gradient(
-      140deg,
-      rgba(26, 26, 24, 0.72) 0%,
-      rgba(38, 38, 34, 0.88) 60%,
-      rgba(230, 0, 35, 0.4) 100%
-    );
+    background: linear-gradient(140deg,
+        rgba(26, 26, 24, 0.72) 0%,
+        rgba(38, 38, 34, 0.88) 60%,
+        rgba(230, 0, 35, 0.4) 100%);
     backdrop-filter: blur(2px);
     z-index: 1;
   }
@@ -154,6 +152,7 @@
         font-weight: 800;
         color: #ffffff;
       }
+
       .feat-lbl {
         font-size: 12px;
         color: var(--color-on-dark-mute);
@@ -296,9 +295,15 @@
 /* Social Buttons */
 .social-auth-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
   gap: 12px;
   margin-bottom: 20px;
+
+  .google-btn-host {
+    display: flex;
+    justify-content: center;
+    min-height: 44px;
+    width: 100%;
+  }
 
   .btn-social {
     height: 44px;
@@ -329,7 +334,8 @@
   font-size: 12px;
   font-weight: 600;
 
-  &::before, &::after {
+  &::before,
+  &::after {
     content: '';
     flex: 1;
     border-bottom: 1px solid var(--color-hairline);
@@ -478,7 +484,9 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .auth-switch-footer {
@@ -516,6 +524,13 @@
 }
 
 @keyframes slideUp {
-  from { transform: translate(-50%, 20px); opacity: 0; }
-  to { transform: translate(-50%, 0); opacity: 1; }
+  from {
+    transform: translate(-50%, 20px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
 }

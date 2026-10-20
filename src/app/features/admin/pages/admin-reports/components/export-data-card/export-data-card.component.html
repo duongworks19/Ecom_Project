@@ -1,0 +1,25 @@
+<div class="export-card">
+  <h3 class="card-title">Xuất dữ liệu</h3>
+
+  <div class="export-list">
+    @for (item of items; track item.id) {
+      <div class="export-row">
+        <div class="row-info">
+          <h4 class="report-name">{{ item.title }}</h4>
+          <p class="report-desc">{{ item.description }}</p>
+        </div>
+
+        <div class="row-actions">
+          <div class="format-tags">
+            @for (fmt of item.formats; track fmt) {
+              <span class="format-tag">{{ fmt }}</span>
+            }
+          </div>
+          <button type="button" class="btn-download" (click)="onDownload(item)">
+            Tải xuống
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+</div>
