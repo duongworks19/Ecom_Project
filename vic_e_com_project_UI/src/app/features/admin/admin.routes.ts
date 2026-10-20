@@ -20,6 +20,12 @@ export const ADMIN_ROUTES: Routes = [
         title: 'Tổng quan Quản trị — VIC MART Admin',
       },
       {
+        path: 'vendors',
+        loadComponent: () =>
+          import('./pages/vendor-approval/vendor-approval.page').then((m) => m.VendorApprovalPage),
+        title: 'Duyệt vendor — VIC MART Admin',
+      },
+      {
         path: 'reports',
         loadComponent: () =>
           import('./pages/admin-reports/admin-reports.component').then((m) => m.AdminReportsComponent),
