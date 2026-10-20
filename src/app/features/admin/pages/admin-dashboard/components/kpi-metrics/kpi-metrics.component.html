@@ -1,0 +1,17 @@
+<div class="kpi-grid">
+  @for (kpi of kpis; track kpi.id) {
+    @if (getRouteForKpi(kpi.id); as link) {
+      <a [routerLink]="link" class="kpi-card" [class.dark-theme]="kpi.isDark" style="text-decoration: none; cursor: pointer;">
+        <span class="kpi-title">{{ kpi.title }}</span>
+        <div class="kpi-value">{{ kpi.value }}</div>
+        <span class="kpi-subtext">{{ kpi.subtext }} ↗</span>
+      </a>
+    } @else {
+      <div class="kpi-card" [class.dark-theme]="kpi.isDark">
+        <span class="kpi-title">{{ kpi.title }}</span>
+        <div class="kpi-value">{{ kpi.value }}</div>
+        <span class="kpi-subtext">{{ kpi.subtext }}</span>
+      </div>
+    }
+  }
+</div>

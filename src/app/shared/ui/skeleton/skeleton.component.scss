@@ -1,0 +1,35 @@
+:host {
+  display: block;
+}
+
+.vic-skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-secondary-bg, #e5e5e0) 25%,
+    var(--color-surface-card, #f6f6f3) 50%,
+    var(--color-secondary-bg, #e5e5e0) 75%
+  );
+  background-size: 200% 100%;
+  animation: vic-shimmer 1.4s ease-in-out infinite;
+
+  &--md {
+    border-radius: var(--rounded-md, 16px);
+  }
+
+  &--lg {
+    border-radius: var(--rounded-lg, 32px);
+  }
+
+  &--full {
+    border-radius: var(--rounded-full, 9999px);
+  }
+}
+
+@keyframes vic-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}

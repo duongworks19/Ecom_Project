@@ -1,0 +1,33 @@
+@if (!authService.isLoggedInSignal()) {
+  <section class="hero-cta-strip">
+    <div class="cta-strip-inner">
+      <div class="cta-text-block">
+        <span class="badge-cta-white">Gia Nhập Cộng Đồng Mua Sắm</span>
+        <h2>Sẵn sàng khám phá hàng triệu sản phẩm bạn yêu thích?</h2>
+        <p>Đăng ký tài khoản miễn phí chỉ mất vài giây để lưu lại những ý tưởng ghim độc đáo và nhận thông tin sớm nhất.</p>
+      </div>
+
+    <div class="cta-actions-block">
+      <a
+        routerLink="/register"
+        class="btn-primary-large"
+        id="btn-strip-register"
+      >
+        <span>Tạo tài khoản miễn phí ngay</span>
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2.5" fill="none">
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+          <polyline points="12 5 19 12 12 19"></polyline>
+        </svg>
+      </a>
+
+      <a
+        routerLink="/seller/onboarding"
+        class="btn-outline-light"
+        id="btn-strip-seller"
+      >
+        <span>Đăng ký mở Shop bán hàng</span>
+      </a>
+    </div>
+    </div>
+  </section>
+}

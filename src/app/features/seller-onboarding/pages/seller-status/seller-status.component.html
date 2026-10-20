@@ -1,0 +1,255 @@
+<div class="status-page-layout">
+  <!-- Minimal Header -->
+  <header class="status-header">
+    <div class="header-inner">
+      <a routerLink="/" class="brand-link">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+            <path d="M12 2C6.48 2 2 6.48 2 12c0 4.24 2.63 7.87 6.4 9.28-.09-.79-.17-2 .03-2.86.19-.78 1.21-5.14 1.21-5.14s-.31-.62-.31-1.53c0-1.43.83-2.51 1.87-2.51.88 0 1.31.66 1.31 1.45 0 .89-.57 2.21-.86 3.44-.24 1.03.52 1.88 1.54 1.88 1.84 0 3.27-1.94 3.27-4.75 0-2.49-1.79-4.22-4.33-4.22-2.95 0-4.69 2.21-4.69 4.5 0 .89.34 1.84.78 2.37.09.1.1.19.07.3-.09.34-.28 1.12-.31 1.28-.04.2-.17.24-.38.14-1.42-.66-2.31-2.74-2.31-4.42 0-3.6 2.61-6.91 7.54-6.91 3.96 0 7.03 2.82 7.03 6.59 0 3.93-2.48 7.1-5.92 7.1-1.16 0-2.24-.6-2.62-1.31l-.71 2.72c-.26.99-.96 2.22-1.42 2.99 1.14.35 2.35.55 3.61.55 5.52 0 10-4.48 10-10S17.52 2 12 2z"/>
+          </svg>
+        </div>
+        <span class="brand-text">VIC<span>MART</span> <span class="badge-seller">TRẠNG THÁI HỒ SƠ</span></span>
+      </a>
+
+      <!-- Nếu đã duyệt → về Seller Dashboard; ngược lại về trang chủ mua sắm -->
+      @if (status() === 'APPROVED') {
+        <a routerLink="/seller/dashboard" class="link-home link-seller">
+          <span>Vào Seller Center →</span>
+        </a>
+      } @else {
+        <a routerLink="/" class="link-home">
+          <span>Về trang chủ</span>
+        </a>
+      }
+    </div>
+  </header>
+
+  <main class="status-main">
+    <div class="status-container">
+      <!-- 1. Trạng thái: CHƯA ĐĂNG KÝ -->
+      @if (status() === 'NOT_STARTED') {
+        <div class="status-card text-center">
+          <div class="status-icon-bubble">🏪</div>
+          <h2 class="status-title">Bạn chưa đăng ký mở gian hàng</h2>
+          <p class="status-desc">
+            Bắt đầu bán hàng cùng VIC MART ngay hôm nay để tiếp cận hàng triệu khách hàng trực tuyến với 0đ chi phí khởi tạo.
+          </p>
+          <div class="card-action">
+            <a routerLink="/seller/onboarding" class="btn-primary-pill">
+              Tìm hiểu & Đăng ký ngay
+            </a>
+          </div>
+        </div>
+      }
+
+      <!-- 2. Trạng thái: NHÁP (DRAFT) -->
+      @else if (status() === 'DRAFT') {
+        <div class="status-card">
+          <div class="status-banner warning-pale">
+            <span class="banner-icon">📝</span>
+            <div class="banner-text">
+              <h3 class="banner-heading">Hồ sơ đăng ký của bạn chưa hoàn tất</h3>
+              <p class="banner-sub">Thông tin đã được tự động lưu nháp. Bạn có thể tiếp tục hoàn thiện và gửi duyệt bất cứ lúc nào.</p>
+            </div>
+          </div>
+
+          <div class="draft-summary-box">
+            <h4 class="summary-title">Gian hàng dự kiến: {{ applicationData().shopInfo.shopName || '(Chưa đặt tên)' }}</h4>
+            <ul class="checklist">
+              <li [class.checked]="!!applicationData().shopInfo.shopName">Thông tin gian hàng</li>
+              <li [class.checked]="!!applicationData().contactInfo.detailedAddress">Kho hàng & Liên hệ</li>
+              <li [class.checked]="!!applicationData().kycInfo.idCardNumber">Xác minh danh tính KYC</li>
+            </ul>
+          </div>
+
+          <div class="card-action right">
+            <button type="button" class="btn-primary-pill" (click)="onContinueDraft()">
+              <span>Tiếp tục điền hồ sơ</span>
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- 3. Trạng thái: CHỜ DUYỆT (PENDING) -->
+      @else if (status() === 'PENDING') {
+        <div class="status-card">
+          <div class="status-banner info-pale">
+            <span class="banner-icon">⏳</span>
+            <div class="banner-text">
+              <h3 class="banner-heading">Hồ sơ đang trong quá trình thẩm định</h3>
+              <p class="banner-sub">
+                Đội ngũ kiểm duyệt VIC MART đang xem xét thông tin của bạn. Thời gian xử lý dự kiến từ <strong>24h - 48h</strong> làm việc.
+              </p>
+            </div>
+          </div>
+
+          <!-- Timeline -->
+          <app-status-timeline [status]="status()" [submittedAt]="applicationData().updatedAt" />
+
+          <div class="pending-info-box">
+            <div class="info-row">
+              <span class="info-label">Tên gian hàng:</span>
+              <span class="info-value strong">{{ applicationData().shopInfo.shopName }}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Người đại diện:</span>
+              <span class="info-value">{{ applicationData().contactInfo.representativeName }}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Trạng thái chỉnh sửa:</span>
+              <span class="info-value badge-locked">🔒 Đã khóa (Tránh sửa đổi trong lúc duyệt)</span>
+            </div>
+          </div>
+
+          <div class="notice-help">
+            Cần hỗ trợ gấp? Vui lòng gửi email tới <a href="mailto:seller-support@vicmart.vn">seller-support&#64;vicmart.vn</a>
+          </div>
+          <div class="card-action space-between" style="margin-top: 20px; gap: 10px; flex-wrap: wrap;">
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <button type="button" class="btn-secondary-pill" (click)="onRefreshStatus()" [disabled]="isRefreshing()">
+                <span>{{ isRefreshing() ? '⏳ Đang kiểm tra...' : '↻ Đồng bộ trạng thái từ Admin' }}</span>
+              </button>
+              <a routerLink="/seller/shop" class="btn-secondary-pill">
+                <span>Xem trước Trang chủ Shop</span>
+              </a>
+            </div>
+            <button type="button" class="btn-primary-pill" (click)="simulateStatus('APPROVED')">
+              <span>⚡ Kích hoạt nhanh &amp; Vào Kênh Người Bán</span>
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- 4. Trạng thái: CẦN BỔ SUNG (REVISION_NEEDED) -->
+      @else if (status() === 'REVISION_NEEDED') {
+        <div class="status-card">
+          <div class="status-banner warning-strong">
+            <span class="banner-icon">⚠️</span>
+            <div class="banner-text">
+              <h3 class="banner-heading">Yêu cầu bổ sung thông tin hồ sơ</h3>
+              <p class="banner-sub">Admin đã xem xét và yêu cầu bạn cập nhật lại một số mục trước khi có thể phê duyệt.</p>
+            </div>
+          </div>
+
+          <!-- Feedback Box -->
+          <div class="admin-feedback-quote">
+            <span class="quote-tag">Lời nhắn từ Admin VIC MART:</span>
+            <p class="quote-content">"{{ applicationData().adminFeedback || 'Vui lòng kiểm tra lại ảnh chụp giấy tờ tùy thân rõ nét hơn.' }}"</p>
+          </div>
+
+          <app-status-timeline [status]="status()" />
+
+          <div class="card-action space-between">
+            <span class="action-hint">Chỉ cần sửa phần được yêu cầu và bấm Gửi lại.</span>
+            <button type="button" class="btn-primary-pill" (click)="onFixRevision()">
+              <span>Cập nhật & Gửi lại ngay</span>
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- 5. Trạng thái: BỊ TỪ CHỐI (REJECTED) -->
+      @else if (status() === 'REJECTED') {
+        <div class="status-card">
+          <div class="status-banner error-pale">
+            <span class="banner-icon">❌</span>
+            <div class="banner-text">
+              <h3 class="banner-heading">Hồ sơ không được phê duyệt</h3>
+              <p class="banner-sub">Rất tiếc, hồ sơ mở gian hàng của bạn chưa đáp ứng đủ điều kiện kinh doanh trên sàn.</p>
+            </div>
+          </div>
+
+          <div class="rejection-box">
+            <span class="rejection-label">Lý do từ chối:</span>
+            <p class="rejection-reason">{{ applicationData().adminFeedback || 'Thông tin giấy tờ không trùng khớp hoặc vi phạm chính sách kinh doanh.' }}</p>
+          </div>
+
+          <div class="card-action right">
+            <button type="button" class="btn-primary-pill" (click)="onRetry()">
+              <span>Đăng ký lại hồ sơ</span>
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- 6. Trạng thái: ĐÃ DUYỆT (APPROVED) -->
+      @else if (status() === 'APPROVED') {
+        <div class="status-card approved-card">
+          <div class="congrats-header">
+            <div class="congrats-badge">🎉 CHÚC MỪNG BẠN!</div>
+            <h2 class="congrats-title">Gian hàng của bạn đã chính thức được kích hoạt</h2>
+            <p class="congrats-sub">Chào mừng bạn đến với cộng đồng Nhà bán hàng VIC MART.</p>
+          </div>
+
+          <div class="shop-approved-badge">
+            <span class="shop-icon">🏬</span>
+            <div class="shop-details">
+              <span class="shop-name">{{ applicationData().shopInfo.shopName }}</span>
+              <span class="shop-role">Vai trò tài khoản: <strong>VENDOR (Nhà bán hàng)</strong></span>
+            </div>
+          </div>
+
+          <div class="onboarding-next-steps">
+            <h4 class="next-title">3 Bước đầu tiên để có đơn hàng thành công:</h4>
+            <div class="next-steps-grid">
+              <div class="next-step-item">
+                <span class="num">1</span>
+                <h5>Đăng sản phẩm đầu tiên</h5>
+                <p>Tải ảnh đẹp, mô tả chuẩn SEO để sản phẩm được ghim nổi bật.</p>
+              </div>
+              <div class="next-step-item">
+                <span class="num">2</span>
+                <h5>Cài đặt vận chuyển</h5>
+                <p>Chọn các đơn vị giao hàng đối tác gần kho lấy hàng của bạn nhất.</p>
+              </div>
+              <div class="next-step-item">
+                <span class="num">3</span>
+                <h5>Tạo mã giảm giá khai trương</h5>
+                <p>Kích thích những đơn hàng đầu tiên với ưu đãi hấp dẫn.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-action center" style="gap: 12px; flex-wrap: wrap;">
+            <a
+              routerLink="/seller/dashboard"
+              class="btn-primary-pill large"
+              id="btn-enter-seller-center"
+            >
+              <span>Truy cập Kênh Người Bán (Seller Center)</span>
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </a>
+            <a
+              routerLink="/seller/shop"
+              class="btn-secondary-pill large"
+              id="btn-enter-shop-storefront"
+            >
+              <span>Xem Trang chủ Shop của bạn</span>
+            </a>
+          </div>
+        </div>
+      }
+
+      <!-- DEMO SIMULATOR TOOLBAR: Giúp test trực tiếp các luồng trạng thái -->
+      <div class="demo-simulator-toolbar">
+        <span class="demo-tag">🧪 Test nhanh luồng trạng thái:</span>
+        <div class="demo-buttons">
+          <button type="button" class="btn-tag" [class.active]="status() === 'NOT_STARTED'" (click)="simulateStatus('NOT_STARTED')">Chưa ĐK</button>
+          <button type="button" class="btn-tag" [class.active]="status() === 'DRAFT'" (click)="simulateStatus('DRAFT')">Nháp</button>
+          <button type="button" class="btn-tag" [class.active]="status() === 'PENDING'" (click)="simulateStatus('PENDING')">Chờ duyệt</button>
+          <button type="button" class="btn-tag" [class.active]="status() === 'REVISION_NEEDED'" (click)="simulateStatus('REVISION_NEEDED')">Cần bổ sung</button>
+          <button type="button" class="btn-tag" [class.active]="status() === 'REJECTED'" (click)="simulateStatus('REJECTED')">Bị từ chối</button>
+          <button type="button" class="btn-tag" [class.active]="status() === 'APPROVED'" (click)="simulateStatus('APPROVED')">Đã duyệt</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

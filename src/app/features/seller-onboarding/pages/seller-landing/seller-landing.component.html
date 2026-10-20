@@ -1,0 +1,125 @@
+<div class="seller-landing-container">
+  <!-- Minimal Header -->
+  <header class="landing-header">
+    <div class="header-inner">
+      <a routerLink="/" class="brand-link">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22">
+            <path d="M12 2C6.48 2 2 6.48 2 12c0 4.24 2.63 7.87 6.4 9.28-.09-.79-.17-2 .03-2.86.19-.78 1.21-5.14 1.21-5.14s-.31-.62-.31-1.53c0-1.43.83-2.51 1.87-2.51.88 0 1.31.66 1.31 1.45 0 .89-.57 2.21-.86 3.44-.24 1.03.52 1.88 1.54 1.88 1.84 0 3.27-1.94 3.27-4.75 0-2.49-1.79-4.22-4.33-4.22-2.95 0-4.69 2.21-4.69 4.5 0 .89.34 1.84.78 2.37.09.1.1.19.07.3-.09.34-.28 1.12-.31 1.28-.04.2-.17.24-.38.14-1.42-.66-2.31-2.74-2.31-4.42 0-3.6 2.61-6.91 7.54-6.91 3.96 0 7.03 2.82 7.03 6.59 0 3.93-2.48 7.1-5.92 7.1-1.16 0-2.24-.6-2.62-1.31l-.71 2.72c-.26.99-.96 2.22-1.42 2.99 1.14.35 2.35.55 3.61.55 5.52 0 10-4.48 10-10S17.52 2 12 2z"/>
+          </svg>
+        </div>
+        <span class="brand-text">VIC<span>MART</span> <span class="badge-seller">SELLER</span></span>
+      </a>
+
+      <div class="header-right">
+        <a routerLink="/" class="link-secondary">Trang chủ mua sắm</a>
+        <a routerLink="/seller/status" class="link-secondary">Tra cứu hồ sơ</a>
+        <a routerLink="/seller/dashboard" class="link-secondary">Kênh người bán</a>
+        <button type="button" class="btn-primary-pill small" (click)="onStartRegistration()">
+          Đăng ký mở shop
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Banner -->
+  <section class="hero-section">
+    <div class="hero-content">
+      <span class="hero-tag">🌟 Bán hàng cùng VIC MART</span>
+      <h1 class="hero-title">Đưa sản phẩm của bạn đến hàng triệu khách hàng yêu thẩm mỹ</h1>
+      <p class="hero-description">
+        Mở gian hàng hoàn toàn miễn phí. Tận dụng giao diện khám phá Pinterest Discovery độc đáo giúp sản phẩm nổi bật, kích thích chốt đơn tự nhiên.
+      </p>
+
+      <div class="hero-actions">
+        <button type="button" class="btn-primary-pill large" (click)="onStartRegistration()" id="btn-hero-register">
+          <span>Bắt đầu đăng ký ngay (Miễn phí)</span>
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+      </div>
+
+      <div class="hero-stats">
+        <div class="stat-item">
+          <span class="stat-number">0đ</span>
+          <span class="stat-label">Phí khởi tạo gian hàng</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number">24h</span>
+          <span class="stat-label">Thời gian xét duyệt nhanh</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number">100%</span>
+          <span class="stat-label">Tích hợp vận chuyển & COD</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 Giá trị cốt lõi -->
+  <section class="value-props-section">
+    <div class="section-container">
+      <h2 class="section-title">Tại sao nên kinh doanh trên VIC MART?</h2>
+      <p class="section-subtitle">Hệ sinh thái thương mại điện tử thế hệ mới được tối ưu cho cả nhà bán lẻ cá nhân lẫn doanh nghiệp.</p>
+
+      <div class="props-grid">
+        <div class="prop-card">
+          <div class="prop-icon">🎨</div>
+          <h3 class="prop-title">Giao diện Masonry trực quan</h3>
+          <p class="prop-desc">Sản phẩm xuất hiện sinh động như một tạp chí thời trang, tăng 40% tỉ lệ khách hàng dừng lại xem và bấm mua.</p>
+        </div>
+
+        <div class="prop-card">
+          <div class="prop-icon">⚡</div>
+          <h3 class="prop-title">Quy trình duyệt hồ sơ minh bạch</h3>
+          <p class="prop-desc">Biết trước kết quả sau 1 - 2 ngày làm việc. Dễ dàng bổ sung thông tin nếu thiếu sót với hướng dẫn chi tiết từ Admin.</p>
+        </div>
+
+        <div class="prop-card">
+          <div class="prop-icon">🛡️</div>
+          <h3 class="prop-title">Thanh toán bảo mật & Đối soát tự động</h3>
+          <p class="prop-desc">Tiền bán hàng được chuyển định kỳ vào tài khoản ngân hàng của bạn, bảng kê chi tiết minh bạch từng đơn hàng.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quy trình 3 bước -->
+  <section class="process-section">
+    <div class="section-container">
+      <h2 class="section-title">Quy trình mở shop 3 bước đơn giản</h2>
+
+      <div class="steps-flow">
+        <div class="step-box">
+          <div class="step-num">01</div>
+          <h4 class="step-box-title">Đăng ký thông tin</h4>
+          <p class="step-box-desc">Điền thông tin shop, địa chỉ kho lấy hàng và ảnh CCCD xác minh KYC trong 3 - 5 phút.</p>
+        </div>
+
+        <div class="step-arrow">➔</div>
+
+        <div class="step-box">
+          <div class="step-num">02</div>
+          <h4 class="step-box-title">Chờ Admin duyệt</h4>
+          <p class="step-box-desc">Đội ngũ VIC MART thẩm định tính hợp lệ của hồ sơ. Nhận thông báo kết quả qua email và app.</p>
+        </div>
+
+        <div class="step-arrow">➔</div>
+
+        <div class="step-box">
+          <div class="step-num">03</div>
+          <h4 class="step-box-title">Bắt đầu mở bán</h4>
+          <p class="step-box-desc">Truy cập Seller Center, đăng tải sản phẩm đầu tiên và nhận các ưu đãi trợ giá từ sàn!</p>
+        </div>
+      </div>
+
+      <div class="cta-banner-bottom">
+        <h3>Bạn đã sẵn sàng trở thành Nhà bán hàng tiếp theo?</h3>
+        <button type="button" class="btn-primary-pill" (click)="onStartRegistration()">
+          Đăng ký mở shop ngay
+        </button>
+      </div>
+    </div>
+  </section>
+</div>

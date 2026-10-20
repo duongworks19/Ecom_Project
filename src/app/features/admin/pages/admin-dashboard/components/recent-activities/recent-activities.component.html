@@ -1,0 +1,22 @@
+<div class="activities-card">
+  <div class="card-header">
+    <h3 class="card-title">Hoạt động gần đây</h3>
+    <button type="button" class="btn-view-all">Xem tất cả</button>
+  </div>
+
+  <div class="activity-list">
+    @for (act of activities; track act.id) {
+      <div class="activity-row">
+        <div class="activity-main">
+          <span class="badge-type">{{ act.type }}</span>
+          <span class="activity-desc">{{ act.description }}</span>
+        </div>
+        <span class="activity-time">{{ act.timeAgo }}</span>
+      </div>
+    } @empty {
+      <div class="activity-row">
+        <span class="activity-desc">Chưa có hoạt động nào gần đây.</span>
+      </div>
+    }
+  </div>
+</div>

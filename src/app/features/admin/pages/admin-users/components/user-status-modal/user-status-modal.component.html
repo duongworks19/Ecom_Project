@@ -1,0 +1,34 @@
+@if (customer) {
+  <div class="modal-backdrop" (click)="close.emit()">
+    <div class="modal-box" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+      <h3 class="modal-title">
+        {{ customer.status === 'LOCKED' ? 'Mở khóa tài khoản' : 'Khóa tài khoản' }}
+      </h3>
+      <p class="modal-desc">
+        Bạn đang thực hiện {{ customer.status === 'LOCKED' ? 'mở khóa' : 'khóa' }} tài khoản của
+        <strong>{{ customer.fullName }}</strong> ({{ customer.email }}).
+      </p>
+
+      <label class="field-label" for="lockReasonInput">
+        Lý do {{ customer.status === 'LOCKED' ? 'mở khóa' : 'khóa' }} *
+      </label>
+      <textarea
+        id="lockReasonInput"
+        class="reason-textarea"
+        rows="3"
+        [(ngModel)]="reason"
+        placeholder="Nhập lý do để lưu vào nhật ký hệ thống..."
+      ></textarea>
+      @if (showError && !reason.trim()) {
+        <span class="error-msg">Vui lòng nhập lý do trước khi xác nhận.</span>
+      }
+
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" (click)="close.emit()">Hủy</button>
+        <button type="button" class="btn-confirm" (click)="onSubmit()">
+          Xác nhận
+        </button>
+      </div>
+    </div>
+  </div>
+}

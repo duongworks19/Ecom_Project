@@ -1,0 +1,130 @@
+<div class="admin-page-container">
+  @if (toastMessage()) {
+    <div class="toast-alert success">
+      <span class="toast-icon">✓</span>
+      <span>{{ toastMessage() }}</span>
+    </div>
+  }
+
+  <header class="page-header">
+    <div class="header-left">
+      <h1 class="page-title">Đổi trả & Khiếu nại đơn hàng</h1>
+      <p class="page-sub">Tiếp nhận khiếu nại, giải quyết tranh chấp hoàn tiền giữa khách mua và nhà bán hàng.</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn-refresh" (click)="loadData()" [disabled]="isLoading()">
+        <span>↻</span> Làm mới dữ liệu
+      </button>
+    </div>
+  </header>
+
+  <!-- KPI Grid -->
+  <section class="kpi-grid">
+    <div class="kpi-card pending">
+      <div class="kpi-label">Yêu cầu chờ xử lý</div>
+      <div class="kpi-value text-danger">{{ response().summaryPending }}</div>
+      <div class="kpi-sub">Cần admin thẩm định và phản hồi</div>
+    </div>
+    <div class="kpi-card approved">
+      <div class="kpi-label">Đã giải quyết hoàn tiền</div>
+      <div class="kpi-value text-success">{{ response().summaryCompleted }}</div>
+      <div class="kpi-sub">Đã hoàn tiền vào tài khoản khách</div>
+    </div>
+    <div class="kpi-card total">
+      <div class="kpi-label">Tổng khiếu nại</div>
+      <div class="kpi-value">{{ response().total }}</div>
+      <div class="kpi-sub">Toàn bộ lịch sử tranh chấp</div>
+    </div>
+  </section>
+
+  <!-- Returns Table -->
+  <section class="table-container">
+    @if (isLoading()) {
+      <div class="loading-state">
+        <p>Đang tải danh sách khiếu nại đổi trả...</p>
+      </div>
+    } @else if (returns().length === 0) {
+      <div class="empty-state">
+        <p>Không có khiếu nại đổi trả nào cần xử lý.</p>
+      </div>
+    } @else {
+      <table class="return-table">
+        <thead>
+          <tr>
+            <th>Mã đơn</th>
+            <th>Khách hàng khiếu nại</th>
+            <th>Sản phẩm liên quan</th>
+            <th>Số tiền hoàn</th>
+            <th>Thời gian</th>
+            <th>Trạng thái</th>
+            <th class="text-right">Thao tác Thẩm định</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of returns(); track r.id) {
+            <tr>
+              <td><span class="order-code-badge">{{ r.orderCode }}</span></td>
+              <td>
+                <div class="c-info">
+                  <strong>{{ r.customerName }}</strong>
+                  <div class="c-phone">{{ r.customerPhone }}</div>
+                </div>
+              </td>
+              <td>{{ r.productSummary }}</td>
+              <td class="amount-cell">{{ r.totalAmount | number }} đ</td>
+              <td><span class="date-text">{{ r.createdAtLabel }}</span></td>
+              <td>
+                <span class="badge" [class.badge-pending]="r.status === 'REFUND_REQUEST' || r.status === 'IN_REVIEW'" [class.badge-completed]="r.status === 'COMPLETED'">
+                  {{ r.statusLabel }}
+                </span>
+              </td>
+              <td class="text-right">
+                @if (r.status === 'REFUND_REQUEST' || r.status === 'IN_REVIEW') {
+                  <button class="btn-approve" (click)="openReviewModal(r, 'APPROVE')">Duyệt hoàn tiền</button>
+                  <button class="btn-reject" (click)="openReviewModal(r, 'REJECT')">Bác bỏ</button>
+                } @else {
+                  <span class="text-muted">Đã xử lý xong</span>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </section>
+
+  <!-- Review Modal -->
+  @if (reviewingItem) {
+    <div class="modal-backdrop" (click)="closeModal()">
+      <div class="modal-box" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>
+            {{ reviewAction === 'APPROVE' ? 'Duyệt hoàn tiền đơn' : 'Từ chối khiếu nại đơn' }} {{ reviewingItem.orderCode }}
+          </h3>
+          <button class="btn-close" (click)="closeModal()">✕</button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-sub">
+            Khách hàng: <strong>{{ reviewingItem.customerName }}</strong> — Số tiền: <strong>{{ reviewingItem.totalAmount | number }} đ</strong>
+          </p>
+
+          <div class="form-group">
+            <label>Ghi chú thẩm định của Admin *</label>
+            <textarea rows="3" [(ngModel)]="reviewNote" class="form-control"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-cancel" (click)="closeModal()">Hủy</button>
+          <button
+            class="btn-confirm"
+            [class.approve]="reviewAction === 'APPROVE'"
+            [class.reject]="reviewAction === 'REJECT'"
+            (click)="confirmReview()"
+          >
+            {{ reviewAction === 'APPROVE' ? 'Xác nhận duyệt hoàn tiền' : 'Xác nhận bác bỏ khiếu nại' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

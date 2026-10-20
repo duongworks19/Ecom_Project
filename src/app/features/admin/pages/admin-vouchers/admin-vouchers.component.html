@@ -1,0 +1,164 @@
+<div class="admin-page-container">
+  @if (toastMessage()) {
+    <div class="toast-alert success">
+      <span class="toast-icon">✓</span>
+      <span>{{ toastMessage() }}</span>
+    </div>
+  }
+
+  <header class="page-header">
+    <div class="header-left">
+      <h1 class="page-title">Mã giảm giá & Voucher toàn sàn</h1>
+      <p class="page-sub">Quản lý các chương trình ưu đãi, mã khuyến mãi tài trợ bởi sàn và nhà bán hàng.</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn-refresh" (click)="loadData()" [disabled]="isLoading()">
+        <span>↻</span> Làm mới
+      </button>
+      <button class="btn-primary-action" (click)="openCreateModal()">
+        <span>+</span> Tạo Voucher sàn mới
+      </button>
+    </div>
+  </header>
+
+  <!-- KPI Grid -->
+  <section class="kpi-grid">
+    <div class="kpi-card total">
+      <div class="kpi-label">Tổng số Voucher</div>
+      <div class="kpi-value">{{ response().summaryTotal }}</div>
+      <div class="kpi-sub">Các mã đã được thiết lập</div>
+    </div>
+    <div class="kpi-card approved">
+      <div class="kpi-label">Đang hiệu lực</div>
+      <div class="kpi-value text-success">{{ response().summaryActive }}</div>
+      <div class="kpi-sub">Khách hàng có thể sử dụng khi checkout</div>
+    </div>
+  </section>
+
+  <!-- Toolbar Filters -->
+  <section class="toolbar-section">
+    <div class="status-tabs">
+      <button class="tab-btn" [class.active]="selectedStatus === 'ALL'" (click)="onFilterStatus('ALL')">
+        Tất cả ({{ response().summaryTotal }})
+      </button>
+      <button class="tab-btn" [class.active]="selectedStatus === 'ACTIVE'" (click)="onFilterStatus('ACTIVE')">
+        Đang mở ({{ response().summaryActive }})
+      </button>
+      <button class="tab-btn" [class.active]="selectedStatus === 'INACTIVE'" (click)="onFilterStatus('INACTIVE')">
+        Đã tắt
+      </button>
+    </div>
+
+    <div class="search-box">
+      <input
+        type="text"
+        [(ngModel)]="keyword"
+        (keyup.enter)="onSearch()"
+        placeholder="Tìm theo mã code (VIC...)"
+        class="search-input"
+      />
+      <button class="btn-search" (click)="onSearch()">Tìm kiếm</button>
+    </div>
+  </section>
+
+  <!-- Voucher Table -->
+  <section class="table-container">
+    @if (isLoading()) {
+      <div class="loading-state">
+        <p>Đang tải danh sách voucher...</p>
+      </div>
+    } @else if (vouchers().length === 0) {
+      <div class="empty-state">
+        <p>Không tìm thấy mã giảm giá nào.</p>
+      </div>
+    } @else {
+      <table class="voucher-table">
+        <thead>
+          <tr>
+            <th>Mã Code</th>
+            <th>Tên chương trình</th>
+            <th>Mức giảm</th>
+            <th>Đơn tối thiểu</th>
+            <th>Đã dùng / Tổng số</th>
+            <th>Hạn sử dụng</th>
+            <th>Trạng thái</th>
+            <th class="text-right">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (v of vouchers(); track v.id) {
+            <tr>
+              <td>
+                <span class="code-pill">{{ v.code }}</span>
+              </td>
+              <td class="title-cell">{{ v.title }}</td>
+              <td class="discount-cell">{{ v.discountText }}</td>
+              <td>{{ v.minOrderAmount | number }} đ</td>
+              <td>
+                <div class="quota-progress">
+                  <span>{{ v.usedCount }}/{{ v.totalQuota }}</span>
+                </div>
+              </td>
+              <td><span class="date-text">{{ v.expiryDate }}</span></td>
+              <td>
+                <span class="badge" [class.badge-active]="v.active" [class.badge-inactive]="!v.active">
+                  {{ v.active ? 'Đang bật' : 'Đã tắt' }}
+                </span>
+              </td>
+              <td class="text-right">
+                <button class="btn-toggle" (click)="toggleVoucher(v)">
+                  {{ v.active ? 'Tắt' : 'Kích hoạt' }}
+                </button>
+                <button class="btn-del" (click)="deleteVoucher(v)" title="Xóa">🗑️</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </section>
+
+  <!-- Create Modal -->
+  @if (showModal) {
+    <div class="modal-backdrop" (click)="closeModal()">
+      <div class="modal-box" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>Tạo mã giảm giá toàn sàn mới</h3>
+          <button class="btn-close" (click)="closeModal()">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Mã Voucher (Code) *</label>
+            <input type="text" [(ngModel)]="code" placeholder="Ví dụ: VICFLASH50" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label>Tiêu đề chương trình</label>
+            <input type="text" [(ngModel)]="title" placeholder="Giảm 30K cho đơn từ 150K" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label>Mức giảm hiển thị</label>
+            <input type="text" [(ngModel)]="discountText" placeholder="30.000đ hoặc 15%" class="form-control" />
+          </div>
+          <div class="form-row">
+            <div class="form-group half">
+              <label>Đơn tối thiểu (VNĐ)</label>
+              <input type="number" [(ngModel)]="minOrderAmount" class="form-control" />
+            </div>
+            <div class="form-group half">
+              <label>Số lượt phát hành</label>
+              <input type="number" [(ngModel)]="totalQuota" class="form-control" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Ngày hết hạn</label>
+            <input type="text" [(ngModel)]="expiryDate" placeholder="31/12/2026" class="form-control" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-cancel" (click)="closeModal()">Hủy</button>
+          <button class="btn-confirm approve" (click)="saveVoucher()">Phát hành Voucher</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

@@ -1,0 +1,133 @@
+.footer-section {
+  background-color: var(--color-canvas);
+  border-top: 1px solid var(--color-hairline);
+  padding: 64px var(--spacing-xl) 32px;
+
+  .footer-container {
+    max-width: 1360px;
+    margin: 0 auto;
+  }
+
+  .footer-grid {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr 1fr;
+    gap: 48px;
+    margin-bottom: 48px;
+
+    @media (max-width: 900px) {
+      grid-template-columns: 1fr 1fr;
+    }
+    @media (max-width: 600px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .footer-col {
+    .col-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--color-ink);
+      margin-bottom: 20px;
+    }
+
+    .col-links {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+
+      li a {
+        font-size: 14px;
+        color: var(--color-mute);
+        transition: color var(--transition-fast);
+
+        &:hover {
+          color: var(--color-ink);
+        }
+      }
+    }
+  }
+
+  .brand-col {
+    .footer-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+
+      .brand-icon.small {
+        width: 30px;
+        height: 30px;
+        border-radius: var(--rounded-full);
+        background-color: var(--color-primary);
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .footer-brand-text {
+        font-size: 18px;
+        font-weight: 800;
+        color: var(--color-ink);
+      }
+    }
+
+    .footer-desc {
+      font-size: 14px;
+      color: var(--color-mute);
+      line-height: 1.6;
+      margin-bottom: 20px;
+      max-width: 320px;
+    }
+  }
+
+  .payment-badge-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 16px;
+
+    .pay-tag {
+      background-color: var(--color-surface-card);
+      border: 1px solid var(--color-hairline);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--color-body);
+      padding: 4px 10px;
+      border-radius: 6px;
+    }
+  }
+
+  .footer-bottom-bar {
+    border-top: 1px solid var(--color-hairline-soft);
+    padding-top: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+    color: var(--color-mute);
+    flex-wrap: wrap;
+    gap: 12px;
+
+    .legal-links {
+      display: flex;
+      gap: 8px;
+      a:hover {
+        color: var(--color-ink);
+      }
+    }
+  }
+
+  @media (max-width: 600px) {
+    padding: 40px 16px 24px;
+
+    .footer-bottom-bar {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+    }
+  }
+}
+
+

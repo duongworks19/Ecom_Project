@@ -1,0 +1,160 @@
+<div class="step-card">
+  <div class="step-header">
+    <span class="step-badge">Bước 4 / 4</span>
+    <h2 class="step-title">Kiểm tra & Gửi hồ sơ đăng ký</h2>
+    <p class="step-subtitle">Vui lòng rà soát kỹ các thông tin trước khi nộp. Sau khi gửi, hồ sơ sẽ chuyển sang trạng thái thẩm định.</p>
+  </div>
+
+  <div class="review-sections-list">
+    <!-- Block 1: Thông tin shop -->
+    <div class="review-block">
+      <div class="block-header">
+        <div class="block-title-box">
+          <span class="block-icon">🏪</span>
+          <h3 class="block-title">Thông tin gian hàng</h3>
+        </div>
+        <button type="button" class="btn-edit-inline" (click)="jumpToStep.emit(1)">
+          Chỉnh sửa
+        </button>
+      </div>
+
+      <div class="review-grid">
+        <div class="review-item">
+          <span class="label">Tên gian hàng:</span>
+          <span class="value strong">{{ data.shopInfo.shopName }}</span>
+        </div>
+        <div class="review-item">
+          <span class="label">Mô hình kinh doanh:</span>
+          <span class="value badge-pill">{{ businessTypeLabel }}</span>
+        </div>
+        <div class="review-item">
+          <span class="label">Ngành hàng chính:</span>
+          <span class="value">{{ data.shopInfo.primaryCategory }}</span>
+        </div>
+        @if (data.shopInfo.description) {
+          <div class="review-item full-width">
+            <span class="label">Mô tả shop:</span>
+            <span class="value italic">"{{ data.shopInfo.description }}"</span>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Block 2: Kho & Liên hệ -->
+    <div class="review-block">
+      <div class="block-header">
+        <div class="block-title-box">
+          <span class="block-icon">📦</span>
+          <h3 class="block-title">Kho hàng & Người liên hệ</h3>
+        </div>
+        <button type="button" class="btn-edit-inline" (click)="jumpToStep.emit(2)">
+          Chỉnh sửa
+        </button>
+      </div>
+
+      <div class="review-grid">
+        <div class="review-item">
+          <span class="label">Người đại diện:</span>
+          <span class="value strong">{{ data.contactInfo.representativeName }}</span>
+        </div>
+        <div class="review-item">
+          <span class="label">Số điện thoại:</span>
+          <span class="value">{{ data.contactInfo.phone }}</span>
+        </div>
+        <div class="review-item">
+          <span class="label">Email đăng nhập Shop:</span>
+          <span class="value strong">{{ data.contactInfo.email }}</span>
+        </div>
+        <div class="review-item">
+          <span class="label">Mật khẩu đăng nhập Shop:</span>
+          <span class="value">{{ data.contactInfo.password ? '•••••••• (Đã thiết lập)' : 'Sử dụng tài khoản hiện tại' }}</span>
+        </div>
+        <div class="review-item full-width">
+          <span class="label">Địa chỉ kho lấy hàng:</span>
+          <span class="value">
+            {{ data.contactInfo.detailedAddress }}, {{ data.contactInfo.ward }}, {{ data.contactInfo.district }}, {{ data.contactInfo.province }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Block 3: KYC & Ngân hàng (Masked) -->
+    <div class="review-block">
+      <div class="block-header">
+        <div class="block-title-box">
+          <span class="block-icon">🪪</span>
+          <h3 class="block-title">Xác minh danh tính & Ngân hàng</h3>
+        </div>
+        <button type="button" class="btn-edit-inline" (click)="jumpToStep.emit(3)">
+          Chỉnh sửa
+        </button>
+      </div>
+
+      <div class="review-grid">
+        <div class="review-item">
+          <span class="label">Số CCCD (Bảo mật):</span>
+          <span class="value monospace">{{ maskIdCard(data.kycInfo.idCardNumber) }}</span>
+        </div>
+        <div class="review-item">
+          <span class="label">Ảnh CCCD 2 mặt:</span>
+          <span class="value text-success">✓ Đã tải đủ 2 mặt</span>
+        </div>
+        <div class="review-item">
+          <span class="label">Ngân hàng nhận tiền:</span>
+          <span class="value strong">{{ data.kycInfo.bankName }}</span>
+        </div>
+        <div class="review-item">
+          <span class="label">Số tài khoản (Bảo mật):</span>
+          <span class="value monospace">{{ maskBankAccount(data.kycInfo.bankAccountNumber) }}</span>
+        </div>
+        <div class="review-item">
+          <span class="label">Chủ tài khoản:</span>
+          <span class="value strong uppercase">{{ data.kycInfo.bankAccountName }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cam kết & Điều khoản -->
+  <div class="terms-agreements-box">
+    <label class="checkbox-label">
+      <input type="checkbox" [(ngModel)]="commitTruth" />
+      <span>Tôi cam kết các thông tin cá nhân và giấy tờ định danh cung cấp là hoàn toàn chính xác, trung thực.</span>
+    </label>
+
+    <label class="checkbox-label">
+      <input type="checkbox" [(ngModel)]="agreeTerms" />
+      <span>
+        Tôi đã đọc và đồng ý với <a href="#" target="_blank" class="link-red">Quy chế hoạt động sàn TMĐT</a> và <a href="#" target="_blank" class="link-red">Chính sách dành cho Nhà bán hàng</a> của VIC MART.
+      </span>
+    </label>
+  </div>
+
+  <!-- Actions -->
+  <div class="step-footer-actions space-between">
+    <button type="button" class="btn-secondary-pill" (click)="back.emit()" [disabled]="isSubmitting">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"></polyline>
+      </svg>
+      <span>Quay lại</span>
+    </button>
+
+    <button
+      type="button"
+      class="btn-primary-pill"
+      [disabled]="!canSubmit()"
+      (click)="onSubmit()"
+      id="btn-submit-application"
+    >
+      @if (isSubmitting) {
+        <span class="spinner-small white"></span>
+        <span>Đang gửi hồ sơ...</span>
+      } @else {
+        <span>Xác nhận & Gửi hồ sơ đăng ký</span>
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+      }
+    </button>
+  </div>
+</div>

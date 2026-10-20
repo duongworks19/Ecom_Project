@@ -1,0 +1,42 @@
+<section class="card">
+  <div class="head">
+    <h2>Sắp hết hàng</h2>
+    <a href="#inventory" (click)="onUpdateStockClick($event)">Cập nhật kho</a>
+  </div>
+  <div class="low-stock-list">
+    @for (prod of products(); track prod.id) {
+      <div
+        class="low"
+        tabindex="0"
+        (click)="onRestockProduct(prod, $event)"
+        (keydown.enter)="onRestockProduct(prod, $event)"
+        title="Nhấn để nhập thêm hàng">
+        <div
+          class="th"
+          [style.background-color]="prod.thumbnailColor">
+          @if (prod.imageUrl && !failedImages()[prod.id]) {
+            <img
+              [src]="prod.imageUrl"
+              [alt]="prod.name"
+              loading="lazy"
+              (error)="onImageError(prod.id)" />
+          }
+        </div>
+        <div class="info">
+          <p [title]="prod.name">{{ prod.name }}</p>
+          <small>{{ prod.variant }} · SKU {{ prod.sku }}</small>
+        </div>
+        <span
+          class="b"
+          [class.r]="prod.badgeType === 'danger'"
+          [class.w]="prod.badgeType === 'warning'">
+          Còn {{ prod.remainingQuantity }}
+        </span>
+      </div>
+    } @empty {
+      <div class="empty-stock">
+        <span>✓ Tất cả sản phẩm trong kho đều đủ số lượng</span>
+      </div>
+    }
+  </div>
+</section>

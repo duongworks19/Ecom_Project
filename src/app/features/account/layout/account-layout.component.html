@@ -1,0 +1,60 @@
+<div class="account-layout">
+  <aside class="account-sidebar" aria-label="Điều hướng tài khoản">
+    <div class="account-sidebar__user">
+      <app-avatar
+        [src]="profileService.avatarUrl()"
+        [name]="profileService.displayName()"
+        [size]="48"
+      />
+      <div class="account-sidebar__user-meta">
+        @if (profileService.displayName()) {
+          <p class="account-sidebar__user-name">{{ profileService.displayName() }}</p>
+        }
+        <a routerLink="/account/profile" class="account-sidebar__edit-link">
+          Sửa hồ sơ
+        </a>
+      </div>
+    </div>
+
+    <nav class="account-sidebar__nav">
+      <div class="account-sidebar__group">
+        <p class="account-sidebar__group-label">TÀI KHOẢN CỦA TÔI</p>
+        <a
+          routerLink="/account/profile"
+          routerLinkActive="account-sidebar__link--active"
+          #profileRla="routerLinkActive"
+          [attr.aria-current]="profileRla.isActive ? 'page' : null"
+          class="account-sidebar__link"
+        >
+          Hồ sơ
+        </a>
+        <a
+          routerLink="/account/addresses"
+          routerLinkActive="account-sidebar__link--active"
+          #addressesRla="routerLinkActive"
+          [attr.aria-current]="addressesRla.isActive ? 'page' : null"
+          class="account-sidebar__link"
+        >
+          Địa chỉ
+        </a>
+      </div>
+
+      <div class="account-sidebar__group">
+        <p class="account-sidebar__group-label">ĐƠN HÀNG</p>
+        <a
+          routerLink="/account/orders"
+          routerLinkActive="account-sidebar__link--active"
+          #ordersRla="routerLinkActive"
+          [attr.aria-current]="ordersRla.isActive ? 'page' : null"
+          class="account-sidebar__link"
+        >
+          Đơn mua
+        </a>
+      </div>
+    </nav>
+  </aside>
+
+  <section class="account-layout__content">
+    <router-outlet />
+  </section>
+</div>
