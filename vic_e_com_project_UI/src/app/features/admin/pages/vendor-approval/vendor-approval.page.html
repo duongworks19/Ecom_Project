@@ -1,0 +1,122 @@
+<div class="vendor-page">
+  <header class="page-heading">
+    <h1>Duyệt vendor</h1>
+    <p class="subtitle">Kiểm tra hồ sơ đăng ký gian hàng và quyết định cho vendor bắt đầu bán.</p>
+  </header>
+
+  @if (pageError()) {
+    <section class="page-state error-state" role="alert">
+      <h2>Chưa tải được danh sách</h2>
+      <p>{{ pageError() }}</p>
+      <button mat-button class="retry-button" type="button" (click)="retry()">Thử lại</button>
+    </section>
+  } @else {
+    <div class="filter-bar">
+      <mat-chip-listbox aria-label="Lọc theo trạng thái" [value]="filter()" (change)="setFilter($event.value)">
+        <mat-chip-option value="PENDING">Chờ duyệt <small>{{ counts().PENDING }}</small></mat-chip-option>
+        <mat-chip-option value="APPROVED">Đã duyệt <small>{{ counts().APPROVED }}</small></mat-chip-option>
+        <mat-chip-option value="REJECTED">Đã từ chối <small>{{ counts().REJECTED }}</small></mat-chip-option>
+        <mat-chip-option value="ALL">Tất cả <small>{{ counts().ALL }}</small></mat-chip-option>
+      </mat-chip-listbox>
+      <mat-form-field appearance="outline" class="search-field">
+        <input matInput type="search" placeholder="Tìm theo tên shop, email, SĐT, chủ shop" [value]="search()" (input)="setSearch($any($event.target).value)" autocomplete="off" />
+      </mat-form-field>
+    </div>
+
+    <section class="workspace" aria-label="Danh sách và chi tiết vendor">
+      <aside class="application-column" aria-label="Danh sách hồ sơ vendor">
+        @if (loading()) {
+          <div class="list-state" aria-live="polite">Đang tải hồ sơ…</div>
+        } @else if (visibleApplications().length === 0) {
+          <div class="list-state empty-state" role="status">Không có hồ sơ nào khớp. Thử đổi bộ lọc hoặc từ khóa.</div>
+        } @else {
+          <ul class="application-list">
+            @for (vendor of visibleApplications(); track vendor.id) {
+              <li>
+                <button type="button" class="application-item" [class.selected]="selectedVendor()?.id === vendor.id" [attr.aria-current]="selectedVendor()?.id === vendor.id ? 'true' : null" (click)="selectVendor(vendor)">
+                  <span class="avatar">{{ vendor.businessName.charAt(0) }}</span>
+                  <span class="application-copy">
+                    <strong>{{ vendor.businessName }}</strong>
+                    <span class="owner-line">{{ vendor.ownerName }} · {{ formatDateOnly(vendor.submittedAt) }}</span>
+                  </span>
+                  <span class="status-tag" [class.pending]="vendor.approvalStatus === 'PENDING'" [class.approved]="vendor.approvalStatus === 'APPROVED'" [class.rejected]="vendor.approvalStatus === 'REJECTED'">{{ statusLabel(vendor.approvalStatus) }}</span>
+                </button>
+              </li>
+            }
+          </ul>
+        }
+      </aside>
+
+      <section class="detail-column" aria-label="Chi tiết hồ sơ vendor" aria-live="polite">
+        @if (selectedVendor(); as vendor) {
+          <article class="detail-card">
+            <div class="detail-banner"><div class="vendor-logo">{{ vendor.businessName.charAt(0) }}</div></div>
+            <div class="detail-content">
+              <header class="vendor-heading">
+                <h2>{{ vendor.businessName }}</h2>
+                <span class="status-tag" [class.pending]="vendor.approvalStatus === 'PENDING'" [class.approved]="vendor.approvalStatus === 'APPROVED'" [class.rejected]="vendor.approvalStatus === 'REJECTED'">{{ statusLabel(vendor.approvalStatus) }}</span>
+              </header>
+              <p class="description">{{ vendor.description || 'Vendor chưa nhập giới thiệu gian hàng.' }}</p>
+
+              @if (vendor.approvalStatus === 'APPROVED') {
+                <div class="decision-note approved-note">Đã duyệt bởi {{ vendor.approvedBy || 'Quản trị viên' }} lúc {{ formatDate(vendor.decidedAt) }}. Gian hàng đã được kích hoạt.</div>
+              } @else if (vendor.approvalStatus === 'REJECTED') {
+                <div class="decision-note rejected-note"><strong>Lý do từ chối:</strong> {{ vendor.rejectReason }}<br>{{ formatDate(vendor.decidedAt) }}</div>
+              }
+
+              <section class="registration-section">
+                <h3>Thông tin đăng ký</h3>
+                <dl class="registration-list">
+                  <dt>Chủ gian hàng</dt><dd>{{ vendor.ownerName }}</dd>
+                  <dt>Email</dt><dd><a [href]="'mailto:' + vendor.email">{{ vendor.email }}</a></dd>
+                  <dt>Số điện thoại</dt><dd><a [href]="'tel:' + vendor.phone.replaceAll(' ', '')">{{ vendor.phone }}</a></dd>
+                  <dt>Mô hình kinh doanh</dt><dd>{{ vendor.businessModel }}</dd>
+                  <dt>Danh mục chính</dt><dd>{{ vendor.category }}</dd>
+                  <dt>Mã số thuế</dt><dd>{{ vendor.taxId || '—' }}</dd>
+                  <dt>Kho lấy hàng</dt><dd>{{ vendor.pickupAddress }}</dd>
+                  <dt>Gửi lúc</dt><dd>{{ formatDate(vendor.submittedAt) }}</dd>
+                </dl>
+              </section>
+
+              <section class="documents-section">
+                <h3>Giấy tờ xác minh (KYC)</h3>
+                <div class="document-grid">
+                  @for (document of vendor.kycDocuments; track document.label) {
+                    <div class="document-card" [attr.aria-label]="document.label">
+                      <span>{{ document.label }}</span>
+                    </div>
+                  }
+                </div>
+              </section>
+
+              @if (vendor.approvalStatus === 'PENDING') {
+                <section class="review-section">
+                  <h3>Kiểm tra trước khi duyệt</h3>
+                  <div class="check-list">
+                    @for (label of checkLabels; track label; let i = $index) {
+                      <div class="check-row"><mat-checkbox [checked]="checks()[i]" (change)="toggleCheck(i, $event.checked)">{{ label }}</mat-checkbox></div>
+                    }
+                  </div>
+                </section>
+              }
+
+              @if (actionError()) { <p class="action-error" role="alert">{{ actionError() }}</p> }
+
+              @if (vendor.approvalStatus === 'PENDING') {
+                <footer class="actions">
+                  <button mat-button type="button" class="approve-action" [disabled]="!canApprove()" (click)="approve()">
+                    @if (submitting()) { Đang xử lý… } @else { Duyệt vendor }
+                  </button>
+                  <button mat-button type="button" class="reject-action" [disabled]="submitting()" (click)="openRejectDialog()">Từ chối</button>
+                  @if (!allChecksComplete()) { <span class="action-hint">Tick đủ 4 mục để duyệt.</span> }
+                </footer>
+              }
+            </div>
+          </article>
+        } @else {
+          <div class="empty-detail">Chọn một hồ sơ để xem chi tiết.</div>
+        }
+      </section>
+    </section>
+  }
+</div>
