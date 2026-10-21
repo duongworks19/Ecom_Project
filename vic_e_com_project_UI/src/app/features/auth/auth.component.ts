@@ -96,6 +96,16 @@ export class AuthComponent implements OnInit, AfterViewInit {
       this.showToast('Mật khẩu cần tối thiểu 6 ký tự', true);
       return;
     }
+    if (!this.isLogin()) {
+      const pwd = this.password();
+      const hasUpper = /[A-Z]/.test(pwd);
+      const hasLower = /[a-z]/.test(pwd);
+      const hasDigit = /[0-9]/.test(pwd);
+      if (pwd.length < 8 || !hasUpper || !hasLower || !hasDigit) {
+        this.showToast('Mật khẩu cần tối thiểu 8 ký tự, gồm chữ hoa, chữ thường và số', true);
+        return;
+      }
+    }
     if (!this.isLogin() && !this.fullName()) {
       this.showToast('Vui lòng nhập họ và tên', true);
       return;

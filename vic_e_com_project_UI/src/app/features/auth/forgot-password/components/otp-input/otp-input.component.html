@@ -1,0 +1,22 @@
+<div class="otp-boxes-grid" role="group" aria-label="Nhập mã xác thực OTP 6 chữ số">
+  @for (idx of indices; track idx) {
+    <input
+      #digitInput
+      type="text"
+      inputmode="numeric"
+      pattern="[0-9]*"
+      maxlength="1"
+      autocomplete="one-time-code"
+      class="otp-digit-box"
+      [class.filled]="!!digits()[idx]"
+      [class.error]="hasError"
+      [disabled]="disabled"
+      [value]="digits()[idx]"
+      [attr.aria-label]="'Chữ số OTP thứ ' + (idx + 1)"
+      (input)="onInput(idx, $event)"
+      (keydown)="onKeyDown(idx, $event)"
+      (paste)="onPaste($event)"
+      (focus)="onFocus($event)"
+    />
+  }
+</div>

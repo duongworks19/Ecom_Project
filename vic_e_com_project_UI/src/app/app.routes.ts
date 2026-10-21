@@ -5,6 +5,7 @@ import { passwordChangeGuard } from './core/guards/password-change.guard';
 import { adminGuard } from './core/guards/admin.guard';
 import { customerAuthGuard } from './core/guards/customer-auth.guard';
 import { CustomerLayoutComponent } from './layouts/customer-layout/customer-layout.component';
+import { FORGOT_PASSWORD_ROUTES } from './features/auth/forgot-password/forgot-password.routes';
 
 export const routes: Routes = [
   {
@@ -33,6 +34,7 @@ export const routes: Routes = [
       ),
     title: 'Đổi mật khẩu lần đầu — VIC MART',
   },
+  ...FORGOT_PASSWORD_ROUTES,
   {
     path: 'admin',
     canActivate: [passwordChangeGuard, adminGuard],

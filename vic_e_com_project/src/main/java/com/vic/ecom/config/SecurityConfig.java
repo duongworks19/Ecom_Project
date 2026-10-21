@@ -51,6 +51,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**", "/api/vendors/check-name", "/api/shops/**").permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/seller/**").hasRole("VENDOR")
+                .requestMatchers("/api/customer/profile/**").hasAnyRole("CUSTOMER", "ADMIN")
                 .requestMatchers("/api/customer/**").hasRole("CUSTOMER")
                 .requestMatchers("/uploads/avatars/**").authenticated()
                 .anyRequest().authenticated()

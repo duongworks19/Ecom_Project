@@ -1,0 +1,103 @@
+<div class="auth-fullscreen-layout">
+  <!-- LEFT SIDE: VISUAL DISCOVERY COLLAGE PANE (PINTEREST MAGAZINE STYLE) -->
+  <aside class="auth-visual-pane">
+    <div class="visual-bg-overlay"></div>
+    <div class="visual-decor-glow"></div>
+
+    <!-- Floating Pin Badges -->
+    <div class="floating-pin-badges">
+      <div class="visual-pill-chip top-left">
+        <span class="pulse-dot"></span>
+        <span>Bảo mật tài khoản đa lớp</span>
+      </div>
+      <div class="visual-pill-chip bottom-right">
+        <span> Khôi phục nhanh với OTP 6 số</span>
+      </div>
+    </div>
+
+    <!-- Magazine Visual Content -->
+    <div class="visual-content-box">
+      <div class="brand-watermark">
+        <div class="watermark-icon">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="32" height="32">
+            <path
+              d="M12 2C6.48 2 2 6.48 2 12c0 4.24 2.63 7.87 6.4 9.28-.09-.79-.17-2 .03-2.86.19-.78 1.21-5.14 1.21-5.14s-.31-.62-.31-1.53c0-1.43.83-2.51 1.87-2.51.88 0 1.31.66 1.31 1.45 0 .89-.57 2.21-.86 3.44-.24 1.03.52 1.88 1.54 1.88 1.84 0 3.27-1.94 3.27-4.75 0-2.49-1.79-4.22-4.33-4.22-2.95 0-4.69 2.21-4.69 4.5 0 .89.34 1.84.78 2.37.09.1.1.19.07.3-.09.34-.28 1.12-.31 1.28-.04.2-.17.24-.38.14-1.42-.66-2.31-2.74-2.31-4.42 0-3.6 2.61-6.91 7.54-6.91 3.96 0 7.03 2.82 7.03 6.59 0 3.93-2.48 7.1-5.92 7.1-1.16 0-2.24-.6-2.62-1.31l-.71 2.72c-.26.99-.96 2.22-1.42 2.99 1.14.35 2.35.55 3.61.55 5.52 0 10-4.48 10-10S17.52 2 12 2z" />
+          </svg>
+        </div>
+        <span class="watermark-title">VIC MART</span>
+      </div>
+
+      <h2 class="visual-headline">
+        Khôi phục quyền truy cập<br />
+        chỉ trong vài giây.
+      </h2>
+      <p class="visual-subtext">
+        An tâm mua sắm và lưu giữ bộ sưu tập ghim yêu thích của bạn với quy trình xác thực OTP một lần an toàn tuyệt đối.
+      </p>
+
+      <div class="visual-features-strip">
+        <div class="feat-bubble">
+          <span class="feat-val">OTP 6 Số</span>
+          <span class="feat-lbl">Xác thực tức thì</span>
+        </div>
+        <div class="feat-bubble">
+          <span class="feat-val">10 Phút</span>
+          <span class="feat-lbl">Hiệu lực bảo mật</span>
+        </div>
+        <div class="feat-bubble">
+          <span class="feat-val">HMAC</span>
+          <span class="feat-lbl">Mã hóa một chiều</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- RIGHT SIDE: CLEAN & SPACIOUS AUTH FORM PANE -->
+  <main class="auth-form-pane">
+    <!-- Top Navigation Header -->
+    <header class="form-pane-header">
+      <a routerLink="/" class="header-brand" aria-label="Về trang chủ VIC MART">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+            <path
+              d="M12 2C6.48 2 2 6.48 2 12c0 4.24 2.63 7.87 6.4 9.28-.09-.79-.17-2 .03-2.86.19-.78 1.21-5.14 1.21-5.14s-.31-.62-.31-1.53c0-1.43.83-2.51 1.87-2.51.88 0 1.31.66 1.31 1.45 0 .89-.57 2.21-.86 3.44-.24 1.03.52 1.88 1.54 1.88 1.84 0 3.27-1.94 3.27-4.75 0-2.49-1.79-4.22-4.33-4.22-2.95 0-4.69 2.21-4.69 4.5 0 .89.34 1.84.78 2.37.09.1.1.19.07.3-.09.34-.28 1.12-.31 1.28-.04.2-.17.24-.38.14-1.42-.66-2.31-2.74-2.31-4.42 0-3.6 2.61-6.91 7.54-6.91 3.96 0 7.03 2.82 7.03 6.59 0 3.93-2.48 7.1-5.92 7.1-1.16 0-2.24-.6-2.62-1.31l-.71 2.72c-.26.99-.96 2.22-1.42 2.99 1.14.35 2.35.55 3.61.55 5.52 0 10-4.48 10-10S17.52 2 12 2z" />
+          </svg>
+        </div>
+        <span class="brand-text">VIC<span>MART</span></span>
+      </a>
+
+      <a [routerLink]="backRoute" class="btn-back-home">
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        <span>{{ backLabel }}</span>
+      </a>
+    </header>
+
+    <!-- Center Card Box -->
+    <div class="form-center-wrapper">
+      <div class="auth-card">
+        <!-- Stepper Indicator (3 Steps) -->
+        <div class="step-indicator" aria-label="Tiến trình khôi phục mật khẩu">
+          <div class="step-pill" [class.active]="currentStep === 1" [class.completed]="currentStep > 1">
+            <span class="step-num">{{ currentStep > 1 ? '✓' : '1' }}</span>
+            <span class="step-label">Nhập Email</span>
+          </div>
+          <div class="step-line" [class.completed]="currentStep > 1"></div>
+          <div class="step-pill" [class.active]="currentStep === 2" [class.completed]="currentStep > 2">
+            <span class="step-num">{{ currentStep > 2 ? '✓' : '2' }}</span>
+            <span class="step-label">Xác thực OTP</span>
+          </div>
+          <div class="step-line" [class.completed]="currentStep > 2"></div>
+          <div class="step-pill" [class.active]="currentStep === 3">
+            <span class="step-num">3</span>
+            <span class="step-label">Mật khẩu mới</span>
+          </div>
+        </div>
+
+        <ng-content></ng-content>
+      </div>
+    </div>
+  </main>
+</div>
