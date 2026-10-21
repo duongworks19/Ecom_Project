@@ -38,7 +38,8 @@ export class ForgotPasswordPageComponent implements OnInit {
     this.errorMessage.set(null);
 
     const normalizedEmail = this.form.controls.email.value.trim().toLowerCase();
-    this.form.controls.email.setValue(normalizedEmail);
+    this.form.controls.email.setValue(normalizedEmail, { emitEvent: false });
+    this.form.controls.email.markAsTouched({ onlySelf: true });
 
     if (this.form.invalid || this.isSubmitting()) {
       this.form.markAllAsTouched();
