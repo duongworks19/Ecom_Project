@@ -192,6 +192,7 @@ export class HttpAuthService extends AuthService {
   }
 
   changePassword(req: ChangePasswordRequest): Observable<ApiResponse<null>> {
+    // TODO: backend endpoint /api/auth/change-password chưa có; wiring sau khi backend implement.
     return this.http.post<ApiResponse<null>>(`${this.API}/change-password`, req).pipe(
       tap(() => this.setMustChangePassword(false))
     );
@@ -261,6 +262,7 @@ export class MockAuthService extends AuthService {
   }
 
   changePassword(req: ChangePasswordRequest): Observable<ApiResponse<null>> {
+    // TODO: backend endpoint /api/auth/change-password chưa có; wiring sau khi backend implement.
     const username = localStorage.getItem('currentUsername') ?? 'shipper@demo.local';
     const acc = this.accounts.get(username);
     if (acc && acc.password !== req.currentPassword) {

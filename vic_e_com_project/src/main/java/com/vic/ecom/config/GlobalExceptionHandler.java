@@ -1,6 +1,7 @@
 package com.vic.ecom.config;
 
 import com.vic.ecom.dto.ApiResponse;
+import com.vic.ecom.ultis.CustomerAccountException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -14,6 +15,11 @@ import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(CustomerAccountException.class)
+    public ResponseEntity<ApiResponse<Void>> handleAccount(CustomerAccountException ex) {
+        return ResponseEntity.status(ex.getStatus()).body(ApiResponse.fail(ex.getCode() + ": " + ex.getMessage()));
+    }
 
     // Validation errors → 422
     @ExceptionHandler(MethodArgumentNotValidException.class)

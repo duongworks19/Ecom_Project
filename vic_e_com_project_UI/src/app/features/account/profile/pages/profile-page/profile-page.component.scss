@@ -59,6 +59,24 @@
   &__actions {
     margin-top: var(--spacing-xs, 4px);
   }
+
+  &__title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--color-ink, #000000);
+    margin: 0;
+  }
+
+  &__subtitle {
+    font-size: 14px;
+    color: var(--color-mute, #62625b);
+    margin: 0;
+  }
+
+  &__password-form {
+    max-width: 520px;
+    width: 100%;
+  }
 }
 
 .vic-input {
@@ -157,6 +175,10 @@
 
     &__avatar-col {
       order: -1;
+    }
+
+    &__password-form {
+      max-width: none;
     }
   }
 }

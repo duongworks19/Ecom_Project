@@ -23,10 +23,7 @@ describe('ChangePasswordComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [ChangePasswordComponent],
-      providers: [
-        provideRouter([]),
-        { provide: AuthService, useValue: authServiceMock },
-      ],
+      providers: [provideRouter([]), { provide: AuthService, useValue: authServiceMock }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(ChangePasswordComponent);
@@ -34,46 +31,11 @@ describe('ChangePasswordComponent', () => {
     fixture.detectChanges();
   });
 
-  it('evaluates password rules in real time and enables submit only when valid', () => {
-    expect(component.isFormValid()).toBe(false);
-
-    component.form.patchValue({
-      currentPassword: 'Temp@12345',
-      newPassword: 'short',
-      confirmPassword: 'short',
-    });
-    expect(component.ruleMinLength()).toBe(false);
-    expect(component.isFormValid()).toBe(false);
-
-    component.form.patchValue({
-      newPassword: 'NewPassword123',
-      confirmPassword: 'NewPassword123',
-    });
-    expect(component.ruleMinLength()).toBe(true);
-    expect(component.ruleUpperLowerNumber()).toBe(true);
-    expect(component.ruleDifferentFromCurrent()).toBe(true);
-    expect(component.ruleConfirmMatch()).toBe(true);
-    expect(component.isFormValid()).toBe(true);
-  });
-
-  it('displays error on currentPassword control when API returns 400', () => {
-    authServiceMock.changePassword.mockReturnValue(
-      throwError(
-        () =>
-          new HttpErrorResponse({
-            status: 400,
-            error: { message: 'Mật khẩu hiện tại không chính xác' },
-          })
-      )
+  it('renders the first-login wrapper and delegates to the shared form', () => {
+    expect(fixture.nativeElement.querySelector('.brand-badge')?.textContent).toContain('VICMART');
+    expect(fixture.nativeElement.querySelector('.card-title')?.textContent).toContain(
+      'Đổi mật khẩu',
     );
-
-    component.form.patchValue({
-      currentPassword: 'WrongPassword1',
-      newPassword: 'NewPassword123',
-      confirmPassword: 'NewPassword123',
-    });
-
-    component.onSubmit();
-    expect(component.form.controls.currentPassword.hasError('incorrect')).toBe(true);
+    expect(fixture.nativeElement.querySelector('app-password-form')).not.toBeNull();
   });
 });

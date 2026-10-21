@@ -48,6 +48,7 @@ public class SecurityConfig {
                 })
             )
             .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/auth/change-password").authenticated()
                 .requestMatchers("/api/auth/**", "/api/vendors/check-name", "/api/shops/**").permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/seller/**").hasRole("VENDOR")

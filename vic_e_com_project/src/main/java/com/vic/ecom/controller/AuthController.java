@@ -7,6 +7,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
+import com.vic.ecom.dto.ChangePasswordRequest;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -37,5 +39,12 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<Void>> logout() {
         return ResponseEntity.ok(ApiResponse.ok("Logged out successfully", null));
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<Void> changePassword(Authentication authentication,
+                                                @RequestBody ChangePasswordRequest req) {
+        authService.changePassword(authentication.getName(), req);
+        return ResponseEntity.noContent().build();
     }
 }
