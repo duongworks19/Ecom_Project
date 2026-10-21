@@ -52,7 +52,7 @@ public class CustomerProfileService {
         if (user.getStatus() == UserStatus.LOCKED || user.getStatus() == UserStatus.PENDING) {
             throw CustomerAccountException.unauthorized("Account is not active");
         }
-        if (user.getRole() != UserRole.CUSTOMER) {
+        if (user.getRole() != UserRole.CUSTOMER && user.getRole() != UserRole.ADMIN) {
             throw CustomerAccountException.forbidden("Customer role required");
         }
         return user;

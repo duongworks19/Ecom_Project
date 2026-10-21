@@ -46,15 +46,18 @@ class CustomerProfileIntegrationTest {
 
     private String customerToken;
     private String vendorToken;
+    private String adminToken;
 
     @BeforeEach
     void setUp() {
         insertUser("Nguyễn Văn Khách", "it_customer1@vic.com", "0912345601", "CUSTOMER", "ACTIVE");
         insertUser("Khách Số Hai", "it_customer2@vic.com", "0987654302", "CUSTOMER", "ACTIVE");
         insertUser("Chủ Gian Hàng", "it_vendor1@vic.com", "0933444503", "VENDOR", "ACTIVE");
+        insertUser("Quản Trị Viên", "it_admin1@vic.com", "0977888904", "ADMIN", "ACTIVE");
 
         customerToken = jwtUtil.generateToken("it_customer1@vic.com", UserRole.CUSTOMER.name());
         vendorToken = jwtUtil.generateToken("it_vendor1@vic.com", UserRole.VENDOR.name());
+        adminToken = jwtUtil.generateToken("it_admin1@vic.com", UserRole.ADMIN.name());
     }
 
     @AfterEach
@@ -80,6 +83,13 @@ class CustomerProfileIntegrationTest {
         mockMvc.perform(get("/api/customer/profile")
                         .header("Authorization", "Bearer " + vendorToken))
                 .andExpect(status().isForbidden());
+
+        mockMvc.perform(get("/api/customer/profile")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.fullName").value("Quản Trị Viên"))
+                .andExpect(jsonPath("$.email").value("it_admin1@vic.com"))
+                .andExpect(jsonPath("$.phone").value("0977888904"));
 
         mockMvc.perform(get("/api/customer/profile")
                         .header("Authorization", "Bearer " + customerToken))

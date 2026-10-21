@@ -62,6 +62,15 @@ export const ADMIN_ROUTES: Routes = [
         title: 'Cập nhật shipper — VIC MART Admin',
       },
       {
+        // ponytail: reuse customer ProfilePageComponent directly since it only renders the profile card (without AccountLayout sidebar)
+        path: 'profile',
+        loadComponent: () =>
+          import('../account/profile/pages/profile-page/profile-page.component').then(
+            (m) => m.ProfilePageComponent
+          ),
+        title: 'Hồ sơ của tôi — VIC MART Admin',
+      },
+      {
         path: '**',
         redirectTo: 'dashboard',
       },
