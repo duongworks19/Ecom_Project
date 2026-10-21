@@ -24,6 +24,7 @@ import { SkeletonComponent } from '../../../../../shared/ui/skeleton/skeleton.co
 import { ErrorStateComponent } from '../../../../../shared/ui/error-state/error-state.component';
 import { ToastService } from '../../../../../shared/ui/toast/toast.service';
 import { AvatarUploaderComponent } from '../../components/avatar-uploader/avatar-uploader.component';
+import { PasswordFormComponent } from '../../../../../shared/ui/password-form/password-form.component';
 
 @Component({
   selector: 'app-profile-page',
@@ -37,6 +38,7 @@ import { AvatarUploaderComponent } from '../../components/avatar-uploader/avatar
     SkeletonComponent,
     ErrorStateComponent,
     AvatarUploaderComponent,
+    PasswordFormComponent,
   ],
   templateUrl: './profile-page.component.html',
   styleUrl: './profile-page.component.scss',
@@ -180,6 +182,10 @@ export class ProfilePageComponent implements OnInit {
         this.toastService.error(err.message);
       },
     });
+  }
+
+  onPasswordChanged(): void {
+    this.toastService.success('Đã đổi mật khẩu.');
   }
 
   private patchFormFromProfile(profile: CustomerProfile): void {

@@ -1,9 +1,7 @@
 <div class="profile-page">
   <header class="profile-page__header">
     <h1 class="profile-page__title">Hồ sơ của tôi</h1>
-    <p class="profile-page__subtitle">
-      Quản lý thông tin hồ sơ để bảo mật tài khoản
-    </p>
+    <p class="profile-page__subtitle">Quản lý thông tin hồ sơ để bảo mật tài khoản</p>
   </header>
 
   @if (profileService.loading() && !profileService.profile()) {
@@ -22,19 +20,11 @@
       </div>
     </div>
   } @else if (profileService.error() && !profileService.profile()) {
-    <app-error-state
-      [message]="profileService.error()!.message"
-      (retry)="loadProfile()"
-    />
+    <app-error-state [message]="profileService.error()!.message" (retry)="loadProfile()" />
   } @else if (profileService.profile(); as profile) {
     <div class="profile-card">
       <div class="profile-card__grid">
-        <form
-          class="profile-card__form-col"
-          [formGroup]="form"
-          (ngSubmit)="onSave()"
-          novalidate
-        >
+        <form class="profile-card__form-col" [formGroup]="form" (ngSubmit)="onSave()" novalidate>
           <app-form-field
             label="Họ và tên"
             controlId="profile-full-name"
@@ -74,7 +64,7 @@
               <span class="profile-phone-readonly__label">Số điện thoại</span>
               <div class="profile-phone-readonly__box">
                 <span class="profile-phone-readonly__value">
-                  {{ profile.phone | maskPhone:'mask' }}
+                  {{ profile.phone | maskPhone: 'mask' }}
                 </span>
                 <button
                   type="button"
@@ -123,11 +113,7 @@
           }
 
           <div class="profile-card__actions">
-            <app-button
-              type="submit"
-              variant="primary"
-              [loading]="saving()"
-            >
+            <app-button type="submit" variant="primary" [loading]="saving()">
               Lưu thay đổi
             </app-button>
           </div>
@@ -141,6 +127,16 @@
             (fileSelected)="onAvatarSelected($event)"
           />
         </div>
+      </div>
+    </div>
+
+    <div class="profile-card profile-card--password">
+      <h2 class="profile-card__title">Đổi mật khẩu</h2>
+      <p class="profile-card__subtitle">
+        Nhập mật khẩu hiện tại và mật khẩu mới để cập nhật tài khoản
+      </p>
+      <div class="profile-card__password-form">
+        <app-password-form (changed)="onPasswordChanged()" />
       </div>
     </div>
   }
