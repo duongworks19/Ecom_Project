@@ -136,8 +136,7 @@
             <div class="label-row">
               <label for="auth-password">Mật khẩu</label>
               @if (isLogin()) {
-              <a href="#" class="forgot-link"
-                (click)="showToast('Tính năng khôi phục mật khẩu sẽ được bổ sung'); $event.preventDefault()">Quên mật
+              <a routerLink="/forgot-password" class="forgot-link">Quên mật
                 khẩu?</a>
               }
             </div>
