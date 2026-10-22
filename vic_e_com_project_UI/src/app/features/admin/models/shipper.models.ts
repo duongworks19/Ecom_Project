@@ -74,6 +74,8 @@ export interface PageResponse<T> {
   total: number;
   page: number;
   size: number;
+  totalElements?: number;
+  totalPages?: number;
 }
 
 /**

@@ -55,6 +55,10 @@ export class AdminShippersComponent implements OnInit {
 
   readonly historyModalShipper = signal<ShipperDetail | null>(null);
   readonly fullDeliveries = signal<ShipperDeliveryItem[]>([]);
+  readonly currentPage = signal(0);
+  readonly pageSize = 10;
+  readonly totalElements = signal(0);
+  readonly totalPages = signal(0);
 
   private currentKeyword = '';
   private currentStatus: ShipperFilterStatus = 'ALL';
@@ -70,7 +74,14 @@ export class AdminShippersComponent implements OnInit {
   onFilterChanged(filter: { keyword: string; status: ShipperFilterStatus }): void {
     this.currentKeyword = filter.keyword;
     this.currentStatus = filter.status;
+    this.currentPage.set(0);
     this.loadData(this.selectedShipper()?.id);
+  }
+
+  goToPage(page: number): void {
+    if (page < 0 || page >= this.totalPages()) return;
+    this.currentPage.set(page);
+    this.loadData();
   }
 
   onSelectShipper(item: ShipperListItem): void {
@@ -132,11 +143,15 @@ export class AdminShippersComponent implements OnInit {
       list: this.shipperService.getShippers({
         keyword: this.currentKeyword,
         status: this.currentStatus,
+        page: this.currentPage(),
+        size: this.pageSize,
       }),
     }).subscribe({
       next: ({ summary, list }) => {
         this.summary.set(summary);
         this.shippers.set(list.items);
+        this.totalElements.set(list.totalElements ?? list.total);
+        this.totalPages.set(list.totalPages ?? Math.ceil((list.totalElements ?? list.total) / this.pageSize));
         this.isLoading.set(false);
 
         const targetId =
