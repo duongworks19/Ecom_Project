@@ -1,0 +1,82 @@
+<div class="hd">
+  <div>
+    <h1>Đánh giá</h1>
+    <p class="sub">Phản hồi đánh giá của khách để tăng uy tín gian hàng.</p>
+  </div>
+</div>
+
+<div class="quick" style="margin-bottom: 16px">
+  <button
+    class="chip"
+    type="button"
+    [attr.aria-pressed]="filterType() === 'ALL'"
+    (click)="filterType.set('ALL')">
+    Tất cả ({{ reviews().length }})
+  </button>
+  <button
+    class="chip"
+    type="button"
+    [attr.aria-pressed]="filterType() === 'UNREPLIED'"
+    (click)="filterType.set('UNREPLIED')">
+    Chưa phản hồi ({{ unrepliedCount() }})
+  </button>
+</div>
+
+<div class="box">
+  @if (filteredReviews().length > 0) {
+    @for (r of filteredReviews(); track r.id) {
+      <div class="row">
+        <div class="g">
+          <span class="m">{{ r.productName }} · {{ r.customerName }}</span>
+          <b class="stars-val">{{ '★'.repeat(r.rating) }}{{ '☆'.repeat(5 - r.rating) }}</b>
+          <span class="comment-text">{{ r.comment }}</span>
+
+          @if (r.reply) {
+            <span class="m reply-box">
+              Phản hồi của {{ shopName() }}: {{ r.reply }}
+            </span>
+          }
+        </div>
+
+        @if (r.reply) {
+          <span class="tag ok">Đã phản hồi</span>
+        } @else {
+          <button class="btn sm" type="button" (click)="openReply(r)">
+            Phản hồi
+          </button>
+        }
+      </div>
+    }
+  } @else {
+    <p style="margin: 0; color: var(--mute, #62625b)">
+      {{ filterType() === 'UNREPLIED' ? 'Tất cả đánh giá đã được phản hồi.' : 'Chưa có đánh giá nào từ người mua.' }}
+    </p>
+  }
+</div>
+
+<!-- Modal Phản hồi đánh giá -->
+@if (targetReviewForReply(); as tr) {
+  <div class="scrim on" role="dialog" aria-modal="true" (click)="closeReply()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <h2>Phản hồi đánh giá</h2>
+      <p class="sub" style="margin: 6px 0 12px">
+        {{ tr.customerName }}: “{{ tr.comment }}”
+      </p>
+
+      <textarea
+        maxlength="500"
+        placeholder="Nhập nội dung phản hồi cho khách hàng…"
+        [ngModel]="replyText()"
+        (ngModelChange)="replyText.set($event)"></textarea>
+
+      @if (replyError()) {
+        <div class="err" role="alert">{{ replyError() }}</div>
+      }
+
+      <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px">
+        <button class="btn" type="button" (click)="closeReply()">Hủy</button>
+        <button class="btn p" type="button" (click)="confirmReply()">Gửi phản hồi</button>
+      </div>
+    </div>
+  </div>
+}

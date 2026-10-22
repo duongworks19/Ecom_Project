@@ -1,0 +1,144 @@
+:host {
+  display: block;
+}
+
+.hd {
+  display: flex;
+  gap: 16px;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+
+  h1 {
+    margin: 10px 0 4px;
+    font-size: 28px;
+    line-height: 1.15;
+    letter-spacing: -1px;
+    color: var(--ink, #000);
+  }
+
+  .sub {
+    margin: 0 0 24px;
+    color: var(--mute, #62625b);
+    font-size: 14px;
+  }
+}
+
+.quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  border: 0;
+  border-radius: 9999px;
+  background: var(--card, #f6f6f3);
+  color: var(--ink, #000);
+  font-weight: 700;
+  font-size: 13px;
+  padding: 8px 14px;
+  min-height: 36px;
+  cursor: pointer;
+
+  &[aria-pressed='true'] {
+    background: var(--on, #000);
+    color: var(--on-t, #fff);
+  }
+}
+
+.box {
+  background: var(--canvas, #fff);
+  border: 1px solid var(--hair-soft, #e5e5e0);
+  border-radius: 16px;
+  padding: 20px 24px;
+  margin-bottom: 16px;
+}
+
+.row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 0;
+  border-top: 1px solid var(--hair-soft, #e5e5e0);
+  flex-wrap: wrap;
+
+  &:first-of-type {
+    border-top: 0;
+  }
+
+  .g {
+    flex: 1;
+    min-width: 150px;
+
+    b {
+      color: var(--ink, #000);
+      font-size: 14px;
+      display: block;
+    }
+
+    .m {
+      display: block;
+      font-size: 13px;
+      color: var(--mute, #62625b);
+    }
+  }
+}
+
+.tag {
+  display: inline-block;
+  border-radius: 9999px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--card, #f6f6f3);
+  color: var(--ink, #000);
+  white-space: nowrap;
+
+  &.warn {
+    background: var(--warn-bg, #fff1c2);
+    color: var(--warn, #5c4400);
+  }
+}
+
+.field-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--mute, #62625b);
+}
+
+.num-inp {
+  width: 84px;
+  border: 1px solid var(--ash, #91918c);
+  border-radius: 12px;
+  padding: 6px 10px;
+  background: var(--canvas, #fff);
+  font: inherit;
+  outline: none;
+
+  &:focus {
+    border-color: var(--ink, #000);
+  }
+}
+
+.btn {
+  border: 0;
+  border-radius: 9999px;
+  padding: 8px 16px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  min-height: 36px;
+  background: var(--hair-soft, #e5e5e0);
+  color: var(--ink, #000);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    background: var(--on, #000);
+    color: var(--on-t, #fff);
+  }
+}

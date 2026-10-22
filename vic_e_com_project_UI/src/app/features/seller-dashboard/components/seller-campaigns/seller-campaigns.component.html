@@ -1,0 +1,120 @@
+<div class="hd">
+  <div>
+    <h1>Chương trình giảm giá</h1>
+    <p class="sub">Flash sale, combo và mua kèm theo khung thời gian.</p>
+  </div>
+  <div class="quick">
+    <button class="btn p" type="button" (click)="openCreate()">
+      + Tạo chương trình
+    </button>
+  </div>
+</div>
+
+<div class="box">
+  @if (promotions().length > 0) {
+    @for (c of promotions(); track c.id) {
+      <div class="row">
+        <div class="g">
+          <b>{{ c.name }}</b>
+          <span class="m">
+            {{ c.timeRange }} · {{ c.productCount }} sản phẩm · giảm {{ c.discountPercent }}%
+          </span>
+        </div>
+        <span
+          class="tag"
+          [class.ok]="c.status === 'RUNNING'"
+          [class.warn]="c.status === 'UPCOMING'">
+          {{ c.status === 'RUNNING' ? 'Đang chạy' : 'Sắp diễn ra' }}
+        </span>
+
+        <button class="btn sm" type="button">
+          {{ c.status === 'RUNNING' ? 'Tạm dừng' : 'Kích hoạt' }}
+        </button>
+      </div>
+    }
+  } @else {
+    <p style="margin: 0; color: var(--mute, #62625b)">
+      Chưa có chương trình giảm giá nào đang chạy.
+    </p>
+  }
+</div>
+
+<!-- Modal Tạo chương trình -->
+@if (showModal()) {
+  <div class="scrim on" role="dialog" aria-modal="true" (click)="closeModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <h2>Tạo chương trình giảm giá</h2>
+
+      <label class="field">
+        Tên chương trình *
+        <input
+          type="text"
+          class="inp"
+          maxlength="150"
+          placeholder="VD: Flash sale cuối tuần"
+          [(ngModel)]="form.name" />
+      </label>
+
+      <div class="g2">
+        <label class="field">
+          Loại
+          <select class="inp" [(ngModel)]="form.type">
+            <option value="Flash sale">Flash sale</option>
+            <option value="Combo / mua kèm">Combo / mua kèm</option>
+          </select>
+        </label>
+
+        <label class="field">
+          Mức giảm (%) *
+          <input
+            type="number"
+            class="inp"
+            min="1"
+            max="90"
+            [(ngModel)]="form.discountPercent" />
+        </label>
+
+        <label class="field">
+          Bắt đầu *
+          <input
+            type="date"
+            class="inp"
+            [(ngModel)]="form.startDate" />
+        </label>
+
+        <label class="field">
+          Kết thúc *
+          <input
+            type="date"
+            class="inp"
+            [(ngModel)]="form.endDate" />
+        </label>
+      </div>
+
+      <p style="margin: 16px 0 8px; font-size: 13px; font-weight: 600; color: var(--ink, #000)">
+        Sản phẩm áp dụng *
+      </p>
+
+      <div class="prod-checkbox-list">
+        @for (p of products(); track p.id) {
+          <label class="cb">
+            <input
+              type="checkbox"
+              [checked]="selectedProductIds().includes(p.id)"
+              (change)="toggleProductSelection(p.id)" />
+            <span>{{ p.name }} · {{ p.variant }}</span>
+          </label>
+        }
+      </div>
+
+      @if (modalError()) {
+        <div class="err" role="alert">{{ modalError() }}</div>
+      }
+
+      <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px">
+        <button class="btn" type="button" (click)="closeModal()">Đóng</button>
+        <button class="btn p" type="button" (click)="saveCampaign()">Tạo chương trình</button>
+      </div>
+    </div>
+  </div>
+}

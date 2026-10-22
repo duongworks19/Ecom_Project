@@ -1,0 +1,75 @@
+<div class="hd">
+  <div>
+    <h1>Đổi trả / Hoàn tiền</h1>
+    <p class="sub">Chấp nhận thì hệ thống hoàn tiền (payments → REFUNDED) và nhập lại kho.</p>
+  </div>
+</div>
+
+<div class="box">
+  @if (returns().length > 0) {
+    @for (r of returns(); track r.id) {
+      <div class="row">
+        <div class="g">
+          <b>{{ r.orderCode }} · {{ r.type }}</b>
+          <span class="m">
+            {{ r.customerName }} · {{ r.reason }} · {{ r.evidenceImagesCount }} ảnh minh chứng
+            @if (r.rejectReason) {
+              <br />
+              <span class="reject-note">Lý do từ chối: {{ r.rejectReason }}</span>
+            }
+          </span>
+        </div>
+        <b>{{ r.amount | number:'1.0-0' }}đ</b>
+        <span
+          class="tag"
+          [class.warn]="r.status === 'PENDING'"
+          [class.ok]="r.status === 'APPROVED'"
+          [class.no]="r.status === 'REJECTED'">
+          {{ r.status === 'PENDING' ? 'Chờ xử lý' : r.status === 'APPROVED' ? 'Đã chấp nhận' : 'Đã từ chối' }}
+        </span>
+
+        @if (r.status === 'PENDING') {
+          <button
+            class="btn p sm"
+            type="button"
+            (click)="accept.emit(r.id)">
+            Chấp nhận
+          </button>
+          <button
+            class="btn sm"
+            type="button"
+            (click)="openRejectModal(r)">
+            Từ chối
+          </button>
+        }
+      </div>
+    }
+  } @else {
+    <p style="margin: 0; color: var(--mute, #62625b)">Không có yêu cầu đổi trả hoặc hoàn tiền nào.</p>
+  }
+</div>
+
+<!-- Modal Từ chối đổi trả -->
+@if (targetReturnForReject(); as tr) {
+  <div class="scrim on" role="dialog" aria-modal="true" (click)="closeRejectModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <h2>Từ chối yêu cầu {{ tr.orderCode }}</h2>
+      <p style="margin: 0; font-size: 13px; color: var(--mute, #62625b)">Lý do sẽ được gửi cho khách hàng.</p>
+
+      <textarea
+        maxlength="300"
+        placeholder="Nêu lý do từ chối yêu cầu đổi trả…"
+        [ngModel]="rejectReasonText()"
+        (ngModelChange)="rejectReasonText.set($event)"></textarea>
+
+      @if (rejectError()) {
+        <div class="err" role="alert">{{ rejectError() }}</div>
+      }
+
+      <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px">
+        <button class="btn" type="button" (click)="closeRejectModal()">Hủy</button>
+        <button class="btn p" type="button" (click)="confirmReject()">Gửi</button>
+      </div>
+    </div>
+  </div>
+}

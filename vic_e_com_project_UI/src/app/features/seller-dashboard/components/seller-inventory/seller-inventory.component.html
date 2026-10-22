@@ -1,0 +1,68 @@
+<div class="hd">
+  <div>
+    <h1>Kho hàng</h1>
+    <p class="sub">Cập nhật tồn kho theo biến thể. Mỗi lần sửa được ghi vào nhật ký tồn kho (lý do MANUAL).</p>
+  </div>
+</div>
+
+<div class="quick" style="margin-bottom: 16px">
+  <button
+    class="chip"
+    type="button"
+    [attr.aria-pressed]="!filterLow()"
+    (click)="filterLow.set(false)">
+    Tất cả ({{ products().length }})
+  </button>
+  <button
+    class="chip"
+    type="button"
+    [attr.aria-pressed]="filterLow()"
+    (click)="filterLow.set(true)">
+    Sắp hết hàng ({{ lowStockCount() }})
+  </button>
+</div>
+
+<div class="box">
+  @if (displayedProducts().length > 0) {
+    @for (p of displayedProducts(); track p.id) {
+      <div class="row">
+        <div class="g">
+          <b>{{ p.name }} · {{ p.variant }}</b>
+          <span class="m">SKU {{ p.sku }} · Ngành: {{ p.category }}</span>
+        </div>
+
+        @if (p.stock <= getThreshold(p.id)) {
+          <span class="tag warn">Sắp hết</span>
+        }
+
+        <label class="m field-label">
+          Tồn
+          <input
+            class="inp num-inp"
+            type="number"
+            min="0"
+            [value]="getStock(p.id, p.stock)"
+            (input)="setStock(p.id, $any($event.target).value)" />
+        </label>
+
+        <label class="m field-label">
+          Ngưỡng
+          <input
+            class="inp num-inp"
+            type="number"
+            min="0"
+            [value]="getThreshold(p.id)"
+            (input)="setThreshold(p.id, $any($event.target).value)" />
+        </label>
+
+        <button class="btn sm" type="button" (click)="onSave(p)">
+          Lưu
+        </button>
+      </div>
+    }
+  } @else {
+    <p style="margin: 0; color: var(--mute, #62625b)">
+      {{ filterLow() ? 'Không có sản phẩm nào sắp hết hàng.' : 'Chưa có sản phẩm nào trong kho.' }}
+    </p>
+  }
+</div>
