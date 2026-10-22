@@ -1,0 +1,269 @@
+<div class="hd">
+  <div>
+    <h1>Chào {{ shopShortName() }}, hôm nay có {{ todoCount() }} việc cần xử lý</h1>
+    <p class="sub">{{ data().currentDateText }} · Xác nhận đơn mới trước 17:00 để giao trong ngày.</p>
+  </div>
+</div>
+
+<div class="box">
+  <h2>Việc cần làm</h2>
+  <div class="tiles">
+    <button
+      class="tile"
+      type="button"
+      [attr.aria-pressed]="orderFilter() === 'PENDING'"
+      (click)="setFilter('PENDING')">
+      <b>{{ pendingOrders().length }}</b>
+      <span>Đơn chờ xác nhận</span>
+    </button>
+    <button
+      class="tile"
+      type="button"
+      [attr.aria-pressed]="orderFilter() === 'PREPARING'"
+      (click)="setFilter('PREPARING')">
+      <b>{{ preparingOrders().length }}</b>
+      <span>Chờ đóng gói</span>
+    </button>
+    <button
+      class="tile"
+      type="button"
+      (click)="navSelect.emit('returns')">
+      <b>{{ pendingReturnsCount() }}</b>
+      <span>Yêu cầu đổi trả</span>
+    </button>
+    <button
+      class="tile"
+      type="button"
+      (click)="navSelect.emit('inventory')">
+      <b>{{ data().lowStockProducts.length }}</b>
+      <span>Sắp hết hàng</span>
+    </button>
+    <button
+      class="tile"
+      type="button"
+      (click)="navSelect.emit('qa')">
+      <b>{{ unansweredQaCount() }}</b>
+      <span>Câu hỏi chưa trả lời</span>
+    </button>
+  </div>
+</div>
+
+<div class="cols">
+  <div>
+    <!-- Đơn hàng cần xử lý -->
+    <div class="box">
+      <h2>
+        Đơn hàng cần xử lý
+        <span class="quick">
+          <button
+            class="chip"
+            type="button"
+            [attr.aria-pressed]="orderFilter() === 'ALL'"
+            (click)="setFilter('ALL')">
+            Tất cả ({{ pendingOrders().length + preparingOrders().length }})
+          </button>
+        </span>
+      </h2>
+
+      @if (displayOrders().length > 0) {
+        @for (o of displayOrders(); track o.id) {
+          <div class="row">
+            <div class="g">
+              <b>{{ o.orderCode }}</b>
+              <span class="m">{{ o.customerName }} · {{ o.productSummary }} · {{ o.createdAt || 'Hôm nay' }}</span>
+            </div>
+            <b>{{ o.totalAmount | number:'1.0-0' }}đ</b>
+            <span class="tag" [class.warn]="o.status === 'PENDING_CONFIRMATION'">
+              {{ o.statusLabel }}
+            </span>
+            @if (o.status === 'PENDING_CONFIRMATION') {
+              <button class="btn p sm" type="button" (click)="onConfirmOrder(o.orderCode)">
+                Xác nhận
+              </button>
+              <button class="btn sm" type="button" (click)="onOpenRejectModal(o.orderCode)">
+                Từ chối
+              </button>
+            } @else if (o.status === 'PREPARING') {
+              <button class="btn sm" type="button" (click)="onPackedOrder(o.orderCode)">
+                Đã đóng gói
+              </button>
+            }
+          </div>
+        }
+      } @else {
+        <p style="color:var(--mute, #62625b); margin:0">Không còn đơn nào ở mục này. Tốt lắm!</p>
+      }
+
+      @for (o of readyToShipOrders(); track o.id) {
+        <div class="row">
+          <div class="g">
+            <b>{{ o.orderCode }}</b>
+            <span class="m">{{ o.customerName }} · Chờ Admin gán shipper</span>
+          </div>
+          <span class="tag info">{{ o.statusLabel }}</span>
+        </div>
+      }
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpis">
+      <div class="kpi">
+        <span>Doanh thu hôm nay</span>
+        <b>{{ data().stats.todayRevenue | number:'1.0-0' }}đ</b>
+        <small>+{{ data().stats.revenueGrowthPercent }}% so với hôm qua · đơn đã giao</small>
+      </div>
+      <div class="kpi">
+        <span>Đơn hàng hôm nay</span>
+        <b>{{ data().stats.totalOrdersToday }}</b>
+        <small>{{ pendingOrders().length }} chờ xác nhận</small>
+      </div>
+      <div class="kpi">
+        <span>Tỷ lệ hủy</span>
+        <b>{{ data().stats.cancellationRate }}%</b>
+        <small>30 ngày gần nhất</small>
+      </div>
+      <div class="kpi">
+        <span>Đánh giá trung bình</span>
+        <b>{{ data().stats.totalReviews > 0 ? (data().stats.averageRating + ' ★') : '—' }}</b>
+        <small>{{ data().stats.totalReviews > 0 ? (data().stats.totalReviews + ' đánh giá') : 'Chưa có đánh giá' }}</small>
+      </div>
+    </div>
+
+    <!-- Doanh thu 7 ngày -->
+    <div class="box">
+      <h2>
+        Doanh thu 7 ngày
+        <span style="font-size:13px; font-weight:500; color:var(--mute, #62625b)">triệu đồng, đơn DELIVERED</span>
+      </h2>
+      <div class="chart" role="img" aria-label="Doanh thu 7 ngày gần nhất">
+        @for (pt of data().revenueChart7Days; track pt.label) {
+          <div>
+            <span>{{ pt.valueInMillions }}</span>
+            <i [style.height.%]="pt.valueInMillions > 0 ? (pt.valueInMillions / 5) * 80 : 4"></i>
+            <span>{{ pt.label }}</span>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <!-- Hoàn thiện gian hàng -->
+    <div class="box">
+      <h2>
+        Hoàn thiện gian hàng
+        <span class="tag">{{ data().completedSteps }}/{{ data().totalSteps }}</span>
+      </h2>
+      <div class="bar">
+        <i [style.width.%]="(data().completedSteps / data().totalSteps) * 100"></i>
+      </div>
+      <div class="ck d"><s>✓</s>Hồ sơ shop</div>
+      <div class="ck d"><s>✓</s>Địa chỉ kho lấy hàng</div>
+      <div class="ck" [class.d]="data().completedSteps >= 3">
+        <s>{{ data().completedSteps >= 3 ? '✓' : '' }}</s>
+        Đăng 5 sản phẩm
+      </div>
+      <div class="ck" [class.d]="data().completedSteps >= 4">
+        <s>{{ data().completedSteps >= 4 ? '✓' : '' }}</s>
+        Tạo voucher đầu tiên
+      </div>
+    </div>
+
+    <!-- Sắp hết hàng -->
+    <div class="box" id="st">
+      <h2>
+        Sắp hết hàng
+        <span class="tag warn">{{ data().lowStockProducts.length }}</span>
+      </h2>
+      @if (data().lowStockProducts.length > 0) {
+        @for (s of data().lowStockProducts; track s.id) {
+          <div class="row">
+            <div class="g">
+              <b>{{ s.name }} · {{ s.variant }}</b>
+              <span class="m">Ngưỡng cảnh báo: 5</span>
+            </div>
+            <span class="tag warn">Còn {{ s.remainingQuantity }}</span>
+            <button
+              class="btn sm"
+              type="button"
+              (click)="openRestock.emit({ productId: s.id, name: s.name })">
+              Nhập kho
+            </button>
+          </div>
+        }
+      } @else {
+        <p style="color:var(--mute, #62625b); margin:0">Không có sản phẩm nào sắp hết hàng.</p>
+      }
+    </div>
+
+    <!-- Cần phản hồi -->
+    <div class="box" id="qa">
+      <h2>
+        Cần phản hồi
+        <span class="tag">{{ pendingReturnsCount() + unansweredQaCount() }}</span>
+      </h2>
+      @for (r of returnsList(); track r.id) {
+        @if (r.status === 'PENDING') {
+          <div class="row">
+            <div class="g">
+              <span class="m">Đổi trả</span>
+              <b>{{ r.orderCode }} · {{ r.reason }}</b>
+            </div>
+            <button class="btn sm" type="button" (click)="navSelect.emit('returns')">
+              Xử lý
+            </button>
+          </div>
+        }
+      }
+      @for (q of qaList(); track q.id) {
+        @if (!q.answer) {
+          <div class="row">
+            <div class="g">
+              <span class="m">Hỏi đáp · {{ q.productName }}</span>
+              <b>{{ q.question }}</b>
+            </div>
+            <button class="btn sm" type="button" (click)="navSelect.emit('qa')">
+              Trả lời
+            </button>
+          </div>
+        }
+      }
+      @if (pendingReturnsCount() === 0 && unansweredQaCount() === 0) {
+        <p style="color:var(--mute, #62625b); margin:0">Tất cả yêu cầu và câu hỏi đã được xử lý.</p>
+      }
+    </div>
+  </div>
+</div>
+
+<!-- Modal Từ chối đơn hàng -->
+@if (showRejectModal()) {
+  <div class="scrim on" role="dialog" aria-modal="true" (click)="onCloseRejectModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <h2>Từ chối đơn hàng</h2>
+      <p style="margin:0; font-size:13px; color:var(--mute, #62625b)">Đơn {{ targetOrderForReject() }}</p>
+
+      <textarea
+        maxlength="300"
+        placeholder="Nêu lý do để khách hàng biết…"
+        [ngModel]="rejectReasonText()"
+        (ngModelChange)="rejectReasonText.set($event)"></textarea>
+
+      @if (rejectError()) {
+        <div class="err" role="alert">{{ rejectError() }}</div>
+      }
+
+      <div class="quick">
+        @for (q of quickReasons; track q) {
+          <button type="button" class="chip" (click)="onSelectQuickReason(q)">
+            {{ q }}
+          </button>
+        }
+      </div>
+
+      <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:18px">
+        <button class="btn" type="button" (click)="onCloseRejectModal()">Hủy</button>
+        <button class="btn p" type="button" (click)="onConfirmReject()">Từ chối đơn</button>
+      </div>
+    </div>
+  </div>
+}

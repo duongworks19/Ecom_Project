@@ -1,0 +1,49 @@
+<div class="chart-card">
+  <h3 class="card-title">Trạng thái đơn hàng</h3>
+  
+  <div class="chart-content">
+    <!-- SVG Donut Chart -->
+    <div class="donut-wrapper">
+      <svg viewBox="0 0 160 160" class="donut-svg">
+        <g transform="rotate(-90 80 80)">
+          <circle
+            cx="80"
+            cy="80"
+            r="56"
+            fill="transparent"
+            stroke="#e5e5e0"
+            stroke-width="24"
+          />
+          @for (slice of svgSlices; track slice.color) {
+            <circle
+              cx="80"
+              cy="80"
+              r="56"
+              fill="transparent"
+              [attr.stroke]="slice.color"
+              stroke-width="24"
+              [attr.stroke-dasharray]="slice.dashArray"
+              [attr.stroke-dashoffset]="slice.dashOffset"
+            />
+          }
+        </g>
+        <!-- Center Total Text -->
+        <text x="80" y="74" text-anchor="middle" class="total-number">{{ totalOrders }}</text>
+        <text x="80" y="93" text-anchor="middle" class="total-label">đơn</text>
+      </svg>
+    </div>
+
+    <!-- Legend Breakdown -->
+    <div class="legend-list">
+      @for (item of stats; track item.statusKey) {
+        <div class="legend-item">
+          <div class="item-left">
+            <span class="legend-dot" [style.background-color]="item.color"></span>
+            <span class="item-label">{{ item.label }}</span>
+          </div>
+          <span class="item-count">{{ item.count }}</span>
+        </div>
+      }
+    </div>
+  </div>
+</div>

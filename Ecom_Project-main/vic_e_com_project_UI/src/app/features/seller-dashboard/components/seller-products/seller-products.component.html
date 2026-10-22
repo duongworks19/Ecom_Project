@@ -1,0 +1,162 @@
+<div class="hd">
+  <div>
+    <h1>Sản phẩm</h1>
+    <p class="sub">{{ products().length }} sản phẩm trong gian hàng.</p>
+  </div>
+  <div class="quick">
+    <button class="btn" type="button" (click)="openImportExport()">
+      Nhập / Xuất file
+    </button>
+    <button class="btn p" type="button" (click)="openAddProduct.emit()">
+      + Thêm sản phẩm
+    </button>
+  </div>
+</div>
+
+<div class="tabs-row">
+  <div class="quick tabs-left">
+    <button
+      class="chip"
+      type="button"
+      [attr.aria-pressed]="statusFilter() === 'ALL'"
+      (click)="statusFilter.set('ALL')">
+      Tất cả ({{ getCount('ALL') }})
+    </button>
+    <button
+      class="chip"
+      type="button"
+      [attr.aria-pressed]="statusFilter() === 'ACTIVE'"
+      (click)="statusFilter.set('ACTIVE')">
+      Đang bán ({{ getCount('ACTIVE') }})
+    </button>
+    <button
+      class="chip"
+      type="button"
+      [attr.aria-pressed]="statusFilter() === 'HIDDEN'"
+      (click)="statusFilter.set('HIDDEN')">
+      Đã ẩn ({{ getCount('HIDDEN') }})
+    </button>
+    <button
+      class="chip"
+      type="button"
+      [attr.aria-pressed]="statusFilter() === 'LOW_STOCK'"
+      (click)="statusFilter.set('LOW_STOCK')">
+      Sắp hết hàng ({{ getCount('LOW_STOCK') }})
+    </button>
+  </div>
+
+  <input
+    class="inp search-inp"
+    type="search"
+    aria-label="Tìm kiếm sản phẩm"
+    placeholder="Tìm kiếm sản phẩm hoặc mã SKU..."
+    [ngModel]="searchQuery()"
+    (ngModelChange)="searchQuery.set($event)" />
+</div>
+
+<div class="box">
+  <!-- EMPTY STATE CHO SHOP MỚI ĐƯỢC DUYỆT -->
+  @if (products().length === 0) {
+    <div class="empty-products-state">
+      <div class="empty-icon-bubble">📦</div>
+      <h3>Gian hàng chưa có sản phẩm nào</h3>
+      <p>
+        Gian hàng mới được cấp phép hoạt động và hiện chưa có sản phẩm. Người bán cần tự cập nhật hàng hóa lên trang để bắt đầu bán hàng.
+      </p>
+      <button class="btn p" type="button" (click)="openAddProduct.emit()">
+        + Đăng sản phẩm đầu tiên
+      </button>
+    </div>
+  } @else if (filteredProducts().length === 0) {
+    <p style="margin: 0; color: var(--mute, #62625b)">
+      Không có sản phẩm nào khớp với tìm kiếm "{{ searchQuery() }}".
+    </p>
+  } @else {
+    @for (p of filteredProducts(); track p.id) {
+      <div class="row">
+        <img [src]="p.imageUrl" [alt]="p.name" class="prod-thumb" />
+        <div class="g">
+          <b>{{ p.name }}</b>
+          <span class="m">
+            {{ p.category }} · SKU: {{ p.sku }} · Phân loại: {{ p.variant }} · Đã bán {{ p.soldCount }}
+          </span>
+        </div>
+        <span class="price-text">{{ p.price | number:'1.0-0' }}đ</span>
+        <span
+          class="tag"
+          [class.warn]="p.stock <= 10">
+          Kho {{ p.stock }}
+        </span>
+        <span
+          class="tag"
+          [class.ok]="p.status === 'ACTIVE'"
+          [class.no]="p.status === 'HIDDEN'">
+          {{ p.status === 'ACTIVE' ? 'Đang bán' : 'Đã ẩn' }}
+        </span>
+
+        <button class="btn sm" type="button" (click)="editProduct.emit(p)">
+          Sửa
+        </button>
+        <button class="btn sm" type="button" (click)="toggleVisibility.emit(p.id)">
+          {{ p.status === 'ACTIVE' ? 'Ẩn' : 'Hiện' }}
+        </button>
+        <button class="btn sm" type="button" (click)="onOpenDelete(p)">
+          Xóa
+        </button>
+      </div>
+    }
+  }
+</div>
+
+<!-- Modal Xác nhận xóa sản phẩm -->
+@if (targetProductForDelete(); as tp) {
+  <div class="scrim on" role="dialog" aria-modal="true" (click)="closeDeleteModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <h2>Xóa sản phẩm?</h2>
+      <p style="margin: 12px 0 18px; color: var(--mute, #62625b)">
+        “{{ tp.name }}” sẽ bị gỡ khỏi gian hàng. Đơn hàng khách đã đặt trước đó sẽ không bị ảnh hưởng.
+      </p>
+
+      <div style="display: flex; gap: 8px; justify-content: flex-end">
+        <button class="btn" type="button" (click)="closeDeleteModal()">Hủy</button>
+        <button class="btn p" type="button" (click)="confirmDelete()">Xóa</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Modal Nhập / Xuất file -->
+@if (showImportExportModal()) {
+  <div class="scrim on" role="dialog" aria-modal="true" (click)="closeImportExport()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <h2>Nhập / Xuất sản phẩm hàng loạt</h2>
+      <p class="sub" style="margin: 8px 0 16px">
+        Xuất toàn bộ sản phẩm hoặc nhập thêm từ file. Sản phẩm nhập vào sẽ được lưu vào gian hàng để bạn kiểm tra trước khi bán.
+      </p>
+
+      <div class="quick" style="margin-bottom: 16px">
+        <button class="btn sm" type="button">Xuất CSV</button>
+        <button class="btn sm" type="button">Xuất Excel</button>
+        <button class="btn sm" type="button">Tải file mẫu</button>
+      </div>
+
+      <label style="display:block; font-size:13px; font-weight:600; color:var(--ink, #000); margin-bottom: 6px">
+        Chọn file nhập (.csv hoặc .xlsx, tối đa 5MB)
+      </label>
+      <input
+        type="file"
+        class="inp"
+        accept=".csv,.xlsx"
+        (change)="onFileImport($event)" />
+
+      @if (importError()) {
+        <div class="err" role="alert">{{ importError() }}</div>
+      }
+
+      <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px">
+        <button class="btn" type="button" (click)="closeImportExport()">Đóng</button>
+        <button class="btn p" type="button" (click)="closeImportExport()">Nhập file</button>
+      </div>
+    </div>
+  </div>
+}

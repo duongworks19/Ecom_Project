@@ -1,0 +1,180 @@
+<div class="hd">
+  <div>
+    <h1>{{ editingProduct() ? 'Sửa sản phẩm' : 'Thêm sản phẩm' }}</h1>
+    <p class="sub">Nhập thông tin sản phẩm và phân loại biến thể để đăng bán trên sàn VIC MART.</p>
+  </div>
+</div>
+
+<div class="box form-box">
+  <!-- 1. Tên sản phẩm & Ngành hàng -->
+  <label class="field">
+    Tên sản phẩm *
+    <input
+      type="text"
+      class="inp"
+      maxlength="150"
+      placeholder="VD: Đèn ngủ gỗ sồi ánh sáng ấm"
+      [ngModel]="formName()"
+      (ngModelChange)="formName.set($event)" />
+  </label>
+
+  <div class="g2">
+    <label class="field">
+      Danh mục *
+      <select
+        class="inp"
+        [ngModel]="formCategory()"
+        (ngModelChange)="formCategory.set($event)">
+        @for (c of categories; track c) {
+          <option [value]="c">{{ c }}</option>
+        }
+      </select>
+    </label>
+
+    <label class="field">
+      Trạng thái
+      <select
+        class="inp"
+        [ngModel]="formStatus()"
+        (ngModelChange)="formStatus.set($event)">
+        <option value="ACTIVE">Đang bán</option>
+        <option value="HIDDEN">Đã ẩn</option>
+      </select>
+    </label>
+  </div>
+
+  <!-- 2. HÌNH ẢNH SẢN PHẨM (MỤC THÊM ẢNH) -->
+  <div class="image-upload-section">
+    <label class="field-title">Hình ảnh sản phẩm *</label>
+    <div class="image-upload-grid">
+      <!-- Image Preview Area -->
+      <div class="image-preview-card">
+        <img [src]="formImageUrl()" alt="Xem trước ảnh sản phẩm" class="preview-img" />
+        <button
+          type="button"
+          class="btn-remove-img"
+          title="Xóa ảnh này"
+          (click)="removeImage()">
+          ✕
+        </button>
+      </div>
+
+      <!-- Upload Actions -->
+      <div class="upload-dropzone">
+        <div class="upload-icon">📷</div>
+        <div class="upload-texts">
+          <strong>Tải ảnh lên từ máy tính</strong>
+          <small>Hỗ trợ JPG, PNG, WEBP (tối đa 5MB)</small>
+          @if (uploadedImageFileName()) {
+            <span class="file-name-badge">✓ Đã chọn: {{ uploadedImageFileName() }}</span>
+          }
+        </div>
+        <label class="btn p sm upload-btn">
+          Chọn ảnh từ máy
+          <input
+            type="file"
+            hidden
+            accept=".jpg,.jpeg,.png,.webp"
+            (change)="onImageFileChange($event)" />
+        </label>
+      </div>
+    </div>
+
+    <!-- Quick Presets -->
+    <div class="preset-pickers">
+      <span class="preset-label">Hoặc chọn nhanh ảnh mẫu:</span>
+      <div class="preset-thumbs">
+        @for (preset of presetImages; track preset.url) {
+          <button
+            type="button"
+            class="preset-thumb-btn"
+            [class.active]="formImageUrl() === preset.url"
+            (click)="onSelectPresetImage(preset.url)">
+            <img [src]="preset.url" [alt]="preset.label" />
+          </button>
+        }
+      </div>
+    </div>
+
+    @if (imageUploadError()) {
+      <div class="err" role="alert">{{ imageUploadError() }}</div>
+    }
+  </div>
+
+  <!-- 3. Mô tả -->
+  <label class="field">
+    Mô tả sản phẩm
+    <textarea
+      class="inp txt-area"
+      maxlength="2000"
+      placeholder="Mô tả chi tiết chất liệu, xuất xứ, hướng dẫn sử dụng..."
+      [ngModel]="formDescription()"
+      (ngModelChange)="formDescription.set($event)"></textarea>
+  </label>
+
+  <!-- 4. Biến thể -->
+  <h3 class="variants-title">Biến thể: SKU · Phân loại · Giá bán · Tồn kho · Ngưỡng cảnh báo</h3>
+
+  <div class="variants-table">
+    @for (v of variants(); track $index) {
+      <div class="vr">
+        <input
+          class="inp"
+          aria-label="SKU"
+          placeholder="Mã SKU"
+          [value]="v.sku"
+          (input)="updateVariant($index, 'sku', $any($event.target).value)" />
+        <input
+          class="inp"
+          aria-label="Phân loại"
+          placeholder="Phân loại (Màu, Size)"
+          [value]="v.variant"
+          (input)="updateVariant($index, 'variant', $any($event.target).value)" />
+        <input
+          class="inp"
+          type="number"
+          min="0"
+          aria-label="Giá"
+          placeholder="Giá (VNĐ)"
+          [value]="v.price"
+          (input)="updateVariant($index, 'price', $any($event.target).value)" />
+        <input
+          class="inp"
+          type="number"
+          min="0"
+          aria-label="Tồn kho"
+          placeholder="Tồn kho"
+          [value]="v.stock"
+          (input)="updateVariant($index, 'stock', $any($event.target).value)" />
+        <input
+          class="inp"
+          type="number"
+          min="0"
+          aria-label="Ngưỡng"
+          placeholder="Ngưỡng"
+          [value]="v.threshold"
+          (input)="updateVariant($index, 'threshold', $any($event.target).value)" />
+        <button
+          class="btn sm btn-del"
+          type="button"
+          aria-label="Xóa biến thể"
+          (click)="removeVariant($index)">
+          ✕
+        </button>
+      </div>
+    }
+  </div>
+
+  <button class="btn sm" type="button" style="margin-top: 10px" (click)="addVariant()">
+    + Thêm biến thể
+  </button>
+
+  @if (formError()) {
+    <div class="err" role="alert">{{ formError() }}</div>
+  }
+
+  <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px">
+    <button class="btn" type="button" (click)="close.emit()">Hủy</button>
+    <button class="btn p" type="button" (click)="onSubmit()">Lưu sản phẩm</button>
+  </div>
+</div>

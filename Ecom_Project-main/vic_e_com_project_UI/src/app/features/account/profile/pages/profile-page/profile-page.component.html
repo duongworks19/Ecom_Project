@@ -1,0 +1,143 @@
+<div class="profile-page">
+  <header class="profile-page__header">
+    <h1 class="profile-page__title">Hồ sơ của tôi</h1>
+    <p class="profile-page__subtitle">Quản lý thông tin hồ sơ để bảo mật tài khoản</p>
+  </header>
+
+  @if (profileService.loading() && !profileService.profile()) {
+    <div class="profile-card" aria-busy="true" aria-label="Đang tải hồ sơ">
+      <div class="profile-card__grid">
+        <div class="profile-card__form-col">
+          <app-skeleton height="44px" />
+          <app-skeleton height="44px" />
+          <app-skeleton height="44px" />
+          <app-skeleton width="140px" height="44px" />
+        </div>
+        <div class="profile-card__avatar-col">
+          <app-skeleton width="96px" height="96px" rounded="full" />
+          <app-skeleton width="110px" height="44px" />
+        </div>
+      </div>
+    </div>
+  } @else if (profileService.error() && !profileService.profile()) {
+    <app-error-state [message]="profileService.error()!.message" (retry)="loadProfile()" />
+  } @else if (profileService.profile(); as profile) {
+    <div class="profile-card">
+      <div class="profile-card__grid">
+        <form class="profile-card__form-col" [formGroup]="form" (ngSubmit)="onSave()" novalidate>
+          <app-form-field
+            label="Họ và tên"
+            controlId="profile-full-name"
+            [required]="true"
+            [error]="fullNameError"
+          >
+            <input
+              id="profile-full-name"
+              aria-label="Họ và tên"
+              type="text"
+              class="vic-input"
+              formControlName="fullName"
+              autocomplete="name"
+              [attr.aria-invalid]="!!fullNameError"
+              [attr.aria-describedby]="fullNameError ? 'profile-full-name-error' : null"
+            />
+          </app-form-field>
+
+          <app-form-field
+            label="Email"
+            controlId="profile-email"
+            hint="Email dùng để đăng nhập và nhận thông báo đơn hàng"
+          >
+            <input
+              id="profile-email"
+              aria-label="Email"
+              type="email"
+              class="vic-input vic-input--readonly"
+              [value]="profile.email | maskEmail"
+              readonly
+              aria-describedby="profile-email-hint"
+            />
+          </app-form-field>
+
+          @if (!isEditingPhone()) {
+            <div class="profile-phone-readonly">
+              <span class="profile-phone-readonly__label">Số điện thoại</span>
+              <div class="profile-phone-readonly__box">
+                <span class="profile-phone-readonly__value">
+                  {{ profile.phone | maskPhone: 'mask' }}
+                </span>
+                <button
+                  type="button"
+                  class="profile-phone-readonly__action"
+                  (click)="enablePhoneEditing()"
+                >
+                  Thay đổi
+                </button>
+              </div>
+            </div>
+          } @else {
+            <app-form-field
+              label="Số điện thoại"
+              controlId="profile-phone"
+              [required]="true"
+              [error]="phoneError"
+            >
+              <div class="profile-phone-edit">
+                <input
+                  #phoneInput
+                  id="profile-phone"
+                  aria-label="Số điện thoại"
+                  type="tel"
+                  class="vic-input"
+                  formControlName="phone"
+                  placeholder="090 123 4218"
+                  autocomplete="tel"
+                  [attr.aria-invalid]="!!phoneError"
+                  [attr.aria-describedby]="phoneError ? 'profile-phone-error' : null"
+                />
+                <button
+                  type="button"
+                  class="profile-phone-edit__cancel"
+                  (click)="cancelPhoneEditing()"
+                >
+                  Hủy
+                </button>
+              </div>
+            </app-form-field>
+          }
+
+          @if (submitError()) {
+            <p class="profile-card__submit-error" role="alert">
+              {{ submitError() }}
+            </p>
+          }
+
+          <div class="profile-card__actions">
+            <app-button type="submit" variant="primary" [loading]="saving()">
+              Lưu thay đổi
+            </app-button>
+          </div>
+        </form>
+
+        <div class="profile-card__avatar-col">
+          <app-avatar-uploader
+            [avatarUrl]="profile.avatarUrl"
+            [fullName]="profile.fullName"
+            [uploading]="uploadingAvatar()"
+            (fileSelected)="onAvatarSelected($event)"
+          />
+        </div>
+      </div>
+    </div>
+
+    <div class="profile-card profile-card--password">
+      <h2 class="profile-card__title">Đổi mật khẩu</h2>
+      <p class="profile-card__subtitle">
+        Nhập mật khẩu hiện tại và mật khẩu mới để cập nhật tài khoản
+      </p>
+      <div class="profile-card__password-form">
+        <app-password-form (changed)="onPasswordChanged()" />
+      </div>
+    </div>
+  }
+</div>

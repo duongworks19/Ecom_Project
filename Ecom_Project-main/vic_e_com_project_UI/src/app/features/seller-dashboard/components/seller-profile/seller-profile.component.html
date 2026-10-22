@@ -1,0 +1,87 @@
+<div class="hd">
+  <div>
+    <h1>Hồ sơ gian hàng</h1>
+    <p class="sub">Thông tin hiển thị công khai cho khách hàng.</p>
+  </div>
+</div>
+
+<div class="box profile-box">
+  <div class="g2">
+    <label class="field">
+      Tên gian hàng *
+      <input
+        type="text"
+        class="inp"
+        maxlength="50"
+        [(ngModel)]="form.shopName" />
+    </label>
+
+    <label class="field">
+      Số điện thoại liên hệ *
+      <input
+        type="tel"
+        class="inp"
+        [(ngModel)]="form.phone" />
+    </label>
+
+    <label class="field">
+      Email
+      <input
+        type="email"
+        class="inp"
+        [(ngModel)]="form.email" />
+    </label>
+
+    <label class="field">
+      Giờ hoạt động
+      <input
+        type="text"
+        class="inp"
+        [(ngModel)]="form.businessHours" />
+    </label>
+  </div>
+
+  <label class="field">
+    Giới thiệu (tối đa 300 ký tự)
+    <textarea
+      maxlength="300"
+      class="inp txt-area"
+      [(ngModel)]="form.description"></textarea>
+  </label>
+
+  <label class="field">
+    Địa chỉ kho lấy hàng *
+    <input
+      type="text"
+      class="inp"
+      [(ngModel)]="form.pickupAddress" />
+  </label>
+
+  <div class="g2">
+    <label class="field">
+      Logo (JPG, PNG, WEBP · 2MB)
+      <input
+        type="file"
+        class="inp file-inp"
+        accept=".jpg,.jpeg,.png,.webp" />
+    </label>
+
+    <label class="field">
+      Banner (JPG, PNG, WEBP · 2MB)
+      <input
+        type="file"
+        class="inp file-inp"
+        accept=".jpg,.jpeg,.png,.webp" />
+    </label>
+  </div>
+
+  @if (formError()) {
+    <div class="err" role="alert">{{ formError() }}</div>
+  }
+
+  <div style="margin-top: 20px">
+    <button class="btn p" type="button" (click)="onSubmit()">
+      Lưu thay đổi
+    </button>
+  </div>
+</div>

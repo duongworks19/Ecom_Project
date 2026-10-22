@@ -1,0 +1,120 @@
+<div class="hd">
+  <div>
+    <h1>Voucher của shop</h1>
+    <p class="sub">Tạo và quản lý mã giảm giá riêng cho gian hàng.</p>
+  </div>
+  <div class="quick">
+    <button class="btn p" type="button" (click)="openCreate()">
+      + Tạo voucher
+    </button>
+  </div>
+</div>
+
+<div class="box">
+  @if (vouchers().length > 0) {
+    @for (v of vouchers(); track v.id) {
+      <div class="row">
+        <div class="g">
+          <span class="mono">{{ v.code }}</span>
+          <span class="m">
+            {{ v.discountText }} · đơn từ {{ v.minOrderAmount | number:'1.0-0' }}đ · đã dùng {{ v.usedCount }}/{{ v.totalQuota }} · HSD: {{ v.expiryDate }}
+          </span>
+        </div>
+        <span
+          class="tag"
+          [class.ok]="v.active"
+          [class.warn]="!v.active">
+          {{ v.active ? 'Đang chạy' : 'Tạm dừng' }}
+        </span>
+
+        <button class="btn sm" type="button" (click)="openEdit(v)">
+          Sửa
+        </button>
+        <button class="btn sm" type="button" (click)="toggleVoucher.emit(v.id)">
+          {{ v.active ? 'Tạm dừng' : 'Tiếp tục' }}
+        </button>
+        <button class="btn sm" type="button" (click)="deleteVoucher.emit(v.code)">
+          Xóa
+        </button>
+      </div>
+    }
+  } @else {
+    <p style="margin: 0; color: var(--mute, #62625b)">
+      Chưa có mã giảm giá nào. Hãy bấm "+ Tạo voucher" để kích thích khách mua hàng!
+    </p>
+  }
+</div>
+
+<!-- Modal Tạo / Sửa Voucher -->
+@if (showModal()) {
+  <div class="scrim on" role="dialog" aria-modal="true" (click)="closeModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <h2>{{ editingVoucher() ? 'Sửa voucher' : 'Tạo voucher' }}</h2>
+
+      <div class="g2">
+        <label class="field">
+          Mã voucher * (3–20 ký tự A–Z, 0–9)
+          <input
+            type="text"
+            class="inp"
+            maxlength="20"
+            [disabled]="!!editingVoucher()"
+            [(ngModel)]="form.code" />
+        </label>
+
+        <label class="field">
+          Loại giảm giá
+          <select class="inp" [(ngModel)]="form.discountType">
+            <option value="PERCENT">Giảm theo %</option>
+            <option value="FIXED">Giảm số tiền cố định</option>
+          </select>
+        </label>
+
+        <label class="field">
+          Giá trị giảm *
+          <input
+            type="number"
+            class="inp"
+            min="1"
+            [(ngModel)]="form.val" />
+        </label>
+
+        <label class="field">
+          Đơn tối thiểu
+          <input
+            type="number"
+            class="inp"
+            min="0"
+            [(ngModel)]="form.minOrder" />
+        </label>
+
+        <label class="field">
+          Số lượt dùng tối đa *
+          <input
+            type="number"
+            class="inp"
+            min="1"
+            [(ngModel)]="form.quota" />
+        </label>
+
+        <label class="field">
+          Hạn sử dụng *
+          <input
+            type="text"
+            class="inp"
+            placeholder="VD: 31/12/2026"
+            [(ngModel)]="form.expiryDate" />
+        </label>
+      </div>
+
+      @if (modalError()) {
+        <div class="err" role="alert">{{ modalError() }}</div>
+      }
+
+      <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px">
+        <button class="btn" type="button" (click)="closeModal()">Đóng</button>
+        <button class="btn p" type="button" (click)="saveVoucher()">Lưu voucher</button>
+      </div>
+    </div>
+  </div>
+}

@@ -1,0 +1,93 @@
+<app-auth-split-layout [currentStep]="2" backRoute="/forgot-password" backLabel="Đổi email khác">
+  <div class="otp-header-block">
+    <div class="icon-badge" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2.2" fill="none">
+        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+        <polyline points="22,6 12,13 2,6"></polyline>
+      </svg>
+    </div>
+    <h1 class="otp-title">Nhập mã xác nhận OTP</h1>
+    <p class="otp-subtitle">
+      Chúng tôi đã gửi mã gồm 6 chữ số đến địa chỉ
+      <strong class="email-chip">{{ email() }}</strong>
+    </p>
+  </div>
+
+  @if (errorMessage(); as err) {
+    <div class="alert-banner error" role="alert">
+      <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.2" fill="none">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+      </svg>
+      <span>{{ err }}</span>
+    </div>
+  }
+
+  @if (resendSuccessMessage(); as msg) {
+    <div class="alert-banner success" role="status">
+      <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.2" fill="none">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+      </svg>
+      <span>{{ msg }}</span>
+    </div>
+  }
+
+  <form class="otp-form" (submit)="onSubmit($event)" novalidate>
+    <div class="otp-field-section">
+      <label class="otp-label">Mã xác thực 6 chữ số</label>
+      <app-otp-input
+        [disabled]="isSubmitting()"
+        [hasError]="!!errorMessage()"
+        (otpChange)="onOtpChange($event)"
+        (otpComplete)="onOtpComplete($event)"
+      ></app-otp-input>
+      <p class="otp-helper-note">
+        Không chia sẻ mã này với bất kỳ ai. Mã có hiệu lực trong 10 phút (tối đa 5 lần thử).
+      </p>
+    </div>
+
+    <!-- Resend OTP & 60s Countdown -->
+    <div class="resend-bar">
+      <span class="resend-question">Chưa nhận được mã?</span>
+      @if (countdown() > 0) {
+        <span class="countdown-badge" aria-live="polite">
+          Gửi lại sau <strong>{{ countdown() }}s</strong>
+        </span>
+      } @else {
+        <button
+          type="button"
+          class="btn-resend-link"
+          [disabled]="!canResend()"
+          (click)="onResendOtp()"
+        >
+          {{ isResending() ? 'Đang gửi lại...' : 'Gửi lại mã OTP' }}
+        </button>
+      }
+    </div>
+
+    <button
+      type="submit"
+      class="btn-primary-submit"
+      [disabled]="!isOtpComplete() || isSubmitting()"
+    >
+      @if (isSubmitting()) {
+        <span class="spinner-inline"></span>
+        <span>Đang xác thực...</span>
+      } @else {
+        <span>Xác nhận mã OTP</span>
+        <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.5" fill="none">
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+          <polyline points="12 5 19 12 12 19"></polyline>
+        </svg>
+      }
+    </button>
+  </form>
+
+  <div class="otp-footer-links">
+    <a routerLink="/forgot-password" class="btn-secondary-pill">
+      Nhập lại địa chỉ Email khác
+    </a>
+  </div>
+</app-auth-split-layout>

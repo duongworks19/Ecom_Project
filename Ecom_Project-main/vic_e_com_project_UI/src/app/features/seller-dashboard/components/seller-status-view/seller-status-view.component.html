@@ -1,0 +1,105 @@
+@switch (state()) {
+  @case ('PENDING') {
+    <section class="state">
+      <span class="tag info">Chờ duyệt</span>
+      <h1>Hồ sơ đang chờ Admin duyệt</h1>
+      <p class="sub">Thường mất 1–2 ngày làm việc. Chúng tôi sẽ thông báo ngay khi có kết quả.</p>
+      <div class="steps">
+        <span class="d">✓ Đã gửi hồ sơ</span>
+        <span class="c">Admin xem xét</span>
+        <span>Bắt đầu bán</span>
+      </div>
+    </section>
+  }
+  @case ('RESUBMITTED') {
+    <section class="state">
+      <span class="tag info">Đã gửi bổ sung</span>
+      <h1>Đã nhận bổ sung của bạn</h1>
+      <p class="sub">Admin chỉ cần kiểm tra lại các mục bạn vừa nộp, những mục đã đạt được giữ nguyên.</p>
+      <div class="steps">
+        <span class="d">✓ Đã gửi hồ sơ</span>
+        <span class="c">Admin xem xét lại</span>
+        <span>Bắt đầu bán</span>
+      </div>
+    </section>
+  }
+  @case ('NEED_INFO') {
+    <section class="state">
+      <span class="tag warn">Cần bổ sung</span>
+      <h1>Admin cần thêm giấy tờ từ bạn</h1>
+      <p class="sub">Hạn bổ sung: 28/10/2026. Bạn chỉ cần nộp các mục dưới đây, không phải đăng ký lại.</p>
+      <div class="note warn">
+        <b>Lời nhắn từ Admin:</b> Thiếu CCCD mặt sau, vui lòng bổ sung kèm giấy phép kinh doanh.
+      </div>
+      <div class="steps">
+        <span class="d">✓ Đã gửi hồ sơ</span>
+        <span class="c">Cần bổ sung</span>
+        <span>Bắt đầu bán</span>
+      </div>
+
+      @for (doc of requiredDocs; track doc) {
+        <div class="row">
+          <div class="g">
+            <b>{{ doc }}</b>
+            <span class="m">
+              {{ files()[doc] ? '✓ ' + files()[doc] : 'Chưa có tệp · JPG, PNG hoặc PDF, tối đa 5MB' }}
+            </span>
+          </div>
+          <label class="btn sm">
+            {{ files()[doc] ? 'Đổi tệp' : 'Chọn tệp' }}
+            <input
+              type="file"
+              hidden
+              accept=".jpg,.jpeg,.png,.pdf"
+              (change)="onFileChange(doc, $event)" />
+          </label>
+        </div>
+      }
+
+      @if (fileError()) {
+        <div class="err" role="alert">{{ fileError() }}</div>
+      }
+
+      <div style="margin-top: 14px">
+        <button
+          class="btn p"
+          type="button"
+          [disabled]="!isAllFilesSelected()"
+          (click)="onSubmitDocs()">
+          Gửi bổ sung
+        </button>
+        @if (!isAllFilesSelected()) {
+          <span class="m" style="font-size: 13px; color: var(--mute, #62625b); margin-left: 8px;">
+            Chọn đủ {{ requiredDocs.length }} tệp để gửi.
+          </span>
+        }
+      </div>
+    </section>
+  }
+  @case ('REJECTED') {
+    <section class="state">
+      <span class="tag no">Bị từ chối</span>
+      <h1>Hồ sơ chưa được duyệt</h1>
+      <div class="note no">
+        <b>Lý do:</b> Thông tin chủ shop không khớp với giấy tờ KYC.
+      </div>
+      <p class="sub">Bạn có thể chỉnh sửa thông tin rồi gửi lại hồ sơ.</p>
+      <a routerLink="/seller/onboarding" class="btn p" (click)="reRegister.emit()">
+        Chỉnh sửa và đăng ký lại
+      </a>
+    </section>
+  }
+  @case ('LOCKED') {
+    <section class="state">
+      <span class="tag no">Bị khóa</span>
+      <h1>Gian hàng tạm thời bị khóa</h1>
+      <div class="note no">
+        <b>Lý do:</b> Phát hiện đăng bán sản phẩm vi phạm chính sách (vendor_violations).
+      </div>
+      <p class="sub">Đơn đang xử lý vẫn cần hoàn tất. Liên hệ hỗ trợ để được xem xét mở khóa.</p>
+      <button class="btn" type="button" (click)="reRegister.emit()">
+        Liên hệ hỗ trợ
+      </button>
+    </section>
+  }
+}

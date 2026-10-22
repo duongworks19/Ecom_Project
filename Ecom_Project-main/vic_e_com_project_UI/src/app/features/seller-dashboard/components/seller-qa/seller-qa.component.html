@@ -1,0 +1,61 @@
+<div class="hd">
+  <div>
+    <h1>Hỏi đáp sản phẩm</h1>
+    <p class="sub">Trả lời nhanh giúp khách quyết định mua hàng.</p>
+  </div>
+</div>
+
+<div class="box">
+  @if (questions().length > 0) {
+    @for (x of questions(); track x.id) {
+      <div class="row">
+        <div class="g">
+          <span class="m">{{ x.productName }} · {{ x.customerName }}</span>
+          <b>{{ x.question }}</b>
+          @if (x.answer) {
+            <span class="m answer-box">Trả lời: {{ x.answer }}</span>
+          }
+        </div>
+
+        @if (x.answer) {
+          <span class="tag ok">Đã trả lời</span>
+        } @else {
+          <button class="btn sm" type="button" (click)="openAnswer(x)">
+            Trả lời
+          </button>
+        }
+      </div>
+    }
+  } @else {
+    <p style="margin: 0; color: var(--mute, #62625b)">
+      Chưa có câu hỏi nào từ khách hàng.
+    </p>
+  }
+</div>
+
+<!-- Modal Trả lời câu hỏi -->
+@if (targetQaForAnswer(); as tq) {
+  <div class="scrim on" role="dialog" aria-modal="true" (click)="closeAnswer()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <h2>Trả lời câu hỏi</h2>
+      <p class="sub" style="margin: 6px 0 12px">
+        {{ tq.customerName }} ({{ tq.productName }}): “{{ tq.question }}”
+      </p>
+
+      <textarea
+        maxlength="500"
+        placeholder="Nhập nội dung trả lời cho khách hàng…"
+        [ngModel]="answerText()"
+        (ngModelChange)="answerText.set($event)"></textarea>
+
+      @if (answerError()) {
+        <div class="err" role="alert">{{ answerError() }}</div>
+      }
+
+      <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px">
+        <button class="btn" type="button" (click)="closeAnswer()">Hủy</button>
+        <button class="btn p" type="button" (click)="confirmAnswer()">Gửi</button>
+      </div>
+    </div>
+  </div>
+}

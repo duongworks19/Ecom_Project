@@ -1,0 +1,203 @@
+.modal-scrim {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(5px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: fadeIn 0.2s ease;
+}
+
+.modal-card {
+  background-color: var(--color-canvas);
+  border-radius: var(--rounded-lg);
+  padding: 36px 32px;
+  width: 100%;
+  max-width: 480px;
+  position: relative;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.2);
+  animation: scaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+
+  .btn-modal-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--rounded-full);
+    background-color: var(--color-surface-card);
+    color: var(--color-ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color var(--transition-fast);
+
+    &:hover {
+      background-color: var(--color-secondary-bg);
+    }
+  }
+}
+
+.modal-header {
+  text-align: center;
+  margin-bottom: 24px;
+
+  .modal-brand-badge {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--rounded-full);
+    background-color: var(--color-primary);
+    color: var(--color-on-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+  }
+
+  .modal-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--color-ink);
+    margin-bottom: 6px;
+  }
+
+  .modal-subtitle {
+    font-size: 14px;
+    color: var(--color-mute);
+    line-height: 1.4;
+  }
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-ink);
+    }
+  }
+}
+
+.text-input {
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+  font-size: 15px;
+  height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--color-ash);
+  border-radius: var(--rounded-md);
+  outline: none;
+  transition: all var(--transition-fast);
+
+  &:focus {
+    border-color: var(--color-ink);
+    box-shadow: 0 0 0 2px var(--color-canvas), 0 0 0 5px var(--color-focus-outer);
+  }
+}
+
+.terms-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--color-mute);
+  cursor: pointer;
+  line-height: 1.4;
+
+  input {
+    margin-top: 2px;
+  }
+}
+
+.btn-primary-block {
+  background-color: var(--color-primary);
+  color: var(--color-on-primary);
+  font-size: 15px;
+  font-weight: 700;
+  height: 44px;
+  border-radius: var(--rounded-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color var(--transition-fast);
+  margin-top: 8px;
+
+  &:hover {
+    background-color: var(--color-primary-pressed);
+  }
+}
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 20px 0;
+  color: var(--color-mute);
+  font-size: 12px;
+  font-weight: 600;
+
+  &::before, &::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid var(--color-hairline);
+  }
+
+  span {
+    padding: 0 10px;
+  }
+}
+
+.btn-social {
+  width: 100%;
+  height: 44px;
+  border-radius: var(--rounded-md);
+  background-color: var(--color-surface-card);
+  border: 1px solid var(--color-hairline);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-ink);
+  transition: background-color var(--transition-fast);
+
+  &:hover {
+    background-color: var(--color-secondary-bg);
+  }
+}
+
+.modal-switch-mode {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 14px;
+  color: var(--color-mute);
+
+  .btn-link {
+    color: var(--color-ink);
+    font-weight: 700;
+    margin-left: 6px;
+    text-decoration: underline;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleUp {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}

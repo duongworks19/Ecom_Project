@@ -1,0 +1,104 @@
+<nav class="side" aria-label="Menu người bán">
+  <h6>TỔNG QUAN</h6>
+  <a
+    href="/seller/dashboard"
+    [class.on]="activeNav() === 'overview'"
+    (click)="onSelect('overview', $event)">
+    Tổng quan
+  </a>
+
+  <h6>ĐƠN HÀNG</h6>
+  <a
+    href="/seller/orders"
+    [class.on]="activeNav() === 'orders'"
+    [class.off]="isOff()"
+    (click)="onSelect('orders', $event)">
+    Tất cả đơn
+    @if (openOrdersCount() > 0) {
+      <em>{{ openOrdersCount() }}</em>
+    }
+  </a>
+  <a
+    href="/seller/returns"
+    [class.on]="activeNav() === 'returns' || activeNav() === 'refunds'"
+    [class.off]="isOff()"
+    (click)="onSelect('returns', $event)">
+    Đổi trả / Hoàn tiền
+    @if (returnsCount() > 0) {
+      <em>{{ returnsCount() }}</em>
+    }
+  </a>
+
+  <h6>SẢN PHẨM</h6>
+  <a
+    href="/seller/products"
+    [class.on]="activeNav() === 'products'"
+    [class.off]="isOff()"
+    (click)="onSelect('products', $event)">
+    Danh sách sản phẩm
+  </a>
+  <a
+    href="/seller/add-product"
+    [class.on]="activeNav() === 'add-product'"
+    [class.off]="isOff()"
+    (click)="onSelect('add-product', $event)">
+    Thêm sản phẩm
+  </a>
+  <a
+    href="/seller/inventory"
+    [class.on]="activeNav() === 'inventory'"
+    [class.off]="isOff()"
+    (click)="onSelect('inventory', $event)">
+    Kho hàng
+    @if (lowStockCount() > 0) {
+      <em>{{ lowStockCount() }}</em>
+    }
+  </a>
+
+  <h6>MARKETING</h6>
+  <a
+    href="/seller/vouchers"
+    [class.on]="activeNav() === 'vouchers'"
+    [class.off]="isOff()"
+    (click)="onSelect('vouchers', $event)">
+    Voucher của shop
+  </a>
+  <a
+    href="/seller/promotions"
+    [class.on]="activeNav() === 'promotions'"
+    [class.off]="isOff()"
+    (click)="onSelect('promotions', $event)">
+    Chương trình giảm giá
+  </a>
+
+  <h6>CHĂM SÓC KHÁCH HÀNG</h6>
+  <a
+    href="/seller/reviews"
+    [class.on]="activeNav() === 'reviews'"
+    [class.off]="isOff()"
+    (click)="onSelect('reviews', $event)">
+    Đánh giá
+    @if (reviewsCount() > 0) {
+      <em>{{ reviewsCount() }}</em>
+    }
+  </a>
+  <a
+    href="/seller/qa"
+    [class.on]="activeNav() === 'qa'"
+    [class.off]="isOff()"
+    (click)="onSelect('qa', $event)">
+    Hỏi đáp
+    @if (qaCount() > 0) {
+      <em>{{ qaCount() }}</em>
+    }
+  </a>
+
+  <h6>CÀI ĐẶT</h6>
+  <a
+    href="/seller/profile"
+    [class.on]="activeNav() === 'profile'"
+    [class.off]="isOff()"
+    (click)="onSelect('profile', $event)">
+    Hồ sơ gian hàng
+  </a>
+</nav>

@@ -1,0 +1,134 @@
+<app-seller-header
+  [shopName]="data().shopName"
+  [shopAvatarLetter]="data().shopAvatarLetter"
+  [unreadCount]="unreadNotificationCount()"
+  [notifications]="notifications()"
+  (openShopProfile)="onSelectNav('profile')"
+  (selectNotification)="onNotificationClick($event)"
+  (markAllRead)="onMarkAllRead()">
+</app-seller-header>
+
+<div class="shell">
+  <app-seller-sidebar
+    [activeNav]="activeNav()"
+    [shopState]="shopState()"
+    [todos]="data().todos"
+    [openOrdersCount]="openOrdersCount()"
+    [returnsCount]="pendingReturnsCount()"
+    [lowStockCount]="lowStockCount()"
+    [reviewsCount]="unrepliedReviewsCount()"
+    [qaCount]="unansweredQaCount()"
+    (navSelect)="onSelectNav($event)"
+    (addProductClick)="openAddProduct()">
+  </app-seller-sidebar>
+
+  <main>
+    <!-- If not APPROVED: show state view -->
+
+    <!-- If not APPROVED: show state view -->
+    @if (shopState() !== 'APPROVED') {
+      <app-seller-status-view
+        [state]="shopState()"
+        (resubmit)="onResubmitDocuments($event)"
+        (reRegister)="onReRegister()">
+      </app-seller-status-view>
+    } @else {
+      <!-- APPROVED: Route active sub-component -->
+      @switch (activeNav()) {
+        @case ('overview') {
+          <app-seller-overview
+            [data]="data()"
+            [returnsList]="returns()"
+            [qaList]="qaQuestions()"
+            (navSelect)="onSelectNav($event)"
+            (orderAction)="onOrderAction($event)"
+            (openRestock)="openRestockModal($event)"
+            (openAddProduct)="openAddProduct()">
+          </app-seller-overview>
+        }
+        @case ('orders') {
+          <app-seller-orders
+            [orders]="data().recentOrders"
+            (orderAction)="onOrderAction($event)">
+          </app-seller-orders>
+        }
+        @case ('returns') {
+          <app-seller-returns
+            [returns]="returns()"
+            (accept)="onAcceptReturn($event)"
+            (reject)="onRejectReturn($event)">
+          </app-seller-returns>
+        }
+        @case ('refunds') {
+          <app-seller-returns
+            [returns]="returns()"
+            (accept)="onAcceptReturn($event)"
+            (reject)="onRejectReturn($event)">
+          </app-seller-returns>
+        }
+        @case ('products') {
+          <app-seller-products
+            [products]="products()"
+            (openAddProduct)="openAddProduct()"
+            (editProduct)="openEditProduct($event)"
+            (deleteProduct)="onDeleteProduct($event)"
+            (toggleVisibility)="onToggleProductVisibility($event)">
+          </app-seller-products>
+        }
+        @case ('add-product') {
+          <app-seller-product-form
+            [editingProduct]="editingProduct()"
+            (save)="onSaveProduct($event)"
+            (close)="onSelectNav('products')">
+          </app-seller-product-form>
+        }
+        @case ('inventory') {
+          <app-seller-inventory
+            [products]="products()"
+            (updateStock)="onUpdateStock($event)">
+          </app-seller-inventory>
+        }
+        @case ('vouchers') {
+          <app-seller-vouchers
+            [vouchers]="vouchers()"
+            (createVoucher)="onCreateVoucher($event)"
+            (toggleVoucher)="onToggleVoucher($event)"
+            (deleteVoucher)="onDeleteVoucher($event)">
+          </app-seller-vouchers>
+        }
+        @case ('promotions') {
+          <app-seller-campaigns
+            [promotions]="promotions()"
+            [products]="products()">
+          </app-seller-campaigns>
+        }
+        @case ('reviews') {
+          <app-seller-reviews
+            [reviews]="reviews()"
+            [shopName]="data().shopName"
+            (submitReply)="onSubmitReviewReply($event)">
+          </app-seller-reviews>
+        }
+        @case ('qa') {
+          <app-seller-qa
+            [questions]="qaQuestions()"
+            (submitAnswer)="onSubmitQaAnswer($event)">
+          </app-seller-qa>
+        }
+        @case ('profile') {
+          <app-seller-profile
+            [profile]="shopProfile()"
+            (saveProfile)="onSaveProfile($event)">
+          </app-seller-profile>
+        }
+      }
+    }
+  </main>
+</div>
+
+<!-- Global Toast popup -->
+@if (toast(); as msg) {
+  <div class="toast on" role="status">
+    {{ msg }}
+  </div>
+}

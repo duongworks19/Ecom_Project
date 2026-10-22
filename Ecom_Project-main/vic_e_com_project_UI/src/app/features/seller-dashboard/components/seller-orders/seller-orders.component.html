@@ -1,0 +1,183 @@
+<div class="hd">
+  <div>
+    <h1>Đơn hàng</h1>
+    <p class="sub">Xem, xác nhận và cập nhật trạng thái đơn của gian hàng.</p>
+  </div>
+  <div class="quick">
+    <button
+      class="chip"
+      type="button"
+      [attr.aria-pressed]="daysFilter() === '0'"
+      (click)="daysFilter.set('0')">
+      Hôm nay
+    </button>
+    <button
+      class="chip"
+      type="button"
+      [attr.aria-pressed]="daysFilter() === '7'"
+      (click)="daysFilter.set('7')">
+      7 ngày
+    </button>
+    <button
+      class="chip"
+      type="button"
+      [attr.aria-pressed]="daysFilter() === 'ALL'"
+      (click)="daysFilter.set('ALL')">
+      Mọi lúc
+    </button>
+  </div>
+</div>
+
+<div class="tabs-row">
+  <div class="quick tabs-left">
+    @for (tab of statusTabs; track tab.key) {
+      <button
+        class="chip"
+        type="button"
+        [attr.aria-pressed]="statusFilter() === tab.key"
+        (click)="statusFilter.set(tab.key)">
+        {{ tab.label }} ({{ getCount(tab.key) }})
+      </button>
+    }
+  </div>
+
+  <input
+    class="inp search-inp"
+    type="search"
+    aria-label="Tìm kiếm đơn hàng"
+    placeholder="Tìm kiếm mã đơn hoặc tên khách..."
+    [ngModel]="searchQuery()"
+    (ngModelChange)="searchQuery.set($event)" />
+</div>
+
+<div class="box">
+  @if (filteredOrders().length > 0) {
+    @for (o of filteredOrders(); track o.id) {
+      <div class="row">
+        <div class="g">
+          <b>{{ o.orderCode }}</b>
+          <span class="m">
+            {{ o.customerName }} · {{ o.productSummary }} · {{ o.createdAt || '10:00' }}
+          </span>
+        </div>
+        <b>{{ o.totalAmount | number:'1.0-0' }}đ</b>
+        <span
+          class="tag"
+          [class.warn]="o.status === 'PENDING_CONFIRMATION'"
+          [class.ok]="o.status === 'COMPLETED'">
+          {{ o.statusLabel }}
+        </span>
+
+        @if (o.status === 'PENDING_CONFIRMATION') {
+          <button
+            class="btn p sm"
+            type="button"
+            (click)="onConfirm(o.orderCode)">
+            Xác nhận
+          </button>
+          <button
+            class="btn sm"
+            type="button"
+            (click)="openRejectModal(o.orderCode)">
+            Từ chối
+          </button>
+        } @else if (o.status === 'PREPARING') {
+          <button
+            class="btn sm"
+            type="button"
+            (click)="onPacked(o.orderCode)">
+            Đã đóng gói
+          </button>
+        } @else if (o.status === 'PACKED') {
+          <button
+            class="btn sm"
+            type="button"
+            (click)="onReadyToShip(o.orderCode)">
+            Sẵn sàng giao
+          </button>
+        }
+
+        <button
+          class="btn sm"
+          type="button"
+          (click)="openDetail(o)">
+          Chi tiết
+        </button>
+      </div>
+    }
+  } @else {
+    <p style="margin: 0; color: var(--mute, #62625b)">Không có đơn hàng nào khớp với bộ lọc.</p>
+  }
+</div>
+
+<!-- Modal Chi tiết đơn hàng -->
+@if (selectedOrderForDetail(); as od) {
+  <div class="scrim on" role="dialog" aria-modal="true" (click)="closeDetail()">
+    <div class="modal detail-modal" (click)="$event.stopPropagation()">
+      <h2>Đơn {{ od.orderCode }}</h2>
+      <span class="tag" [class.ok]="od.status === 'COMPLETED'" [class.warn]="od.status === 'PENDING_CONFIRMATION'">
+        {{ od.statusLabel }}
+      </span>
+
+      <div class="detail-info">
+        <p><b>Khách hàng:</b> {{ od.customerName }} · {{ od.customerPhone || '0912 345 678' }}</p>
+        <p><b>Địa chỉ nhận:</b> {{ od.shippingAddress || 'Số 12 Ngõ 88 Trần Thái Tông, Cầu Giấy, Hà Nội' }}</p>
+        <p><b>Thanh toán:</b> COD · {{ od.status === 'COMPLETED' ? 'Đã thu tiền' : 'Thu tiền khi giao hàng' }}</p>
+        <p><b>Vận chuyển:</b> {{ od.status === 'COMPLETED' || od.status === 'PACKED' ? 'Đã chuyển cho Admin gán shipper' : 'Chờ shop chuẩn bị hàng' }}</p>
+      </div>
+
+      <div class="detail-items">
+        <div class="row">
+          <div class="g">{{ od.productSummary }}</div>
+          <span class="m">x1</span>
+          <b>{{ od.totalAmount - 30000 | number:'1.0-0' }}đ</b>
+        </div>
+        <div class="row">
+          <div class="g m">Phí vận chuyển tiêu chuẩn</div>
+          <b>30.000đ</b>
+        </div>
+        <div class="row total-row">
+          <div class="g"><b>Tổng cộng</b></div>
+          <b class="price-val">{{ od.totalAmount | number:'1.0-0' }}đ</b>
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; margin-top:16px">
+        <button class="btn" type="button" (click)="closeDetail()">Đóng</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Modal Từ chối đơn hàng -->
+@if (showRejectModal()) {
+  <div class="scrim on" role="dialog" aria-modal="true" (click)="showRejectModal.set(false)">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <h2>Từ chối đơn hàng</h2>
+      <p style="margin:0; font-size:13px; color:var(--mute, #62625b)">Đơn {{ targetOrderForReject() }}</p>
+
+      <textarea
+        maxlength="300"
+        placeholder="Nêu lý do để khách hàng biết…"
+        [ngModel]="rejectReasonText()"
+        (ngModelChange)="rejectReasonText.set($event)"></textarea>
+
+      @if (rejectError()) {
+        <div class="err" role="alert">{{ rejectError() }}</div>
+      }
+
+      <div class="quick">
+        @for (q of quickReasons; track q) {
+          <button type="button" class="chip" (click)="selectQuickReason(q)">
+            {{ q }}
+          </button>
+        }
+      </div>
+
+      <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:18px">
+        <button class="btn" type="button" (click)="showRejectModal.set(false)">Hủy</button>
+        <button class="btn p" type="button" (click)="confirmReject()">Từ chối đơn</button>
+      </div>
+    </div>
+  </div>
+}

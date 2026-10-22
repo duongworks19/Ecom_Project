@@ -1,0 +1,126 @@
+.account-layout {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: var(--spacing-xxl, 32px);
+  align-items: start;
+
+  &__content {
+    min-width: 0;
+  }
+}
+
+.account-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl, 24px);
+
+  &__user {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md, 12px);
+  }
+
+  &__user-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  &__user-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-ink, #000000);
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__edit-link {
+    font-size: 13px;
+    color: var(--color-mute, #62625b);
+    text-decoration: none;
+
+    &:hover {
+      color: var(--color-ink, #000000);
+      text-decoration: underline;
+    }
+  }
+
+  &__nav {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg, 16px);
+  }
+
+  &__group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  &__group-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--color-subtle, #91918c);
+    padding: 4px var(--spacing-md, 12px);
+    margin: 0;
+  }
+
+  &__link {
+    height: 44px;
+    padding: 0 var(--spacing-lg, 16px);
+    border-radius: var(--rounded-md, 16px);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-body, #33332e);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    transition: background-color 0.15s ease, color 0.15s ease;
+
+    &:hover {
+      background-color: var(--color-surface-card, #f6f6f3);
+      color: var(--color-ink, #000000);
+    }
+
+    &--active {
+      background-color: var(--color-surface-dark, #262622);
+      color: var(--color-on-dark, #ffffff);
+
+      &:hover {
+        background-color: var(--color-surface-dark, #262622);
+        color: var(--color-on-dark, #ffffff);
+      }
+    }
+  }
+}
+
+@media (max-width: 900px) {
+  .account-layout {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-lg, 16px);
+  }
+
+  .account-sidebar {
+    gap: var(--spacing-md, 12px);
+
+    &__nav {
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: var(--spacing-sm, 8px);
+    }
+
+    &__group {
+      flex-direction: row;
+      align-items: center;
+      gap: var(--spacing-sm, 8px);
+    }
+
+    &__group-label {
+      display: none;
+    }
+  }
+}

@@ -1,0 +1,6 @@
+<div class="error-state" role="alert">
+  <p class="error-state__message">{{ message() }}</p>
+  <app-button variant="secondary" (clicked)="retry.emit()">
+    {{ retryLabel() }}
+  </app-button>
+</div>

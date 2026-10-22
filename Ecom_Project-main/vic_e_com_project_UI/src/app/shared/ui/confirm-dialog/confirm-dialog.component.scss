@@ -1,0 +1,16 @@
+.confirm-dialog {
+  &__message {
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--color-body, #33332e);
+    margin: 0;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--spacing-md, 12px);
+    margin-top: var(--spacing-sm, 8px);
+  }
+}

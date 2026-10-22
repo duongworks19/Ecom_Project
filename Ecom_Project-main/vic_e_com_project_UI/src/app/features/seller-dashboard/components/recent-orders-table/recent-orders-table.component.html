@@ -1,0 +1,73 @@
+<section class="card orders-card">
+  <div class="head">
+    <h2>{{ title() }}</h2>
+    @if (showViewAll()) {
+      <a href="#orders" (click)="onViewAll($event)">Xem tất cả</a>
+    }
+  </div>
+  <div class="wrapx">
+    <table>
+      <thead>
+        <tr>
+          <th>Mã đơn</th>
+          <th>Khách hàng</th>
+          <th>Sản phẩm</th>
+          <th>Tổng tiền</th>
+          <th>Trạng thái</th>
+          <th>Thao tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (order of orders(); track order.orderCode) {
+          <tr
+            class="order-row"
+            tabindex="0"
+            (click)="onRowClick(order)"
+            (keydown.enter)="onRowClick(order)"
+            title="Nhấn để xem chi tiết đơn hàng">
+            <td class="font-semibold">{{ order.orderCode }}</td>
+            <td>{{ order.customerName }}</td>
+            <td>
+              <div class="prod-cell">
+                @if (order.productImage && !failedImages()[order.orderCode]) {
+                  <img
+                    class="prod-thumb"
+                    [src]="order.productImage"
+                    [alt]="order.productSummary"
+                    loading="lazy"
+                    (error)="onImageError(order.orderCode)" />
+                }
+                <span>{{ order.productSummary }}</span>
+              </div>
+            </td>
+            <td class="font-bold">{{ order.totalAmount | number:'1.0-0' }}đ</td>
+            <td>
+              <span
+                class="b"
+                [class.w]="order.badgeClass === 'w'"
+                [class.o]="order.badgeClass === 'o'"
+                [class.r]="order.badgeClass === 'r'">
+                {{ order.statusLabel }}
+              </span>
+            </td>
+            <td>
+              <button
+                class="pill"
+                [class.red]="order.actionStyle === 'red'"
+                type="button"
+                (click)="onActionClick(order, $event)">
+                {{ order.actionText }}
+              </button>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="6" class="empty-row">
+              Không tìm thấy đơn hàng nào phù hợp.
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</section>
