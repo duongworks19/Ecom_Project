@@ -5,6 +5,13 @@ import { Observable, delay, mergeMap, of, throwError, timer } from 'rxjs';
 // The database design document does not enumerate approval_status; these values follow the existing backend enum and requested review flow.
 export type VendorApprovalStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 
+export const VENDOR_DOCUMENT_CHECKS: Record<string, string> = {
+  'CCCD mặt trước': 'CCCD mặt trước',
+  'CCCD mặt sau': 'CCCD mặt sau',
+  'Giấy phép kinh doanh': 'Giấy phép kinh doanh',
+  'Giấy tờ liên quan': 'Giấy tờ liên quan',
+};
+
 export interface VendorApplication {
   id: number;
   businessName: string;
@@ -141,6 +148,18 @@ export class VendorApprovalService {
     if (vendor.approvalStatus !== 'PENDING') return this.fail(409, 'VENDOR_ALREADY_DECIDED');
     if (trimmedReason.length < 10 || trimmedReason.length > 500) return this.fail(422, 'INVALID_REJECT_REASON');
     Object.assign(vendor, { approvalStatus: 'REJECTED' as const, rejectReason: trimmedReason, decidedAt: new Date().toISOString() });
+    return of(structuredClone(vendor)).pipe(delay(300));
+  }
+
+  requestAdditionalInfo(id: number, items: string[], note: string): Observable<VendorApplication> {
+    const vendor = this.applications.find((item) => item.id === id);
+    const trimmedNote = note.trim();
+    if (!vendor) return this.fail(404, 'VENDOR_NOT_FOUND');
+    if (vendor.approvalStatus !== 'PENDING') return this.fail(409, 'VENDOR_ALREADY_DECIDED');
+    if (!items.length || trimmedNote.length < 10 || trimmedNote.length > 500) {
+      return this.fail(422, 'INVALID_ADDITIONAL_INFO_REQUEST');
+    }
+    Object.assign(vendor, { rejectReason: `${items.join(', ')}: ${trimmedNote}` });
     return of(structuredClone(vendor)).pipe(delay(300));
   }
 

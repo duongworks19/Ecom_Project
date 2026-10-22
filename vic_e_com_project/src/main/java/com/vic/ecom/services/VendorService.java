@@ -115,6 +115,17 @@ public class VendorService {
         return VendorResponse.fromEntity(vendorRepository.save(vendor));
     }
 
+    @Transactional
+    public VendorResponse reviewVendorByAdmin(String adminPrincipal, Long vendorId, String action, String rejectReason) {
+        if (adminPrincipal == null || adminPrincipal.isBlank()) {
+            throw new IllegalArgumentException("KhĂ´ng xĂ¡c Ä‘á»‹nh Ä‘Æ°á»£c quáº£n trá»‹ viĂªn");
+        }
+        User admin = userRepository.findByEmail(adminPrincipal)
+                .or(() -> userRepository.findByPhone(adminPrincipal))
+                .orElseThrow(() -> new IllegalArgumentException("KhĂ´ng tĂ¬m tháº¥y thĂ´ng tin quáº£n trá»‹ viĂªn"));
+        return reviewVendor(admin.getId(), vendorId, action, rejectReason);
+    }
+
     @Transactional(readOnly = true)
     public List<VendorResponse> getVendorsByStatus(ApprovalStatus status) {
         return vendorRepository.findByApprovalStatus(status).stream()
