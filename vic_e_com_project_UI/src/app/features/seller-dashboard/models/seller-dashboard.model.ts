@@ -2,6 +2,8 @@ export type SellerNavTab =
   | 'overview'
   | 'orders'
   | 'refunds'
+  | 'returns'
+  | 'qa'
   | 'products'
   | 'add-product'
   | 'inventory'
@@ -9,6 +11,28 @@ export type SellerNavTab =
   | 'promotions'
   | 'reviews'
   | 'profile';
+
+export type VendorState = 'PENDING' | 'RESUBMITTED' | 'NEED_INFO' | 'REJECTED' | 'LOCKED';
+
+export interface SellerReturnRequest {
+  id: number;
+  orderCode: string;
+  type: string;
+  customerName: string;
+  reason: string;
+  evidenceImagesCount: number;
+  amount: number;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  rejectReason?: string;
+}
+
+export interface SellerQaQuestion {
+  id: number;
+  productName: string;
+  customerName: string;
+  question: string;
+  answer?: string;
+}
 
 export type OrderFilterType =
   | 'ALL'
