@@ -36,7 +36,10 @@ export class ShipperDetailPanelComponent {
     return 'Nghỉ';
   }
 
-  formatRate(rate: number): string {
+  formatRate(rate: number| null | undefined): string {
+    if (rate === null || rate === undefined) {
+      return '0,0';
+    }
     return rate.toFixed(1).replace('.', ',');
   }
 

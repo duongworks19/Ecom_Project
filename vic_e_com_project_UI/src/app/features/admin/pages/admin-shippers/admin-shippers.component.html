@@ -38,6 +38,19 @@
           [selectedShipperId]="selectedShipper()?.id ?? null"
           (selectShipper)="onSelectShipper($event)"
         ></vic-shippers-table>
+
+        @if (totalPages() > 1) {
+          <div class="pagination" aria-label="Phân trang danh sách shipper">
+            <span class="pagination-summary">
+              {{ currentPage() * pageSize + 1 }}–{{ currentPage() * pageSize + shippers().length }} / {{ totalElements() }} shipper
+            </span>
+            <div class="pagination-actions">
+              <button type="button" [disabled]="currentPage() === 0" (click)="goToPage(currentPage() - 1)">Trước</button>
+              <span>Trang {{ currentPage() + 1 }} / {{ totalPages() }}</span>
+              <button type="button" [disabled]="currentPage() + 1 >= totalPages()" (click)="goToPage(currentPage() + 1)">Sau</button>
+            </div>
+          </div>
+        }
       </div>
 
       <div class="col-detail">

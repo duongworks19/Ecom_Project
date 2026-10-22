@@ -144,6 +144,11 @@
 
 .btn-action-primary,
 .btn-action-secondary {
+  width: auto;
+  min-width: 132px;
+  height: auto;
+  line-height: 1.2;
+  white-space: nowrap;
   min-height: var(--control-min-height, 44px);
   font-size: 12px;
   font-weight: 700;
@@ -157,6 +162,7 @@
 .btn-action-primary {
   background-color: var(--color-ink, #000000);
   color: var(--color-on-dark, #ffffff);
+  border-radius: var(--rounded-full, 9999px);
 }
 
 .btn-action-secondary {

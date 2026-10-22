@@ -45,6 +45,9 @@ public class User {
     @Column(name = "password_hash", length = 255)
     private String passwordHash;
 
+    @Column(name = "must_change_password", nullable = false, columnDefinition = "boolean default false")
+    private boolean mustChangePassword = false;
+
     @Column(name = "auth_provider", nullable = false, length = 20)
     private String authProvider = "LOCAL";
 

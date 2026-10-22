@@ -10,6 +10,7 @@ public class AuthResponse {
     private Long userId;
     private String fullName;
     private String email;
+    private boolean mustChangePassword;
 
     public AuthResponse(String accessToken, String tokenType, String role, Long userId, String fullName, String email) {
         this.accessToken = accessToken;
@@ -30,5 +31,9 @@ public class AuthResponse {
 
     public AuthResponse(String accessToken, String role, Long userId, String fullName, String email) {
         this(accessToken, "Bearer", role, userId, fullName, email);
+    }
+
+    public void setMustChangePassword(boolean mustChangePassword) {
+        this.mustChangePassword = mustChangePassword;
     }
 }
