@@ -1,6 +1,0 @@
-{
-    "java.compile.nullAnalysis.mode": "automatic",
-    "java.jdt.ls.java.home": null,
-    "java.configuration.updateBuildConfiguration": "automatic",
-    "java.autobuild.enabled": false
-}

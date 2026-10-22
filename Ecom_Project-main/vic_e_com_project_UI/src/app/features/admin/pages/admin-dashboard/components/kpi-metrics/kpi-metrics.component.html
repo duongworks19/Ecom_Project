@@ -1,9 +1,0 @@
-<div class="kpi-grid">
-  @for (kpi of kpis; track kpi.id) {
-    <div class="kpi-card" [class.dark-theme]="kpi.isDark">
-      <span class="kpi-title">{{ kpi.title }}</span>
-      <div class="kpi-value">{{ kpi.value }}</div>
-      <span class="kpi-subtext">{{ kpi.subtext }}</span>
-    </div>
-  }
-</div>
