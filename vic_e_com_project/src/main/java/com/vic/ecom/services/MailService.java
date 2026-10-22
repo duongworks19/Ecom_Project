@@ -39,4 +39,23 @@ public class MailService {
             log.error("Failed to send OTP mail to {}", to, e);
         }
     }
+
+    @Async
+    public void sendTemporaryPassword(String to, String temporaryPassword, String loginUrl) {
+        try {
+            SimpleMailMessage msg = new SimpleMailMessage();
+            msg.setFrom(from);
+            msg.setTo(to);
+            msg.setSubject("Tài khoản Shipper VIC MART");
+            msg.setText("Tài khoản Shipper VIC MART\n\n"
+                    + "Email đăng nhập: " + to + "\n"
+                    + "Mật khẩu tạm: " + temporaryPassword + "\n"
+                    + "Trang đăng nhập: " + loginUrl + "\n\n"
+                    + "Bạn sẽ được yêu cầu đổi mật khẩu ở lần đăng nhập đầu tiên.\n"
+                    + "Không chia sẻ mật khẩu này với bất kỳ ai.");
+            mailSender.send(msg);
+        } catch (Exception e) {
+            log.error("Failed to send shipper temporary-password mail to {}", to, e);
+        }
+    }
 }

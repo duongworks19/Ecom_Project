@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "shipments")
@@ -21,15 +22,32 @@ public class Shipment {
     @JoinColumn(name = "order_id", nullable = false)
     private Order order;
 
-    @Column(name = "shipper_id")
-    private Long shipperId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "shipper_id")
+    private ShipperProfile shipper;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "assigned_by")
+    private User assignedBy;
 
     @Enumerated(EnumType.STRING)
     @Column(length = 20, nullable = false)
     private ShipmentStatus status = ShipmentStatus.ASSIGNED;
 
-    @Column(name = "assigned_at")
+    @Column(name = "cod_amount", precision = 12, scale = 2, nullable = false, columnDefinition = "numeric(12,2) default 0")
+    private BigDecimal codAmount = BigDecimal.ZERO;
+
+    @Column(name = "cod_collected", nullable = false, columnDefinition = "boolean default false")
+    private boolean codCollected;
+
+    @Column(name = "assigned_at", nullable = false)
     private LocalDateTime assignedAt = LocalDateTime.now();
+
+    @Column(name = "picked_up_at")
+    private LocalDateTime pickedUpAt;
+
+    @Column(name = "delivered_at")
+    private LocalDateTime deliveredAt;
 
     public Shipment() {
     }

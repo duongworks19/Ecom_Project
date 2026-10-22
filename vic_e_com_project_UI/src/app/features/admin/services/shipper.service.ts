@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
-import { Observable, delay, of, throwError } from 'rxjs';
+import { Observable, delay, map, of, throwError } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import {
   CreateShipperRequest,
@@ -34,42 +34,65 @@ export class HttpShipperService extends ShipperService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiUrl}/admin/shippers`;
 
+  private unwrap<T>() {
+    return map((response: { data?: T } | T) =>
+      (response && typeof response === 'object' && 'data' in response && response.data !== undefined
+        ? response.data
+        : response) as T
+    );
+  }
+
+  private unwrapPage<T>() {
+    return map((response: { data?: any } | any) => {
+      const data = response?.data ?? response;
+      if (Array.isArray(data?.items)) return data as PageResponse<T>;
+      return {
+        items: data?.content ?? [],
+        page: data?.number ?? 0,
+        size: data?.size ?? 10,
+        total: data?.totalElements ?? 0,
+        totalElements: data?.totalElements ?? 0,
+        totalPages: data?.totalPages ?? 0,
+      } as PageResponse<T>;
+    });
+  }
+
   getShippers(params: ShipperQueryParams = {}): Observable<PageResponse<ShipperListItem>> {
     let httpParams = new HttpParams();
     if (params.keyword) httpParams = httpParams.set('keyword', params.keyword);
     if (params.status && params.status !== 'ALL') httpParams = httpParams.set('status', params.status);
     if (params.page !== undefined) httpParams = httpParams.set('page', String(params.page));
     if (params.size !== undefined) httpParams = httpParams.set('size', String(params.size));
-    return this.http.get<PageResponse<ShipperListItem>>(this.baseUrl, { params: httpParams });
+    return this.http.get<any>(this.baseUrl, { params: httpParams }).pipe(this.unwrapPage<ShipperListItem>());
   }
 
   getSummary(): Observable<ShipperSummary> {
-    return this.http.get<ShipperSummary>(`${this.baseUrl}/summary`);
+    return this.http.get<{ data: ShipperSummary }>(`${this.baseUrl}/summary`).pipe(this.unwrap<ShipperSummary>());
   }
 
   getShipperDetail(id: number): Observable<ShipperDetail> {
-    return this.http.get<ShipperDetail>(`${this.baseUrl}/${id}`);
+    return this.http.get<{ data: ShipperDetail }>(`${this.baseUrl}/${id}`).pipe(this.unwrap<ShipperDetail>());
   }
 
   getDeliveries(id: number, page = 0, size = 10): Observable<PageResponse<ShipperDeliveryItem>> {
     const params = new HttpParams().set('page', String(page)).set('size', String(size));
-    return this.http.get<PageResponse<ShipperDeliveryItem>>(`${this.baseUrl}/${id}/deliveries`, { params });
+    return this.http.get<any>(`${this.baseUrl}/${id}/deliveries`, { params }).pipe(this.unwrapPage<ShipperDeliveryItem>());
   }
 
   createShipper(payload: CreateShipperRequest): Observable<ShipperDetail> {
-    return this.http.post<ShipperDetail>(this.baseUrl, payload);
+    return this.http.post<{ data: ShipperDetail }>(this.baseUrl, payload).pipe(this.unwrap<ShipperDetail>());
   }
 
   updateShipper(id: number, payload: UpdateShipperRequest): Observable<ShipperDetail> {
-    return this.http.put<ShipperDetail>(`${this.baseUrl}/${id}`, payload);
+    return this.http.put<{ data: ShipperDetail }>(`${this.baseUrl}/${id}`, payload).pipe(this.unwrap<ShipperDetail>());
   }
 
   lockShipper(id: number, reason?: string): Observable<ShipperDetail> {
-    return this.http.post<ShipperDetail>(`${this.baseUrl}/${id}/lock`, { reason });
+    return this.http.post<{ data: ShipperDetail }>(`${this.baseUrl}/${id}/lock`, { reason }).pipe(this.unwrap<ShipperDetail>());
   }
 
   unlockShipper(id: number): Observable<ShipperDetail> {
-    return this.http.post<ShipperDetail>(`${this.baseUrl}/${id}/unlock`, {});
+    return this.http.post<{ data: ShipperDetail }>(`${this.baseUrl}/${id}/unlock`, {}).pipe(this.unwrap<ShipperDetail>());
   }
 }
 
