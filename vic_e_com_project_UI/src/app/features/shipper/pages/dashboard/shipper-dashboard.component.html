@@ -3,7 +3,7 @@
   <div class="page-header">
     <div>
       <span class="badge-subtitle">BẢNG ĐIỀU HÀNH SHIPPER</span>
-      <h1 class="page-title">Xin chào, Nguyễn Minh Anh!</h1>
+      <h1 class="page-title">Xin chào, {{ (shipperService.profile$ | async)?.fullName || 'Shipper' }}!</h1>
       <p class="page-desc">Danh sách đơn hàng cần bàn giao và các chỉ số vận hành trong ca làm việc hôm nay.</p>
     </div>
     <button type="button" class="btn-refresh" (click)="refreshKPI()">

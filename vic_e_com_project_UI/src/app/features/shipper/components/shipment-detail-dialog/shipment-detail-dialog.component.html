@@ -1,0 +1,63 @@
+<app-dialog
+  [open]="open()"
+  [title]="'Chi tiết vận đơn: ' + (shipment()?.code || '')"
+  [maxWidth]="'620px'"
+  (closed)="onClose()"
+>
+  @if (shipment(); as item) {
+    <div class="shipment-detail-body">
+      <!-- Summary Cards -->
+      <div class="info-grid">
+        <div class="info-block">
+          <span class="block-label">Kiện hàng & Sản phẩm</span>
+          <div class="block-val">{{ item.itemSummary }}</div>
+          <div class="block-sub">Khối lượng: {{ item.packageWeightKg || 0.5 }} kg • Gói hàng tiêu chuẩn</div>
+        </div>
+        <div class="info-block">
+          <span class="block-label">Thu hộ COD & Cước</span>
+          <div class="block-val block-val--cod">{{ formatCurrency(item.codAmount) }}</div>
+          <div class="block-sub">Phương thức: Thu tiền mặt khi nhận hàng (COD)</div>
+        </div>
+      </div>
+
+      <!-- 2 Addresses -->
+      <div class="address-container">
+        <div class="address-card address-card--vendor">
+          <div class="address-type-label">
+            <span class="type-dot"></span>
+            <span>Điểm lấy hàng (Kho/Shop Vendor)</span>
+          </div>
+          <div class="address-title">{{ item.vendorName }}</div>
+          <div class="address-detail">{{ item.vendorAddress }} • SĐT: {{ item.vendorPhone }}</div>
+        </div>
+
+        <div class="address-card address-card--customer">
+          <div class="address-type-label">
+            <span class="type-dot"></span>
+            <span>Điểm giao hàng (Khách hàng)</span>
+          </div>
+          <div class="address-title">{{ item.customerName }} — SĐT: {{ item.customerPhone }}</div>
+          <div class="address-detail">{{ item.customerAddress }}</div>
+        </div>
+      </div>
+
+      <!-- Events Timeline (shipment_events) -->
+      <div class="timeline-section">
+        <h4 class="timeline-title">Lịch trình sự kiện vận đơn (shipment_events):</h4>
+        <div class="timeline-list">
+          @for (ev of item.events; track ev.id) {
+            <div class="timeline-item">
+              <div class="timeline-marker"></div>
+              <div class="timeline-time">{{ ev.time }}</div>
+              <div class="timeline-desc">{{ ev.title }}</div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="dialog-footer">
+        <button type="button" class="btn-close" (click)="onClose()">Đóng cửa sổ</button>
+      </div>
+    </div>
+  }
+</app-dialog>
