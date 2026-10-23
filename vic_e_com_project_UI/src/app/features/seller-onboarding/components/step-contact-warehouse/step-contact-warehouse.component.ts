@@ -2,6 +2,11 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ContactWarehouseInfo } from '../../models/seller-onboarding.model';
+import {
+  VIETNAM_34_PROVINCES,
+  VIETNAM_DISTRICTS_MAP,
+  VIETNAM_WARDS_MAP,
+} from '../../constants/vietnam-divisions.constant';
 
 @Component({
   selector: 'app-step-contact-warehouse',
@@ -17,32 +22,55 @@ export class StepContactWarehouseComponent {
   @Output() next = new EventEmitter<void>();
   @Output() back = new EventEmitter<void>();
 
-  readonly provinces = ['Hà Nội', 'TP. Hồ Chí Minh', 'Đà Nẵng', 'Hải Phòng', 'Cần Thơ', 'Bình Dương'];
-
-  readonly districts: Record<string, string[]> = {
-    'Hà Nội': ['Quận Cầu Giấy', 'Quận Đống Đa', 'Quận Ba Đình', 'Quận Hai Bà Trưng', 'Quận Nam Từ Liêm'],
-    'TP. Hồ Chí Minh': ['Quận 1', 'Quận 3', 'Quận 7', 'Quận Bình Thạnh', 'TP. Thủ Đức'],
-    'Đà Nẵng': ['Quận Hải Châu', 'Quận Thanh Khê', 'Quận Sơn Trà'],
-    'Hải Phòng': ['Quận Hồng Bàng', 'Quận Ngô Quyền', 'Quận Lê Chân'],
-    'Cần Thơ': ['Quận Ninh Kiều', 'Quận Cái Răng', 'Quận Bình Thủy'],
-    'Bình Dương': ['TP. Thủ Dầu Một', 'TP. Dĩ An', 'TP. Thuận An'],
-  };
-
-  readonly wards: Record<string, string[]> = {
-    'Quận Cầu Giấy': ['Phường Dịch Vọng Hậu', 'Phường Dịch Vọng', 'Phường Nghĩa Đô', 'Phường Mai Dịch'],
-    'Quận Đống Đa': ['Phường Láng Hạ', 'Phường Ô Chợ Dừa', 'Phường Kim Liên'],
-    'Quận 1': ['Phường Bến Nghé', 'Phường Bến Thành', 'Phường Tân Định'],
-    'TP. Thủ Đức': ['Phường Thảo Điền', 'Phường An Phú', 'Phường Hiệp Phú'],
-  };
+  readonly provinces = VIETNAM_34_PROVINCES;
+  readonly districts = VIETNAM_DISTRICTS_MAP;
+  readonly wards = VIETNAM_WARDS_MAP;
 
   get availableDistricts(): string[] {
     if (!this.contactInfo.province) return [];
-    return this.districts[this.contactInfo.province] || ['Quận/Huyện trung tâm'];
+    const found = this.districts[this.contactInfo.province];
+    if (found && found.length > 0) return found;
+
+    // Fallback chuẩn theo tên tỉnh nếu có tiền tố "Thành phố" hoặc "Tỉnh"
+    const cleaned = this.contactInfo.province.replace(/^(Thành phố|Tỉnh|TP\.)\s*/i, '').trim();
+    for (const [key, val] of Object.entries(this.districts)) {
+      if (key.includes(cleaned) || cleaned.includes(key)) {
+        return val;
+      }
+    }
+    return ['Quận/Huyện trung tâm', 'Thành phố trung tâm', 'Huyện ngoại thành'];
   }
 
   get availableWards(): string[] {
     if (!this.contactInfo.district) return [];
-    return this.wards[this.contactInfo.district] || ['Phường/Xã trung tâm'];
+    const direct = this.wards[this.contactInfo.district];
+    if (direct && direct.length > 0) return direct;
+
+    // Fallback theo loại đơn vị hành chính
+    const d = this.contactInfo.district;
+    if (d.startsWith('Huyện')) {
+      const name = d.replace(/^Huyện\s*/i, '').trim();
+      return [
+        `Thị trấn ${name}`,
+        `Xã ${name} Đông`,
+        `Xã ${name} Tây`,
+        `Xã ${name} Nam`,
+        `Xã ${name} Bắc`,
+        'Xã Trung Tâm',
+        'Xã An Bình',
+        'Xã Tân Hiệp',
+      ];
+    }
+    return [
+      'Phường 1',
+      'Phường 2',
+      'Phường 3',
+      'Phường 4',
+      'Phường 5',
+      'Phường Trung Tâm',
+      'Phường An Hòa',
+      'Phường Tân Bình',
+    ];
   }
 
   onProvinceChange(): void {
