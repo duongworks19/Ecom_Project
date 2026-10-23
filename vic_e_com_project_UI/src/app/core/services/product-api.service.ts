@@ -4,7 +4,6 @@ import { Observable, catchError, map, of } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { Product } from '../models/product.model';
 import { CategoryItem } from '../models/category.model';
-import { FlashDealItem } from '../../features/landing/components/flash-sale/flash-sale.component';
 
 @Injectable({
   providedIn: 'root',
@@ -77,24 +76,6 @@ export class ProductApiService {
               map(applyFilter),
               catchError(() => of(null))
             )
-          : of(null)
-      )
-    );
-  }
-
-  /**
-   * Lấy sản phẩm Flash Sale từ API:
-   * URL: http://localhost:4200/api/flash-sales.json
-   */
-  getFlashDeals(): Observable<FlashDealItem[] | null> {
-    const url = this.baseUrl.startsWith('http')
-      ? `${this.baseUrl}/flash-sales`
-      : `${this.baseUrl}/flash-sales.json`;
-
-    return this.http.get<FlashDealItem[]>(url).pipe(
-      catchError(() =>
-        this.baseUrl.startsWith('http')
-          ? this.http.get<FlashDealItem[]>('/api/flash-sales.json').pipe(catchError(() => of(null)))
           : of(null)
       )
     );

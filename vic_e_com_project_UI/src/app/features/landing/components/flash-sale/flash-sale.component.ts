@@ -1,6 +1,5 @@
-import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ProductApiService } from '../../../../core/services/product-api.service';
 
 export interface FlashDealItem {
   id: string;
@@ -21,8 +20,6 @@ export interface FlashDealItem {
   styleUrl: './flash-sale.component.scss',
 })
 export class FlashSaleComponent implements OnInit, OnDestroy {
-  private readonly productApi = inject(ProductApiService);
-
   readonly hours = signal<number>(4);
   readonly minutes = signal<number>(29);
   readonly seconds = signal<number>(53);
@@ -73,16 +70,7 @@ export class FlashSaleComponent implements OnInit, OnDestroy {
   ]);
 
   ngOnInit() {
-    // 1. Tải dữ liệu Flash Sale từ API nếu có
-    this.productApi.getFlashDeals().subscribe({
-      next: (apiDeals) => {
-        if (apiDeals && apiDeals.length > 0) {
-          this.dealItems.set(apiDeals);
-        }
-      },
-    });
-
-    // 2. Chạy đồng hồ đếm ngược trực tiếp
+    // Flash Sale backend chưa được triển khai; landing dùng dữ liệu hiển thị tạm thời.
     this.timerInterval = setInterval(() => {
       let s = this.seconds() - 1;
       let m = this.minutes();
