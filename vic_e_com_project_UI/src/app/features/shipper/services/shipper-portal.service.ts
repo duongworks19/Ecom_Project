@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { BehaviorSubject, Observable, map, of, tap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { FailureReason, Shipment, ShipmentStatus, ShipperKPI, ShipperProfile } from '../models/shipper.models';
+import { FailureReason, Shipment, ShipmentStatus, ShipperKPI, ShipperProfile, UpdateShipperProfileRequest } from '../models/shipper.models';
 
 interface ApiResponse<T> { data: T; }
 
@@ -17,6 +17,13 @@ export class ShipperPortalService {
 
   getProfile(): Observable<ShipperProfile> { 
     return this.http.get<ApiResponse<ShipperProfile>>(`${this.baseUrl}/profile`).pipe(map(r => r.data), tap(p => this.profileSubject.next(p))); 
+  }
+
+  updateProfile(data: UpdateShipperProfileRequest): Observable<ShipperProfile> {
+    return this.http.put<ApiResponse<ShipperProfile>>(`${this.baseUrl}/profile`, data).pipe(
+      map(r => r.data),
+      tap(p => this.profileSubject.next(p))
+    );
   }
   
   updateWorkStatus(isAvailable: boolean): Observable<ShipperProfile> {

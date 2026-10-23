@@ -15,9 +15,23 @@ import jakarta.validation.constraints.NotBlank;
 @RestController @RequestMapping("/api/shipper/shipments") @PreAuthorize("hasRole('SHIPPER')") @RequiredArgsConstructor
 public class ShipperShipmentController {
     private final ShipperShipmentService service;
-    @PostMapping("/{id}/pickup") public ResponseEntity<ApiResponse<ShipperPortalDtos.Item>> pickup(Authentication a, @PathVariable Long id) { return ResponseEntity.ok(ApiResponse.ok("Đã lấy hàng", service.pickup(a, id))); }
-    @PostMapping("/{id}/confirm-delivered") public ResponseEntity<ApiResponse<ShipperPortalDtos.Item>> delivered(Authentication a, @PathVariable Long id, @RequestBody(required = false) Delivered r) { return ResponseEntity.ok(ApiResponse.ok("Đã giao hàng", service.delivered(a, id, r == null ? null : r.collectedCod()))); }
-    @PostMapping("/{id}/report-failure") public ResponseEntity<ApiResponse<ShipperPortalDtos.Item>> failure(Authentication a, @PathVariable Long id, @Valid @RequestBody Failure r) { return ResponseEntity.ok(ApiResponse.ok("Đã báo giao thất bại", service.failure(a, id, r.reason(), r.notes()))); }
+
+    @PostMapping("/{id}/pickup")
+    public ResponseEntity<ApiResponse<ShipperPortalDtos.Item>> pickup(Authentication a, @PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.ok("Đã lấy hàng", service.pickup(a, id)));
+    }
+
+    @PostMapping("/{id}/confirm-delivered")
+    public ResponseEntity<ApiResponse<ShipperPortalDtos.Item>> delivered(Authentication a, @PathVariable Long id, @RequestBody(required = false) Delivered r) {
+        return ResponseEntity.ok(ApiResponse.ok("Đã giao hàng", service.delivered(a, id, r == null ? null : r.collectedCod())));
+    }
+
+    @PostMapping("/{id}/report-failure")
+    public ResponseEntity<ApiResponse<ShipperPortalDtos.Item>> failure(Authentication a, @PathVariable Long id, @Valid @RequestBody Failure r) {
+        return ResponseEntity.ok(ApiResponse.ok("Đã báo giao thất bại", service.failure(a, id, r.reason(), r.notes())));
+    }
+
     public record Delivered(BigDecimal collectedCod) { }
+
     public record Failure(@NotBlank String reason, String notes) { }
 }

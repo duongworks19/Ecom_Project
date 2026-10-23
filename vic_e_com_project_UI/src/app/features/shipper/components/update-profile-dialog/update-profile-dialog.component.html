@@ -1,0 +1,121 @@
+<app-dialog
+  [open]="open()"
+  [title]="'Cập nhật thông tin shipper'"
+  [maxWidth]="'560px'"
+  (closed)="onCancel()"
+>
+  <div class="shipper-dialog-body">
+    <p class="dialog-subtitle">
+      Cập nhật thông tin liên hệ, phương tiện và khu vực giao hàng của bạn.
+    </p>
+
+    @if (serverError()) {
+      <div class="error-banner" role="alert">
+        {{ serverError() }}
+      </div>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate class="update-form">
+      <!-- Section 1: Thông tin cá nhân -->
+      <section class="form-section">
+        <h3 class="section-title">Thông tin cá nhân</h3>
+
+        <div class="grid-two">
+          <div class="field-group">
+            <label for="fullName">Họ và tên</label>
+            <input
+              id="fullName"
+              type="text"
+              formControlName="fullName"
+              placeholder="Nhập họ và tên"
+            />
+            @if (form.controls.fullName.touched && form.controls.fullName.hasError('required')) {
+              <span class="field-error" role="alert">Vui lòng nhập họ và tên</span>
+            } @else if (form.controls.fullName.touched && form.controls.fullName.hasError('minlength')) {
+              <span class="field-error" role="alert">Họ và tên tối thiểu 2 ký tự</span>
+            }
+          </div>
+
+          <div class="field-group">
+            <label for="phone">Số điện thoại</label>
+            <input
+              id="phone"
+              type="tel"
+              formControlName="phone"
+              placeholder="Nhập số điện thoại"
+            />
+            @if (form.controls.phone.touched && form.controls.phone.hasError('required')) {
+              <span class="field-error" role="alert">Vui lòng nhập số điện thoại</span>
+            } @else if (form.controls.phone.touched && form.controls.phone.hasError('pattern')) {
+              <span class="field-error" role="alert">Số điện thoại gồm 10 số (bắt đầu bằng 03, 05, 07, 08, 09)</span>
+            }
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label for="email">Email</label>
+          <input
+            id="email"
+            type="email"
+            [value]="profile()?.email || ''"
+            readonly
+            class="readonly-input"
+            aria-readonly="true"
+          />
+          <span class="field-hint">Email đăng nhập do hệ thống quản lý, không thể thay đổi.</span>
+        </div>
+      </section>
+
+      <!-- Section 2: Phương tiện và khu vực -->
+      <section class="form-section">
+        <h3 class="section-title">Phương tiện và khu vực</h3>
+
+        <div class="grid-two">
+          <div class="field-group">
+            <label for="vehicleType">Loại xe</label>
+            <select id="vehicleType" formControlName="vehicleType">
+              @for (type of vehicleTypes; track type) {
+                <option [value]="type">{{ type }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="field-group">
+            <label for="licensePlate">Biển số xe</label>
+            <input
+              id="licensePlate"
+              type="text"
+              formControlName="licensePlate"
+              placeholder="Ví dụ: 29-T1 256 81"
+            />
+            @if (form.controls.licensePlate.touched && form.controls.licensePlate.hasError('required')) {
+              <span class="field-error" role="alert">Vui lòng nhập biển số xe</span>
+            }
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label for="serviceArea">Khu vực hoạt động</label>
+          <input
+            id="serviceArea"
+            type="text"
+            formControlName="serviceArea"
+            placeholder="Ví dụ: Thanh Xuân, Hà Đông"
+          />
+          @if (form.controls.serviceArea.touched && form.controls.serviceArea.hasError('required')) {
+            <span class="field-error" role="alert">Vui lòng nhập khu vực hoạt động</span>
+          }
+        </div>
+      </section>
+
+      <div class="form-actions">
+        <button type="button" class="btn-cancel" (click)="onCancel()" [disabled]="isSubmitting()">
+          Hủy
+        </button>
+        <button type="submit" class="btn-submit" [disabled]="isSubmitting()">
+          {{ isSubmitting() ? 'Đang lưu...' : 'Lưu thay đổi' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</app-dialog>

@@ -23,6 +23,12 @@ public class ShipperPortalController {
         return ResponseEntity.ok(ApiResponse.ok("Thông tin hồ sơ", service.profile(auth)));
     }
 
+    @PutMapping("/profile")
+    public ResponseEntity<ApiResponse<ShipperPortalDtos.Profile>> updateProfile(
+            Authentication auth, @RequestBody ShipperPortalDtos.UpdateProfile request) {
+        return ResponseEntity.ok(ApiResponse.ok("Đã cập nhật hồ sơ", service.updateProfile(auth, request)));
+    }
+
     @GetMapping("/dashboard/kpi")
     public ResponseEntity<ApiResponse<ShipperPortalDtos.Kpi>> kpi(Authentication auth) {
         return ResponseEntity.ok(ApiResponse.ok("KPI", service.kpi(auth)));
