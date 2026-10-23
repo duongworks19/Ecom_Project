@@ -1,4 +1,4 @@
-export type BusinessType = 'INDIVIDUAL' | 'HOUSEHOLD' | 'COMPANY';
+export type BusinessType = 'INDIVIDUAL' | 'HOUSEHOLD' | 'COMPANY' | '';
 
 export type ApplicationStatus =
   | 'NOT_STARTED'

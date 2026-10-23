@@ -43,6 +43,13 @@ export class SellerWizardComponent {
     this.onboardingService.updateKycInfo(info);
   }
 
+  onResetForm(): void {
+    if (confirm('Bạn có chắc muốn xóa sạch toàn bộ dữ liệu đã nhập để điền lại từ đầu không?')) {
+      this.onboardingService.resetApplication();
+      this.currentStep.set(1);
+    }
+  }
+
   goToStep(step: number): void {
     if (step >= 1 && step <= 4) {
       this.currentStep.set(step);

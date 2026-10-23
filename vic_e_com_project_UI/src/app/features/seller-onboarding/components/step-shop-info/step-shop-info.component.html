@@ -36,7 +36,7 @@
           {{ nameCheckMessage() }}
         </p>
       }
-      <span class="form-hint">Tên shop từ 3 - 50 ký tự, không chứa ký tự đặc biệt vi phạm chính sách.</span>
+      <!-- <span class="form-hint">Tên shop từ 3 - 50 ký tự, không chứa ký tự đặc biệt vi phạm chính sách.</span> -->
     </div>
 
     <!-- 2. Loại hình kinh doanh -->
@@ -91,6 +91,9 @@
           <div class="radio-check"></div>
         </div>
       </div>
+      @if (!shopInfo.businessType) {
+        <span class="field-required-hint">* Vui lòng bấm chọn 1 mô hình kinh doanh phù hợp</span>
+      }
     </div>
 
     <!-- 3. Ngành hàng chính -->
@@ -109,6 +112,9 @@
           </button>
         }
       </div>
+      @if (!shopInfo.primaryCategory) {
+        <span class="field-required-hint">* Vui lòng chọn 1 danh mục ngành hàng kinh doanh</span>
+      }
     </div>
 
     <!-- 4. Mô tả gian hàng -->
@@ -135,6 +141,9 @@
         <div class="logo-preview-box">
           @if (shopInfo.logoUrl) {
             <img [src]="shopInfo.logoUrl" alt="Logo shop" class="logo-preview" />
+            @if (!readOnly) {
+              <button type="button" class="btn-remove-logo" (click)="removeLogo()" title="Xóa ảnh logo">✕</button>
+            }
           } @else {
             <div class="logo-placeholder">🏪</div>
           }
@@ -162,7 +171,7 @@
         <button
           type="submit"
           class="btn-primary-pill"
-          [disabled]="!shopInfo.shopName || nameCheckStatus() === 'TAKEN' || isCheckingName()"
+          [disabled]="!isStepValid()"
           id="btn-step1-continue"
         >
           <span>Tiếp tục: Địa chỉ lấy hàng</span>

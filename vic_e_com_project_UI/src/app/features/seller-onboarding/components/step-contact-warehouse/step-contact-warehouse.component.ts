@@ -36,22 +36,23 @@ export class StepContactWarehouseComponent {
   };
 
   get availableDistricts(): string[] {
+    if (!this.contactInfo.province) return [];
     return this.districts[this.contactInfo.province] || ['Quận/Huyện trung tâm'];
   }
 
   get availableWards(): string[] {
+    if (!this.contactInfo.district) return [];
     return this.wards[this.contactInfo.district] || ['Phường/Xã trung tâm'];
   }
 
   onProvinceChange(): void {
-    const districts = this.availableDistricts;
-    this.contactInfo.district = districts[0] || '';
-    this.onDistrictChange();
+    this.contactInfo.district = '';
+    this.contactInfo.ward = '';
+    this.emitChange();
   }
 
   onDistrictChange(): void {
-    const wards = this.availableWards;
-    this.contactInfo.ward = wards[0] || '';
+    this.contactInfo.ward = '';
     this.emitChange();
   }
 
@@ -64,6 +65,9 @@ export class StepContactWarehouseComponent {
       this.contactInfo.representativeName?.trim() &&
       this.contactInfo.phone?.trim() &&
       this.contactInfo.email?.trim() &&
+      this.contactInfo.province?.trim() &&
+      this.contactInfo.district?.trim() &&
+      this.contactInfo.ward?.trim() &&
       this.contactInfo.detailedAddress?.trim()
     );
   }

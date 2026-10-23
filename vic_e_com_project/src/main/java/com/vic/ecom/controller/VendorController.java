@@ -25,10 +25,10 @@ public class VendorController {
 
     @GetMapping("/check-name")
     public ResponseEntity<ApiResponse<Map<String, Object>>> checkShopName(@RequestParam String name) {
-        boolean available = vendorService.isShopNameAvailable(name);
+        VendorService.ShopNameValidationResult result = vendorService.validateShopName(name);
         return ResponseEntity.ok(ApiResponse.ok("Kiểm tra tên gian hàng", Map.of(
-                "isAvailable", available,
-                "message", available ? "Tên gian hàng hợp lệ và khả dụng" : "Tên gian hàng đã tồn tại hoặc không hợp lệ"
+                "isAvailable", result.isAvailable(),
+                "message", result.message()
         )));
     }
 

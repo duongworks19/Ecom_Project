@@ -76,7 +76,9 @@
           (ngModelChange)="onProvinceChange()"
           name="province"
           [disabled]="readOnly"
+          required
         >
+          <option value="" disabled selected>-- Chọn Tỉnh / Thành phố --</option>
           @for (prov of provinces; track prov) {
             <option [value]="prov">{{ prov }}</option>
           }
@@ -91,8 +93,10 @@
           [(ngModel)]="contactInfo.district"
           (ngModelChange)="onDistrictChange()"
           name="district"
-          [disabled]="readOnly"
+          [disabled]="readOnly || !contactInfo.province"
+          required
         >
+          <option value="" disabled selected>-- Chọn Quận / Huyện --</option>
           @for (dist of availableDistricts; track dist) {
             <option [value]="dist">{{ dist }}</option>
           }
@@ -107,8 +111,10 @@
           [(ngModel)]="contactInfo.ward"
           (ngModelChange)="emitChange()"
           name="ward"
-          [disabled]="readOnly"
+          [disabled]="readOnly || !contactInfo.district"
+          required
         >
+          <option value="" disabled selected>-- Chọn Phường / Xã --</option>
           @for (w of availableWards; track w) {
             <option [value]="w">{{ w }}</option>
           }

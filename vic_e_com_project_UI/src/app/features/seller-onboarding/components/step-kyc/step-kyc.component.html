@@ -175,7 +175,9 @@
           (ngModelChange)="emitChange()"
           name="bankName"
           [disabled]="readOnly"
+          required
         >
+          <option value="" disabled selected>-- Chọn Ngân hàng thụ hưởng --</option>
           @for (bank of popularBanks; track bank) {
             <option [value]="bank">{{ bank }}</option>
           }
