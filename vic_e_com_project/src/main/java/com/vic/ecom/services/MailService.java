@@ -58,4 +58,23 @@ public class MailService {
             log.error("Failed to send shipper temporary-password mail to {}", to, e);
         }
     }
+    @Async
+    public void sendShipperLocked(String to, String fullName, String reason) {
+        try {
+            SimpleMailMessage msg = new SimpleMailMessage();
+            msg.setFrom(from);
+            msg.setTo(to);
+            msg.setSubject("Tài khoản Shipper VIC MART đã bị khóa");
+            String detail = reason == null || reason.isBlank()
+                    ? "Quản trị viên không cung cấp lý do cụ thể."
+                    : reason.trim();
+            msg.setText("Xin chào " + fullName + ",\n\n"
+                    + "Tài khoản Shipper VIC MART của bạn đã được tạm khóa.\n"
+                    + "Lý do: " + detail + "\n\n"
+                    + "Vui lòng liên hệ quản trị viên để được hỗ trợ.");
+            mailSender.send(msg);
+        } catch (Exception e) {
+            log.error("Failed to send shipper lock mail to {}", to, e);
+        }
+    }
 }

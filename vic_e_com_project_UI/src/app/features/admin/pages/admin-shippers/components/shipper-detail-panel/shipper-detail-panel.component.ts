@@ -18,6 +18,7 @@ export class ShipperDetailPanelComponent {
   @Input() shipper: ShipperDetail | null = null;
   @Output() requestToggleLock = new EventEmitter<ShipperDetail>();
   @Output() viewAllHistory = new EventEmitter<ShipperDetail>();
+  @Output() requestDelete = new EventEmitter<ShipperDetail>();
 
   readonly maskPhone = maskPhoneNumber;
   readonly getInitial = getShipperInitial;

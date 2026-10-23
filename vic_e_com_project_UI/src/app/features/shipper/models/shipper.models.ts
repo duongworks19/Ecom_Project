@@ -71,3 +71,11 @@ export interface ShipperKPI {
   totalCollectedCod: number;
   successRate: number;
 }
+
+export interface UpdateShipperProfileRequest {
+  fullName: string;
+  phone: string;
+  vehicleType: string;
+  licensePlate: string;
+  serviceArea: string;
+}

@@ -27,6 +27,7 @@ export abstract class ShipperService {
   abstract updateShipper(id: number, payload: UpdateShipperRequest): Observable<ShipperDetail>;
   abstract lockShipper(id: number, reason?: string): Observable<ShipperDetail>;
   abstract unlockShipper(id: number): Observable<ShipperDetail>;
+  abstract permanentlyDelete(id: number): Observable<void>;
 }
 
 @Injectable()
@@ -93,6 +94,10 @@ export class HttpShipperService extends ShipperService {
 
   unlockShipper(id: number): Observable<ShipperDetail> {
     return this.http.post<{ data: ShipperDetail }>(`${this.baseUrl}/${id}/unlock`, {}).pipe(this.unwrap<ShipperDetail>());
+  }
+
+  permanentlyDelete(id: number): Observable<void> {
+    return this.http.delete<any>(`${this.baseUrl}/${id}/permanent`).pipe(map(() => undefined));
   }
 }
 
@@ -225,6 +230,28 @@ export class MockShipperService extends ShipperService {
     if (!target) return this.notFound();
     Object.assign(target, { accountStatus: 'ACTIVE', workStatus: 'AVAILABLE', lockReason: undefined });
     return of(structuredClone(target)).pipe(delay(this.latencyMs));
+  }
+
+  permanentlyDelete(id: number): Observable<void> {
+    const idx = this.shippers.findIndex((s) => s.id === id);
+    if (idx === -1) return this.notFound();
+    const target = this.shippers[idx];
+    if (target.accountStatus !== 'LOCKED') {
+      return throwError(
+        () => new HttpErrorResponse({ status: 409, error: { message: 'Chỉ được xóa shipper đã khóa' } })
+      );
+    }
+    if (target.deliveringCount > 0) {
+      return throwError(
+        () =>
+          new HttpErrorResponse({
+            status: 409,
+            error: { message: 'Không thể xóa khi shipper còn đơn đang giao' },
+          })
+      );
+    }
+    this.shippers.splice(idx, 1);
+    return of(undefined).pipe(delay(this.latencyMs));
   }
 
   private notFound<T>(): Observable<T> {

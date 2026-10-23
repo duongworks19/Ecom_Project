@@ -63,6 +63,12 @@ public class AdminShipperController {
         return ResponseEntity.ok(ApiResponse.ok("Đã mở khóa shipper", service.unlock(id, req == null ? null : req.reason(), auth.getName())));
     }
 
+    @DeleteMapping("/{id}/permanent")
+    public ResponseEntity<ApiResponse<Void>> permanentlyDelete(@PathVariable Long id) {
+        service.permanentlyDelete(id);
+        return ResponseEntity.ok(ApiResponse.ok("Đã xóa vĩnh viễn tài khoản shipper", null));
+    }
+
     private ShipperProfile require(Long id) {
         return profiles.findByUserId(id).filter(p -> p.getUser().getRole() == UserRole.SHIPPER).orElseThrow(()
                 -> CustomerAccountException.notFound("SHIPPER_NOT_FOUND", "Không tìm thấy shipper"));

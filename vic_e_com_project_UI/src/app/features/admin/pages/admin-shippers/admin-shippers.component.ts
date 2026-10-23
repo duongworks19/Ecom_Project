@@ -16,6 +16,7 @@ import { ShippersFilterBarComponent } from './components/shippers-filter-bar/shi
 import { ShippersTableComponent } from './components/shippers-table/shippers-table.component';
 import { ShipperDetailPanelComponent } from './components/shipper-detail-panel/shipper-detail-panel.component';
 import { ShipperLockModalComponent } from './components/shipper-lock-modal/shipper-lock-modal.component';
+import { ShipperDeleteModalComponent } from './components/shipper-delete-modal/shipper-delete-modal.component';
 
 @Component({
   selector: 'vic-admin-shippers',
@@ -28,6 +29,7 @@ import { ShipperLockModalComponent } from './components/shipper-lock-modal/shipp
     ShippersTableComponent,
     ShipperDetailPanelComponent,
     ShipperLockModalComponent,
+    ShipperDeleteModalComponent,
   ],
   templateUrl: './admin-shippers.component.html',
   styleUrl: './admin-shippers.component.scss',
@@ -52,6 +54,10 @@ export class AdminShippersComponent implements OnInit {
   readonly lockModalShipper = signal<ShipperDetail | null>(null);
   readonly lockModalError = signal<string | null>(null);
   readonly isLockSubmitting = signal<boolean>(false);
+
+  readonly deleteModalShipper = signal<ShipperDetail | null>(null);
+  readonly deleteModalError = signal<string | null>(null);
+  readonly isDeleteSubmitting = signal<boolean>(false);
 
   readonly historyModalShipper = signal<ShipperDetail | null>(null);
   readonly fullDeliveries = signal<ShipperDeliveryItem[]>([]);
@@ -132,6 +138,40 @@ export class AdminShippersComponent implements OnInit {
     this.shipperService.getDeliveries(shipper.id, 0, 20).subscribe({
       next: (res) => this.fullDeliveries.set(res.items),
     });
+  }
+
+  onOpenDeleteModal(shipper: ShipperDetail): void {
+    this.deleteModalError.set(null);
+    this.deleteModalShipper.set(shipper);
+  }
+
+  onConfirmPermanentDelete(shipper: ShipperDetail): void {
+    this.isDeleteSubmitting.set(true);
+    this.deleteModalError.set(null);
+
+    this.shipperService.permanentlyDelete(shipper.id).subscribe({
+      next: () => {
+        this.isDeleteSubmitting.set(false);
+        this.deleteModalShipper.set(null);
+        this.showToast(`Đã xóa vĩnh viễn tài khoản shipper ${shipper.fullName} và toàn bộ dữ liệu liên quan.`);
+        this.selectedShipper.set(null);
+        this.loadData();
+      },
+      error: (err: HttpErrorResponse) => {
+        this.isDeleteSubmitting.set(false);
+        const msg =
+          err.error?.message ||
+          (err.status === 409
+            ? 'Không thể xóa: Shipper phải ở trạng thái ĐÃ KHÓA và không còn đơn hàng đang giao.'
+            : 'Không thể xóa tài khoản shipper này.');
+        this.deleteModalError.set(msg);
+      },
+    });
+  }
+
+  onRequestLockFromDeleteModal(shipper: ShipperDetail): void {
+    this.deleteModalShipper.set(null);
+    this.onOpenLockModal(shipper);
   }
 
   private loadData(preferredId?: number): void {

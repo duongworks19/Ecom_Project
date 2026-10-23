@@ -12,6 +12,8 @@ public final class ShipperPortalDtos {
                           String avatarUrl, String vehicleType, String licensePlate, String hubName,
                           String serviceArea, String partnerCompany, String joinedDate, BigDecimal rating,
                           ShipperWorkStatus workStatus) { }
+    public record UpdateProfile(String fullName, String phone, String vehicleType,
+                                 String licensePlate, String serviceArea) { }
     public record Kpi(long readyToPickCount, long deliveringCount, long deliveredCount, long failedCount,
                       BigDecimal totalCollectedCod, Double successRate) { }
     public record Item(Long id, Long orderId, String code, Long shipperId, ShipmentStatus status,
