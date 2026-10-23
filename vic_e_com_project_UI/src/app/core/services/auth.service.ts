@@ -202,25 +202,20 @@ export class HttpAuthService extends AuthService {
 @Injectable()
 export class MockAuthService extends AuthService {
   private readonly latencyMs = 300;
-  private readonly accounts = new Map<string, { password: string; role: string; userId: number; mustChangePassword: boolean }>([
-    ['admin@demo.local', { password: 'Admin@123', role: 'ADMIN', userId: 1, mustChangePassword: false }],
-    ['shipper@demo.local', { password: 'Temp@12345', role: 'SHIPPER', userId: 2, mustChangePassword: true }],
+  private readonly accounts = new Map<string, { password: string; role: string; userId: number; mustChangePassword: boolean; fullName?: string }>([
+    ['admin@demo.local', { password: 'Admin@123', role: 'ADMIN', userId: 1, mustChangePassword: false, fullName: 'Quản trị viên' }],
+    ['shipper@demo.local', { password: 'Shipper@123', role: 'SHIPPER', userId: 2, mustChangePassword: false, fullName: 'Nguyễn Minh Anh' }],
+    ['shipper-first@demo.local', { password: 'Temp@12345', role: 'SHIPPER', userId: 3, mustChangePassword: true, fullName: 'Nguyễn Minh Anh' }],
   ]);
 
   constructor() {
     super();
-    // ponytail: auto-seed ADMIN session in mock mode when not in first-login flow or explicit logout so /admin works out-of-the-box
-    const isFirstLoginFlow = localStorage.getItem('mustChangePassword') === 'true';
-    if (!isFirstLoginFlow && !sessionStorage.getItem('explicit_logout') && localStorage.getItem('role') !== 'ADMIN') {
-      localStorage.setItem('currentUsername', 'admin@demo.local');
-      this.saveSession({ token: 'mock-jwt-admin', role: 'ADMIN', userId: 1, mustChangePassword: false });
-    }
   }
 
   register(req: RegisterRequest): Observable<ApiResponse<AuthResponse>> {
     const email = req.email.trim().toLowerCase();
-    this.accounts.set(email, { password: req.password, role: 'CUSTOMER', userId: Date.now(), mustChangePassword: false });
-    const data: AuthResponse = { token: 'mock-jwt-customer', role: 'CUSTOMER', userId: 99, mustChangePassword: false };
+    this.accounts.set(email, { password: req.password, role: 'CUSTOMER', userId: Date.now(), mustChangePassword: false, fullName: req.fullName });
+    const data: AuthResponse = { token: 'mock-jwt-customer', role: 'CUSTOMER', userId: 99, mustChangePassword: false, fullName: req.fullName };
     return of({ message: 'Đăng ký thành công', data }).pipe(
       delay(this.latencyMs),
       tap((res) => {
@@ -242,6 +237,7 @@ export class MockAuthService extends AuthService {
       token: `mock-jwt-${acc.role.toLowerCase()}`,
       role: acc.role,
       userId: acc.userId,
+      fullName: acc.fullName,
       mustChangePassword: acc.mustChangePassword,
     };
     return of({ message: 'Đăng nhập thành công', data }).pipe(
