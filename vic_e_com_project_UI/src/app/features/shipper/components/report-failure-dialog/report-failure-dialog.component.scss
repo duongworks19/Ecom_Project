@@ -1,0 +1,92 @@
+.failure-dialog-body {
+  padding: 8px 0 4px;
+  text-align: center;
+}
+
+.warning-icon-circle {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background-color: #fee2e2;
+  color: var(--color-primary, #e60023);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+  svg {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+.order-code-sub {
+  font-size: 13px;
+  color: var(--color-mute, #62625b);
+  margin-bottom: 20px;
+  strong {
+    color: var(--color-ink, #000000);
+  }
+}
+
+.form-group {
+  text-align: left;
+  margin-bottom: 16px;
+  .form-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--color-ink, #000000);
+    margin-bottom: 6px;
+  }
+  .select-input,
+  .textarea-input {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--color-hairline, #dadad3);
+    background-color: #ffffff;
+    font-size: 13px;
+    color: var(--color-ink, #000000);
+    outline: none;
+    box-sizing: border-box;
+    &:focus {
+      border-color: var(--color-primary, #e60023);
+    }
+  }
+  .textarea-input {
+    resize: vertical;
+    font-family: inherit;
+  }
+}
+
+.dialog-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+  button {
+    flex: 1;
+    padding: 11px 0;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition-fast, 0.15s ease);
+  }
+  .btn-cancel {
+    background-color: transparent;
+    border: 1px solid var(--color-hairline, #dadad3);
+    color: var(--color-mute, #62625b);
+    &:hover {
+      background-color: var(--color-surface-card, #f6f6f3);
+      color: var(--color-ink, #000000);
+    }
+  }
+  .btn-report {
+    background-color: var(--color-primary, #e60023);
+    border: none;
+    color: #ffffff;
+    &:hover {
+      background-color: var(--color-primary-pressed, #cc001f);
+    }
+  }
+}

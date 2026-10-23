@@ -21,7 +21,7 @@ import { ShipmentDetailDialogComponent } from '../../components/shipment-detail-
   changeDetection: ChangeDetectionStrategy.Default,
 })
 export class ShipperDashboardComponent implements OnInit {
-  private readonly shipperService = inject(ShipperPortalService);
+  readonly shipperService = inject(ShipperPortalService);
   private readonly toastService = inject(ToastService);
 
   readonly kpi = signal<ShipperKPI>({
@@ -42,6 +42,7 @@ export class ShipperDashboardComponent implements OnInit {
   readonly activeFailureShipment = signal<Shipment | null>(null);
 
   ngOnInit(): void {
+    this.shipperService.getShipments().subscribe();
     this.shipperService.shipments$.subscribe((list) => {
       this.shipments.set(list);
       this.refreshKPI();

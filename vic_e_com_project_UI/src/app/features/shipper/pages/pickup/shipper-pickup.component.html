@@ -1,0 +1,59 @@
+<div class="pickup-page">
+  <div class="page-header">
+    <span class="badge-subtitle">QUY TRÌNH LẤY HÀNG</span>
+    <h1 class="page-title">Đơn hàng cần lấy từ Shop</h1>
+    <p class="page-desc">Đến trực tiếp địa chỉ kho/cửa hàng của người bán, kiểm tra kiện hàng và bấm xác nhận lấy.</p>
+  </div>
+
+  @if (pickupShipments().length === 0) {
+    <div class="empty-card">
+      <p>Hiện không có đơn nào đang chờ lấy hàng tại Shop.</p>
+    </div>
+  } @else {
+    <div class="pickup-cards-grid">
+      @for (item of pickupShipments(); track item.id) {
+        <div class="pickup-card">
+          <div class="card-main">
+            <div class="card-top-row">
+              <button type="button" class="btn-code" (click)="activeDetailShipment.set(item)">
+                {{ item.code }}
+              </button>
+              <span class="tag-pickup">Cần lấy</span>
+            </div>
+
+            <h3 class="vendor-title">{{ item.vendorName }}</h3>
+            <div class="vendor-address-row">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              </svg>
+              <span>{{ item.vendorAddress }}</span>
+            </div>
+            <div class="vendor-phone-row">
+              <span>Liên hệ kho: <strong>{{ item.vendorPhone }}</strong></span>
+            </div>
+
+            <div class="package-box">
+              <span class="pkg-label">Nội dung kiện hàng:</span>
+              <strong class="pkg-name">{{ item.itemSummary }}</strong>
+            </div>
+          </div>
+
+          <div class="card-footer">
+            <div class="cod-tag">
+              COD cần thu: <strong>{{ formatCurrency(item.codAmount) }}</strong>
+            </div>
+            <button type="button" class="btn-confirm-pickup" (click)="onConfirmPickup(item)">
+              Xác nhận đã lấy kiện hàng
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <app-shipment-detail-dialog
+    [open]="activeDetailShipment() !== null"
+    [shipment]="activeDetailShipment()"
+    (closed)="activeDetailShipment.set(null)"
+  />
+</div>

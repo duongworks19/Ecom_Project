@@ -29,9 +29,11 @@ export class ShipperLayoutComponent implements OnInit {
   readonly currentDate = signal<string>('Hôm nay: Thứ năm, 22/10/2026');
 
   ngOnInit(): void {
+    this.shipperService.getProfile().subscribe();
+    this.shipperService.getShipments().subscribe();
     this.shipperService.profile$.subscribe((prof) => {
       this.profile.set(prof);
-      this.isAvailable.set(prof.workStatus === 'AVAILABLE');
+      this.isAvailable.set(prof?.workStatus === 'AVAILABLE');
     });
 
     this.shipperService.shipments$.subscribe((list) => {

@@ -1,0 +1,44 @@
+<app-dialog
+  [open]="open()"
+  [title]="'Xác nhận giao thành công'"
+  [maxWidth]="'460px'"
+  (closed)="onCancel()"
+>
+  @if (shipment(); as item) {
+    <div class="confirm-delivery-body">
+      <div class="status-icon-circle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
+      <p class="order-code-sub">Đơn hàng: <strong>{{ item.code }}</strong></p>
+
+      <div class="info-card">
+        <div class="info-row">
+          <span class="label">Người nhận:</span>
+          <strong class="val">{{ item.customerName }} ({{ item.customerPhone }})</strong>
+        </div>
+        <div class="info-row">
+          <span class="label">Số tiền COD cần thu:</span>
+          <strong class="val val--amount">{{ formatCurrency(item.codAmount) }}</strong>
+        </div>
+        <div class="checkbox-row">
+          <input type="checkbox" id="codCheck" [(ngModel)]="isCodConfirmed" />
+          <label for="codCheck">Đã nhận đủ tiền mặt hoặc chuyển khoản từ khách hàng</label>
+        </div>
+      </div>
+
+      <div class="dialog-actions">
+        <button type="button" class="btn-cancel" (click)="onCancel()">Hủy bỏ</button>
+        <button
+          type="button"
+          class="btn-confirm"
+          [disabled]="item.codAmount > 0 && !isCodConfirmed"
+          (click)="onConfirm()"
+        >
+          Xác nhận hoàn tất
+        </button>
+      </div>
+    </div>
+  }
+</app-dialog>
