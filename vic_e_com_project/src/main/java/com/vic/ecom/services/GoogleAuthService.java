@@ -66,15 +66,10 @@ public class GoogleAuthService {
 
         recordLogin(user, LoginStatus.SUCCESS);
         String subject = user.getEmail() != null ? user.getEmail() : email;
-<<<<<<< HEAD
         String token = jwtUtil.generateToken(user.getId(), subject, user.getRole().name(), user.getTokenVersion());
-        return new AuthResponse(token, user.getRole().name(), user.getId(), user.getFullName(), subject);
-=======
-        String token = jwtUtil.generateToken(subject, user.getRole().name());
         AuthResponse response = new AuthResponse(token, user.getRole().name(), user.getId(), user.getFullName(), subject);
         response.setMustChangePassword(user.isMustChangePassword());
         return response;
->>>>>>> bfcc42103f1dadd178df35ca55f498106c896c29
     }
 
     private GoogleIdToken.Payload verify(String idToken) {

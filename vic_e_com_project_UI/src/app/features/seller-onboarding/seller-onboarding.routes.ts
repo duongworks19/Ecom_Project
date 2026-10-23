@@ -35,6 +35,14 @@ export const SELLER_ONBOARDING_ROUTES: Routes = [
       ),
   },
   {
+    path: 'shop/:id',
+    loadComponent: () =>
+      import('../seller-dashboard/pages/shop-storefront/shop-storefront.component').then(
+        (m) => m.ShopStorefrontComponent
+      ),
+    title: 'Trang chủ gian hàng — VIC MART',
+  },
+  {
     path: 'shop',
     loadComponent: () =>
       import('../seller-dashboard/pages/shop-storefront/shop-storefront.component').then(

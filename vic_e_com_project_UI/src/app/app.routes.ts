@@ -59,9 +59,20 @@ export const routes: Routes = [
     pathMatch: 'full',
   },
   {
+    path: 'shop/:id',
+    loadComponent: () =>
+      import('./features/seller-dashboard/pages/shop-storefront/shop-storefront.component').then(
+        (m) => m.ShopStorefrontComponent
+      ),
+    title: 'Gian hàng — VIC MART',
+  },
+  {
     path: 'shop',
-    redirectTo: 'seller/shop',
-    pathMatch: 'full',
+    loadComponent: () =>
+      import('./features/seller-dashboard/pages/shop-storefront/shop-storefront.component').then(
+        (m) => m.ShopStorefrontComponent
+      ),
+    title: 'Gian hàng — VIC MART',
   },
   {
     path: 'account',

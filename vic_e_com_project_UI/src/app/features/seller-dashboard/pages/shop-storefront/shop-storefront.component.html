@@ -43,7 +43,7 @@
           </div>
           <p class="tagline">Chuyên ngành {{ shopCategory() }}</p>
           <div class="shop-stats-inline">
-            <span>★ <b>4.8</b> (128 đánh giá)</span>
+            <span>★ <b>{{ shopRating() }}</b> (Đánh giá uy tín)</span>
             <span>·</span>
             <span><b>{{ products().length }}</b> Sản phẩm</span>
             <span>·</span>
@@ -56,9 +56,6 @@
         <button type="button" class="pill" [class.red]="!isFollowing()" (click)="toggleFollow()">
           {{ isFollowing() ? '✓ Đang theo dõi' : '+ Theo dõi Shop' }}
         </button>
-        <!-- <a routerLink="/seller/dashboard" class="pill">
-          Tùy chỉnh giao diện Shop
-        </a> -->
       </div>
     </div>
   </section>
@@ -140,11 +137,11 @@
         <div class="head">
           <h2>Giới thiệu gian hàng</h2>
         </div>
-        <p class="shop-desc">{{ profile().description }}</p>
+        <p class="shop-desc">{{ shopDescription() }}</p>
         <div class="info-list">
-          <div><span>Địa chỉ kho:</span> <strong>{{ profile().pickupAddress }}</strong></div>
-          <div><span>Hotline CSKH:</span> <strong>{{ profile().phone }}</strong></div>
-          <div><span>Email liên hệ:</span> <strong>{{ profile().email }}</strong></div>
+          <div><span>Địa chỉ kho:</span> <strong>{{ shopPickupAddress() }}</strong></div>
+          <div><span>Hotline CSKH:</span> <strong>{{ shopPhone() }}</strong></div>
+          <div><span>Email liên hệ:</span> <strong>{{ shopEmail() }}</strong></div>
         </div>
       </section>
 
@@ -164,7 +161,7 @@
             <p class="rev-comment">{{ rev.comment }}</p>
             @if (rev.reply) {
             <div class="seller-reply">
-              <strong>Phản hồi từ {{ data().shopName }}:</strong>
+              <strong>Phản hồi từ {{ shopName() }}:</strong>
               <p>{{ rev.reply }}</p>
             </div>
             }

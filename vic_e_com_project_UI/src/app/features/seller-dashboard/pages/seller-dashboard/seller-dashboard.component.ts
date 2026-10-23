@@ -8,6 +8,7 @@ import {
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
@@ -96,10 +97,34 @@ export class SellerDashboardComponent implements OnInit {
   private readonly dashboardService = inject(SellerDashboardService);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly http = inject(HttpClient);
+
+  readonly currentShopId = signal<number | null>(null);
 
   ngOnInit(): void {
     this.loadProducts();
     this.detectApprovedRole();
+    this.loadCurrentShopInfo();
+  }
+
+  loadCurrentShopInfo(): void {
+    this.http.get<any>('http://localhost:9090/api/shops/current').subscribe({
+      next: (res) => {
+        const shop = res?.data || res;
+        if (shop && shop.id) {
+          this.currentShopId.set(shop.id);
+          this.shopProfile.set({
+            n: shop.name,
+            d: shop.description || 'Đồ decor phong cách tối giản Bắc Âu.',
+            ph: shop.phone || '0912345678',
+            em: shop.email || 'lumi@vicmart.vn',
+            ad: shop.pickupAddress || 'Số 12 Ngõ 88 Trần Thái Tông, Cầu Giấy, Hà Nội',
+            hr: '08:00 – 21:00',
+          });
+        }
+      },
+      error: () => {},
+    });
   }
 
   loadProducts(): void {

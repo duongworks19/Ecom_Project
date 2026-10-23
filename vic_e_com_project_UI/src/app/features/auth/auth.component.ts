@@ -127,11 +127,7 @@ export class AuthComponent implements OnInit, AfterViewInit {
             return;
           }
           this.showToast('✨ Đăng nhập thành công!', false);
-<<<<<<< HEAD
           const target = this.getTargetRoute(res.data?.role);
-=======
-          const target = res.data?.role === 'ADMIN' ? '/admin' : res.data?.role === 'SHIPPER' ? '/shipper' : '/';
->>>>>>> bfcc42103f1dadd178df35ca55f498106c896c29
           setTimeout(() => void this.router.navigateByUrl(target), 800);
         },
         error: (err: HttpErrorResponse) => {
@@ -170,6 +166,9 @@ export class AuthComponent implements OnInit, AfterViewInit {
     if (normalizedRole === 'VENDOR' || normalizedRole === 'ROLE_VENDOR') {
       return '/seller/dashboard';
     }
+    if (normalizedRole === 'SHIPPER' || normalizedRole === 'ROLE_SHIPPER') {
+      return '/shipper';
+    }
     return '/';
   }
 
@@ -182,15 +181,11 @@ export class AuthComponent implements OnInit, AfterViewInit {
             next: (res) => {
               this.isLoading.set(false);
               this.showToast('✨ Đăng nhập Google thành công!', false);
-<<<<<<< HEAD
-              const target = this.getTargetRoute(res.data?.role);
-=======
               if (res.data?.mustChangePassword) {
                 void this.router.navigateByUrl('/change-password');
                 return;
               }
-              const target = res.data?.role === 'ADMIN' ? '/admin' : res.data?.role === 'SHIPPER' ? '/shipper' : '/';
->>>>>>> bfcc42103f1dadd178df35ca55f498106c896c29
+              const target = this.getTargetRoute(res.data?.role);
               setTimeout(() => void this.router.navigateByUrl(target), 800);
             },
             error: (err: HttpErrorResponse) => {

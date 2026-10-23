@@ -6,7 +6,7 @@
     <span class="tagk">SELLER</span>
   </a>
   <span class="sp"></span>
-  <a routerLink="/seller/shop" class="pill hide-m">Xem shop như khách</a>
+  <a [routerLink]="currentShopId() ? ['/shop', currentShopId()] : ['/shop']" class="pill hide-m">Xem shop như khách</a>
   <a routerLink="/" class="pill hide-m">Trang mua sắm</a>
   <button class="pill bell" type="button" aria-label="Thông báo, 6 chưa đọc">
     🔔<i>{{ totalTodoCount() }}</i>
@@ -30,7 +30,7 @@
           <div class="user-dropdown-shop">Gian hàng: <b>{{ shopName() }}</b></div>
         </div>
         <div class="user-dropdown-divider"></div>
-        <a class="user-dropdown-item" routerLink="/seller/shop" (click)="closeUserMenu()">
+        <a class="user-dropdown-item" [routerLink]="currentShopId() ? ['/shop', currentShopId()] : ['/shop']" (click)="closeUserMenu()">
           <span class="item-icon">🏪</span>
           <span>Xem shop như khách</span>
         </a>
