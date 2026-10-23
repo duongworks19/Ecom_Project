@@ -58,6 +58,7 @@
           [shipper]="selectedShipper()"
           (requestToggleLock)="onOpenLockModal($event)"
           (viewAllHistory)="onOpenHistory($event)"
+          (requestDelete)="onOpenDeleteModal($event)"
         ></vic-shipper-detail-panel>
       </div>
     </section>
@@ -73,4 +74,13 @@
     (confirmLock)="onConfirmToggleLock($event)"
     (closeHistory)="historyModalShipper.set(null)"
   ></vic-shipper-lock-modal>
+
+  <vic-shipper-delete-modal
+    [shipper]="deleteModalShipper()"
+    [errorMessage]="deleteModalError()"
+    [isSubmitting]="isDeleteSubmitting()"
+    (close)="deleteModalShipper.set(null)"
+    (confirmPermanentDelete)="onConfirmPermanentDelete($event)"
+    (requestLockFirst)="onRequestLockFromDeleteModal($event)"
+  ></vic-shipper-delete-modal>
 </div>

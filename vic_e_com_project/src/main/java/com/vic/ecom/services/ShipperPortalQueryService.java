@@ -11,9 +11,11 @@ import com.vic.ecom.repository.ShipmentEventRepository;
 import com.vic.ecom.repository.DeliveryFailureRepository;
 import com.vic.ecom.repository.UserRepository;
 import com.vic.ecom.ultis.CustomerAccountException;
+import com.vic.ecom.ultis.CustomerAccountValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -46,6 +48,49 @@ public class ShipperPortalQueryService {
                 p.getServiceArea(), null, p.getCreatedAt().toLocalDate().toString(), null, p.getWorkStatus());
     }
 
+    @Transactional
+    public ShipperPortalDtos.Profile updateProfile(Authentication auth, ShipperPortalDtos.UpdateProfile request) {
+        if (request == null) {
+            throw CustomerAccountException.badRequest("INVALID_REQUEST", "Request body is required", null);
+        }
+        ShipperProfile profile = requireProfile(auth);
+        User user = profile.getUser();
+        if (!CustomerAccountValidator.isValidFullName(request.fullName())) {
+            throw CustomerAccountException.badRequest("INVALID_FULL_NAME", "Họ và tên không hợp lệ", "fullName");
+        }
+        String phone = CustomerAccountValidator.normalizePhone(request.phone());
+        if (!CustomerAccountValidator.isValidVnPhone(phone)) {
+            throw CustomerAccountException.badRequest("INVALID_PHONE", "Số điện thoại không hợp lệ", "phone");
+        }
+        users.findByPhone(phone).ifPresent(other -> {
+            if (!other.getId().equals(user.getId())) {
+                throw CustomerAccountException.conflict("PHONE_ALREADY_IN_USE",
+                        "Số điện thoại đã được sử dụng", "phone");
+            }
+        });
+        if (blankMax(request.vehicleType(), 50)) {
+            throw CustomerAccountException.unprocessable("INVALID_VEHICLE_TYPE", "Loại xe không hợp lệ", "vehicleType");
+        }
+        if (blankMax(request.licensePlate(), 20)) {
+            throw CustomerAccountException.unprocessable("INVALID_LICENSE_PLATE", "Biển số xe không hợp lệ", "licensePlate");
+        }
+        if (blankMax(request.serviceArea(), 255)) {
+            throw CustomerAccountException.unprocessable("INVALID_SERVICE_AREA", "Khu vực hoạt động không hợp lệ", "serviceArea");
+        }
+        user.setFullName(request.fullName().trim());
+        user.setPhone(phone);
+        profile.setVehicleType(request.vehicleType().trim());
+        profile.setLicensePlate(request.licensePlate().trim().toUpperCase());
+        profile.setServiceArea(request.serviceArea().trim());
+        users.save(user);
+        profiles.save(profile);
+        return profile(auth);
+    }
+
+    private boolean blankMax(String value, int max) {
+        return value == null || value.isBlank() || value.trim().length() > max;
+    }
+
     public ShipperPortalDtos.Kpi kpi(Authentication auth) {
         Long id = requireProfile(auth).getId();
         long ready = shipments.countByShipper_IdAndStatusIn(id, List.of(ShipmentStatus.ASSIGNED));
@@ -60,12 +105,18 @@ public class ShipperPortalQueryService {
         return new ShipperPortalDtos.Kpi(ready, delivering, delivered, failed, cod, rate);
     }
 
+    @Transactional
     public void setWorkStatus(Authentication auth, boolean available) {
         ShipperProfile p = requireProfile(auth);
-        if (!available) { p.setWorkStatus(com.vic.ecom.enums.ShipperWorkStatus.OFFLINE); return; }
+        if (!available) {
+            p.setWorkStatus(com.vic.ecom.enums.ShipperWorkStatus.OFFLINE);
+            profiles.save(p);
+            return;
+        }
         boolean active = shipments.existsByShipper_IdAndStatusIn(p.getId(),
                 List.of(ShipmentStatus.ASSIGNED, ShipmentStatus.PICKED_UP, ShipmentStatus.DELIVERING));
         p.setWorkStatus(active ? com.vic.ecom.enums.ShipperWorkStatus.BUSY : com.vic.ecom.enums.ShipperWorkStatus.AVAILABLE);
+        profiles.save(p);
     }
 
     public List<ShipperPortalDtos.Item> list(Authentication auth, String status) {

@@ -1,15 +1,39 @@
 <div class="profile-page">
   <div class="page-header">
-    <span class="badge-subtitle">THÔNG TIN TÀI KHOẢN</span>
-    <h1 class="page-title">Hồ sơ Shipper</h1>
-    <!-- <p class="page-desc">Dữ liệu được xác thực bởi VICMART & đối tác vận tải An Phát Logistics.</p> -->
+    <div class="header-left">
+      <span class="badge-subtitle">THÔNG TIN TÀI KHOẢN</span>
+      <h1 class="page-title">Hồ sơ Shipper</h1>
+    </div>
+    <!-- <div class="header-actions">
+      <button
+        type="button"
+        class="btn-header-action btn-edit"
+        (click)="openUpdateDialog.set(true)"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+        </svg>
+        <span>Chỉnh sửa thông tin</span>
+      </button>
+
+      <button
+        type="button"
+        class="btn-header-action btn-password"
+        (click)="openPasswordDialog.set(true)"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </svg>
+        <span>Đổi mật khẩu</span>
+      </button>
+    </div> -->
   </div>
 
   @if (profile(); as prof) {
     <div class="profile-grid">
       <!-- Col 1: Identity Card -->
       <div class="identity-card">
-        <div class="avatar-large">MA</div>
+        <div class="avatar-large">{{ getInitials(prof.fullName) }}</div>
         <h2 class="shipper-name">{{ prof.fullName }}</h2>
         <p class="shipper-email">{{ prof.email }}</p>
 
@@ -26,8 +50,12 @@
             <strong class="val">{{ prof.shipperCode }}</strong>
           </div>
           <div class="info-line">
+            <span class="label">Số điện thoại:</span>
+            <strong class="val">{{ prof.phone || '--' }}</strong>
+          </div>
+          <div class="info-line">
             <span class="label">Đơn vị quản lý:</span>
-            <strong class="val">{{ prof.partnerCompany }}</strong>
+            <strong class="val">{{ prof.partnerCompany || 'VICMART Logistics' }}</strong>
           </div>
           <div class="info-line">
             <span class="label">Ngày tham gia:</span>
@@ -35,7 +63,7 @@
           </div>
           <div class="info-line">
             <span class="label">Điểm uy tín:</span>
-            <strong class="val val--rating">{{ prof.rating }} / 5.0 ★</strong>
+            <strong class="val val--rating">{{ prof.rating ? (prof.rating + ' / 5.0 ★') : '/ 5.0 ★' }}</strong>
           </div>
         </div>
       </div>
@@ -44,46 +72,74 @@
       <div class="details-column">
         <!-- Box 1: Vehicle & Operating Hub -->
         <div class="detail-box">
-          <h3 class="detail-box-title">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <span>Thông tin phương tiện & khu vực</span>
-          </h3>
+          <div class="detail-box-header">
+            <h3 class="detail-box-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <span>Thông tin phương tiện & khu vực</span>
+            </h3>
+            <button
+              type="button"
+              class="btn-inline-edit"
+              (click)="openUpdateDialog.set(true)"
+              title="Chỉnh sửa thông tin phương tiện & khu vực"
+            >
+              Chỉnh sửa
+            </button>
+          </div>
 
           <div class="tiles-grid">
             <div class="tile">
               <span class="tile-label">Loại phương tiện</span>
-              <div class="tile-val">{{ prof.vehicleType }}</div>
+              <div class="tile-val">{{ prof.vehicleType || '--' }}</div>
             </div>
             <div class="tile">
               <span class="tile-label">Biển số xe</span>
-              <div class="tile-val">{{ prof.licensePlate }}</div>
+              <div class="tile-val">{{ prof.licensePlate || '--' }}</div>
             </div>
-            <div class="tile">
+            <div class="tile tile--full">
               <span class="tile-label">Khu vực tuyến chính</span>
-              <div class="tile-val">{{ prof.serviceArea }}</div>
+              <div class="tile-val">{{ prof.serviceArea || '--' }}</div>
             </div>
-            <!-- <div class="tile">
-              <span class="tile-label">Bưu cục trực thuộc</span>
-              <div class="tile-val">{{ prof.hubName }}</div>
-            </div> -->
           </div>
         </div>
 
-        <!-- Box 2: Privacy & Role Specs -->
-        <!-- <div class="detail-box">
-          <h3 class="detail-box-title">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="shield-icon">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-            </svg>
-            <span>Bảo mật & Quyền hạn (Role SHIPPER)</span>
-          </h3>
+        <!-- Box 2: Quick Security Card -->
+        <div class="detail-box security-box">
+          <div class="detail-box-header">
+            <h3 class="detail-box-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="shield-icon">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+              <span>Bảo mật tài khoản</span>
+            </h3>
+            <button
+              type="button"
+              class="btn-inline-edit"
+              (click)="openPasswordDialog.set(true)"
+            >
+              Đổi mật khẩu
+            </button>
+          </div>
           <p class="role-desc">
-            Tài khoản được phân quyền theo đúng tiêu chuẩn an toàn thông tin: Chỉ hiển thị số điện thoại khách hàng cho những đơn đang vận chuyển thực tế. Các thao tác giao thành công hoặc báo hỏng đều được lưu vết kiểm toán (audit log) vào bảng <code class="code-tag">shipment_events</code>.
+            Bảo vệ tài khoản shipper của bạn bằng mật khẩu mạnh (ít nhất 8 ký tự, gồm chữ hoa, chữ thường và chữ số). Mọi thao tác cập nhật dữ liệu và giao hàng đều được mã hóa và ghi nhật ký an toàn.
           </p>
-        </div> -->
+        </div>
       </div>
     </div>
   }
+
+  <!-- Modals -->
+  <app-update-profile-dialog
+    [open]="openUpdateDialog()"
+    [profile]="profile()"
+    (saved)="handleProfileSaved($event)"
+    (closed)="openUpdateDialog.set(false)"
+  />
+
+  <app-change-password-dialog
+    [open]="openPasswordDialog()"
+    (closed)="openPasswordDialog.set(false)"
+  />
 </div>

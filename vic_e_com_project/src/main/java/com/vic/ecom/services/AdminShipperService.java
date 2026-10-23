@@ -18,6 +18,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 public class AdminShipperService {
     private final UserRepository users; private final ShipperProfileRepository profiles;
     private final ShipmentRepository shipments; private final AccountLockLogRepository locks;
+    private final ShipperPurgeRepository purge;
     private final PasswordEncoder encoder; private final MailService mail; private final AdminShipperQueryService query;
     @Value("${app.frontend-url:http://localhost:4200/login}") private String loginUrl;
 
@@ -42,8 +43,33 @@ public class AdminShipperService {
         User u = p.getUser(); u.setFullName(req.fullName().trim()); u.setPhone(phone); p.setVehicleType(req.vehicleType().trim()); p.setLicensePlate(req.licensePlate().trim().toUpperCase()); p.setServiceArea(req.serviceArea().trim()); p.setWorkStatus(work); users.save(u); profiles.save(p); return query.detail(p, null);
     }
 
-    @Transactional public Status lock(Long id, String reason, String principal) { ShipperProfile p = require(id); User u = p.getUser(); if (u.getStatus() != UserStatus.ACTIVE) throw CustomerAccountException.conflict("ALREADY_LOCKED", "Shipper đã bị khóa", null); if (shipments.existsByShipper_IdAndStatusIn(p.getId(), java.util.List.of(ShipmentStatus.ASSIGNED, ShipmentStatus.PICKED_UP, ShipmentStatus.DELIVERING))) throw CustomerAccountException.conflict("HAS_ACTIVE_SHIPMENTS", "Shipper còn đơn đang giao, hãy đổi shipper trước khi khóa", null); u.setStatus(UserStatus.LOCKED); p.setWorkStatus(ShipperWorkStatus.OFFLINE); saveLog(u, reason, principal, AccountAction.LOCK); return new Status(id, u.getStatus().name()); }
+    @Transactional public Status lock(Long id, String reason, String principal) { ShipperProfile p = require(id); User u = p.getUser(); if (u.getStatus() != UserStatus.ACTIVE) throw CustomerAccountException.conflict("ALREADY_LOCKED", "Shipper đã bị khóa", null); if (shipments.existsByShipper_IdAndStatusIn(p.getId(), java.util.List.of(ShipmentStatus.ASSIGNED, ShipmentStatus.PICKED_UP, ShipmentStatus.DELIVERING))) throw CustomerAccountException.conflict("HAS_ACTIVE_SHIPMENTS", "Shipper còn đơn đang giao, hãy đổi shipper trước khi khóa", null); u.setStatus(UserStatus.LOCKED); p.setWorkStatus(ShipperWorkStatus.OFFLINE); saveLog(u, reason, principal, AccountAction.LOCK); notifyLocked(u, reason); return new Status(id, u.getStatus().name()); }
     @Transactional public Status unlock(Long id, String reason, String principal) { ShipperProfile p = require(id); User u = p.getUser(); if (u.getStatus() != UserStatus.LOCKED) throw CustomerAccountException.conflict("NOT_LOCKED", "Shipper chưa bị khóa", null); u.setStatus(UserStatus.ACTIVE); saveLog(u, reason, principal, AccountAction.UNLOCK); return new Status(id, u.getStatus().name()); }
+
+    private void notifyLocked(User user, String reason) {
+        String email = user.getEmail();
+        String name = user.getFullName();
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                mail.sendShipperLocked(email, name, reason);
+            }
+        });
+    }
+    @Transactional
+    public void permanentlyDelete(Long id) {
+        ShipperProfile profile = require(id);
+        User user = profile.getUser();
+        if (user.getStatus() != UserStatus.LOCKED) {
+            throw CustomerAccountException.conflict("SHIPPER_MUST_BE_LOCKED", "Chỉ được xóa shipper đã khóa", null);
+        }
+        if (shipments.existsByShipper_IdAndStatusIn(profile.getId(),
+                java.util.List.of(ShipmentStatus.ASSIGNED, ShipmentStatus.PICKED_UP, ShipmentStatus.DELIVERING))) {
+            throw CustomerAccountException.conflict("HAS_ACTIVE_SHIPMENTS",
+                    "Không thể xóa khi shipper còn đơn đang giao", null);
+        }
+        purge.deleteAllOwnedData(profile.getId(), user.getId());
+    }
     private ShipperProfile require(Long id) { return profiles.findByUserId(id).filter(p -> p.getUser().getRole() == UserRole.SHIPPER).orElseThrow(() -> CustomerAccountException.notFound("SHIPPER_NOT_FOUND", "Không tìm thấy shipper")); }
     private void saveLog(User target, String reason, String principal, AccountAction action) { if (reason != null && reason.trim().length() > 500) throw CustomerAccountException.unprocessable("INVALID_REASON", "Lý do tối đa 500 ký tự", "reason"); User admin = users.findByEmail(principal).orElseThrow(() -> CustomerAccountException.unauthorized("Unauthorized")); AccountLockLog log = new AccountLockLog(); log.setUser(target); log.setPerformedBy(admin); log.setAction(action); log.setReason(reason == null ? null : reason.trim()); locks.save(log); }
     private String normalizeEmail(String email) { return email == null ? "" : email.trim().toLowerCase(); }
