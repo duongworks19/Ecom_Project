@@ -5,12 +5,15 @@ import com.vic.ecom.dto.vendor.VendorResponse;
 import com.vic.ecom.entity.Shop;
 import com.vic.ecom.entity.User;
 import com.vic.ecom.entity.Vendor;
+import com.vic.ecom.entity.VendorViolation;
 import com.vic.ecom.enums.ApprovalStatus;
 import com.vic.ecom.enums.ShopStatus;
 import com.vic.ecom.enums.UserRole;
+import com.vic.ecom.enums.UserStatus;
 import com.vic.ecom.repository.ShopRepository;
 import com.vic.ecom.repository.UserRepository;
 import com.vic.ecom.repository.VendorRepository;
+import com.vic.ecom.repository.VendorViolationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +29,7 @@ public class VendorService {
     private final VendorRepository vendorRepository;
     private final ShopRepository shopRepository;
     private final UserRepository userRepository;
+    private final VendorViolationRepository vendorViolationRepository;
 
     public boolean isShopNameAvailable(String name) {
         if (name == null || name.trim().length() < 3) return false;
@@ -118,12 +122,58 @@ public class VendorService {
     @Transactional
     public VendorResponse reviewVendorByAdmin(String adminPrincipal, Long vendorId, String action, String rejectReason) {
         if (adminPrincipal == null || adminPrincipal.isBlank()) {
-            throw new IllegalArgumentException("KhĂ´ng xĂ¡c Ä‘á»‹nh Ä‘Æ°á»£c quáº£n trá»‹ viĂªn");
+            throw new IllegalArgumentException("Không xác định được quản trị viên");
         }
         User admin = userRepository.findByEmail(adminPrincipal)
                 .or(() -> userRepository.findByPhone(adminPrincipal))
-                .orElseThrow(() -> new IllegalArgumentException("KhĂ´ng tĂ¬m tháº¥y thĂ´ng tin quáº£n trá»‹ viĂªn"));
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy thông tin quản trị viên"));
         return reviewVendor(admin.getId(), vendorId, action, rejectReason);
+    }
+
+    @Transactional
+    public void terminateVendorAccount(String adminPrincipal, Long vendorId, String violationType, String reason) {
+        if (adminPrincipal == null || adminPrincipal.isBlank()) {
+            throw new IllegalArgumentException("Không xác định được thông tin quản trị viên");
+        }
+        User admin = userRepository.findByEmail(adminPrincipal)
+                .or(() -> userRepository.findByPhone(adminPrincipal))
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy thông tin quản trị viên"));
+
+        Vendor vendor = vendorRepository.findById(vendorId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ người bán (id=" + vendorId + ")"));
+
+        // 1. Chuyển trạng thái phê duyệt của Vendor sang REJECTED
+        vendor.setApprovalStatus(ApprovalStatus.REJECTED);
+        vendor.setRejectReason(reason);
+        vendor.setApprovedBy(admin);
+
+        // 2. Vô hiệu hóa Shop của người bán
+        if (vendor.getShop() != null) {
+            vendor.getShop().setStatus(ShopStatus.INACTIVE);
+            shopRepository.save(vendor.getShop());
+        }
+
+        // 3. Khóa tài khoản User của người bán và hạ role về CUSTOMER, tăng tokenVersion để vô hiệu hóa JWT đang lưu
+        User user = vendor.getUser();
+        if (user != null) {
+            user.setStatus(UserStatus.LOCKED);
+            user.setRole(UserRole.CUSTOMER);
+            user.setTokenVersion(user.getTokenVersion() + 1);
+            userRepository.save(user);
+        }
+
+        vendorRepository.save(vendor);
+
+        // 4. Ghi vết vi phạm vào vendor_violations
+        if (vendorViolationRepository != null) {
+            VendorViolation violation = new VendorViolation();
+            violation.setVendor(vendor);
+            violation.setType(violationType != null && !violationType.isBlank() ? violationType : "TERMINATED");
+            violation.setContent(reason);
+            violation.setActionTaken("TERMINATE_ACCOUNT");
+            violation.setCreatedBy(admin);
+            vendorViolationRepository.save(violation);
+        }
     }
 
     @Transactional(readOnly = true)

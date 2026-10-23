@@ -59,9 +59,14 @@ public class GoogleAuthService {
             throw new BadCredentialsException("Account pending approval");
         }
 
+        if (user.getTokenVersion() == null) {
+            user.setTokenVersion(1);
+            userRepository.save(user);
+        }
+
         recordLogin(user, LoginStatus.SUCCESS);
         String subject = user.getEmail() != null ? user.getEmail() : email;
-        String token = jwtUtil.generateToken(subject, user.getRole().name());
+        String token = jwtUtil.generateToken(user.getId(), subject, user.getRole().name(), user.getTokenVersion());
         AuthResponse response = new AuthResponse(token, user.getRole().name(), user.getId(), user.getFullName(), subject);
         response.setMustChangePassword(user.isMustChangePassword());
         return response;

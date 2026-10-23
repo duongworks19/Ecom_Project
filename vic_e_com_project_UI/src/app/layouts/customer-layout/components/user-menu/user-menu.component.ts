@@ -137,6 +137,11 @@ export class UserMenuComponent implements OnInit {
     void this.router.navigateByUrl('/account/orders');
   }
 
+  navigateToSellerDashboard(): void {
+    this.closeMenu(false);
+    void this.router.navigateByUrl('/seller/dashboard');
+  }
+
   logout(): void {
     this.closeMenu(false);
     this.profileService.logout().subscribe({

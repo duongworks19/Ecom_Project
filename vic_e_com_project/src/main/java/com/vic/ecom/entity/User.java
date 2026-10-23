@@ -61,6 +61,17 @@ public class User {
     @Column(nullable = false)
     private UserStatus status = UserStatus.ACTIVE;
 
+    @Column(name = "token_version", columnDefinition = "integer default 1")
+    private Integer tokenVersion = 1;
+
+    public Integer getTokenVersion() {
+        return tokenVersion != null ? tokenVersion : 1;
+    }
+
+    public void setTokenVersion(Integer tokenVersion) {
+        this.tokenVersion = tokenVersion;
+    }
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 }

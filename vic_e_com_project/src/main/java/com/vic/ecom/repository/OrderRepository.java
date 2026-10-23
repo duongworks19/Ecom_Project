@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
@@ -22,4 +23,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     @Query("SELECT o.status, COUNT(o) FROM Order o WHERE o.customer.id = :customerId GROUP BY o.status")
     List<Object[]> countGroupByStatusForCustomer(@Param("customerId") Long customerId);
+
+    List<Order> findByShopIdOrderByCreatedAtDescIdDesc(Long shopId);
+
+    Optional<Order> findByOrderCode(String orderCode);
 }

@@ -74,7 +74,6 @@ export class SellerOnboardingService {
         const parsed = JSON.parse(savedDraft) as VendorApplicationData;
         this.application.set(parsed);
         this.currentStatus.set(parsed.status || 'DRAFT');
-        return;
       } catch (e) {
         console.error('Error parsing draft from localStorage', e);
       }
@@ -187,12 +186,14 @@ export class SellerOnboardingService {
 
     return this.http.post<any>(`${this.API}/register`, registerReq).pipe(
       delay(800), // Tạo hiệu ứng mượt mà
-      catchError(() => of({ data: payload })), // Mock fallback an toàn
       tap(() => {
         this.application.set(payload);
         this.currentStatus.set('PENDING');
         localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(payload));
+        localStorage.removeItem('vic_seller_products');
+        window.dispatchEvent(new Event('storage'));
         this.dashboardService.syncFromOnboarding(payload);
+        this.dashboardService.products.set([]);
         this.isSubmitting.set(false);
       }),
       delay(200),

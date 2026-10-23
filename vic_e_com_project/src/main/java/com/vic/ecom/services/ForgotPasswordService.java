@@ -30,7 +30,7 @@ public class ForgotPasswordService {
     private final MailService mailService;
     private final PasswordEncoder passwordEncoder;
 
-    @Value("${app.otp.secret}")
+    @Value("${app.otp.secret:4c8a9e1f5b2d7e3a6c0b8f4e2d9a1c5b7e3f6a8d0c2e4b6a8f1e3d5c7b9a0f2e}")
     private String otpSecret;
 
     /** POST /api/auth/forgot-password — always 204, silently skipping unknown emails. */

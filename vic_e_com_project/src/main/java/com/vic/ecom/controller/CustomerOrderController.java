@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/customer/orders")
-@PreAuthorize("hasRole('CUSTOMER')")
+@PreAuthorize("hasRole('CUSTOMER') or hasRole('VENDOR') or hasRole('ADMIN')")
 @RequiredArgsConstructor
 public class CustomerOrderController {
 

@@ -111,9 +111,7 @@ public class AuthService {
         recordLogin(user, LoginStatus.SUCCESS);
         String subject = user.getEmail() != null ? user.getEmail() : user.getPhone();
         String token = jwtUtil.generateToken(subject, user.getRole().name());
-        AuthResponse response = new AuthResponse(token, user.getRole().name(), user.getId(), user.getFullName(), subject);
-        response.setMustChangePassword(user.isMustChangePassword());
-        return response;
+        return new AuthResponse(token, user.getRole().name(), user.getId(), user.getFullName(), subject);
     }
 
     private void recordLogin(User user, LoginStatus status) {

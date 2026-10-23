@@ -17,7 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/customer/profile")
-@PreAuthorize("hasRole('CUSTOMER') or hasRole('ADMIN')")
+@PreAuthorize("hasRole('CUSTOMER') or hasRole('VENDOR') or hasRole('ADMIN')")
 @RequiredArgsConstructor
 public class CustomerProfileController {
 

@@ -3,6 +3,7 @@ package com.vic.ecom.services;
 import com.vic.ecom.dto.seller.*;
 import com.vic.ecom.entity.*;
 import com.vic.ecom.enums.ApprovalStatus;
+import com.vic.ecom.enums.OrderStatus;
 import com.vic.ecom.enums.ShopStatus;
 import com.vic.ecom.enums.UserRole;
 import com.vic.ecom.enums.UserStatus;
@@ -35,8 +36,8 @@ public class SellerDashboardService {
     private final ShopRepository shopRepository;
     private final VendorRepository vendorRepository;
     private final UserRepository userRepository;
-    private final ShopProductRepository shopProductRepository;
-    private final ShopOrderRepository shopOrderRepository;
+    private final ProductRepository productRepository;
+    private final OrderRepository orderRepository;
     private final ShopVoucherRepository shopVoucherRepository;
     private final ShopPromotionRepository shopPromotionRepository;
     private final ShopReviewRepository shopReviewRepository;
@@ -128,8 +129,8 @@ public class SellerDashboardService {
     private void seedShopDataIfNeeded(Shop shop) {
         Long shopId = shop.getId();
 
-        if (shopProductRepository.findByShopIdOrderByIdDesc(shopId).isEmpty()) {
-            List<ShopProduct> initialProducts = List.of(
+        if (productRepository.findByShopIdOrderByIdDesc(shopId).isEmpty()) {
+            List<Product> initialProducts = List.of(
                     buildProduct(shop, "Đèn ngủ gốm Cloud", "Màu kem", "LM-021", "Đèn trang trí", BigDecimal.valueOf(420000), 2, 84, "#f3c7c0", IMG_LAMP_CLOUD),
                     buildProduct(shop, "Khung tranh gỗ sồi A4", "Size A4", "LM-044", "Khung & Tranh", BigDecimal.valueOf(190000), 3, 142, "#d9d2c6", IMG_OAK_FRAME),
                     buildProduct(shop, "Bình hoa thủy tinh", "Xanh sage", "LM-007", "Lọ & Bình hoa", BigDecimal.valueOf(159000), 6, 215, "#c8d9c9", IMG_GLASS_VASE),
@@ -137,17 +138,21 @@ public class SellerDashboardService {
                     buildProduct(shop, "Gương để bàn lượn sóng Bắc Âu", "Trắng kem", "LM-088", "Gương decor", BigDecimal.valueOf(285000), 34, 96, "#e8dfd5", IMG_NORDIC_MIRROR),
                     buildProduct(shop, "Khay gốm sứ đựng trang sức Monstera", "Trắng ngà", "LM-052", "Phụ kiện bàn", BigDecimal.valueOf(135000), 42, 178, "#dce5df", IMG_CERAMIC_TRAY)
             );
-            shopProductRepository.saveAll(initialProducts);
+            productRepository.saveAll(initialProducts);
         }
 
-        if (shopOrderRepository.findByShopIdOrderByIdDesc(shopId).isEmpty()) {
-            List<ShopOrder> initialOrders = List.of(
-                    buildOrder(shop, "#VM240918", "Nguyễn Thu Hà", "0912 345 678", "188 Cầu Giấy, Phường Quan Hoa, Quận Cầu Giấy, Hà Nội", "14/10/2026 09:12", "Đèn ngủ gốm Cloud ×1", IMG_LAMP_CLOUD, BigDecimal.valueOf(420000), "PENDING_CONFIRMATION", "Chờ xác nhận", "w", "Xác nhận", "red", "CONFIRM"),
-                    buildOrder(shop, "#VM240917", "Trần Minh Quân", "0988 765 432", "72 Nguyễn Trãi, Phường Thượng Đình, Quận Thanh Xuân, Hà Nội", "14/10/2026 08:45", "Nến thơm Lavender ×3", IMG_LAVENDER_CANDLE, BigDecimal.valueOf(267000), "PENDING_CONFIRMATION", "Chờ xác nhận", "w", "Xác nhận", "red", "CONFIRM"),
-                    buildOrder(shop, "#VM240915", "Lê Phương Anh", "0904 112 233", "Tòa S2 Vinhomes Skylake, Phạm Hùng, Nam Từ Liêm, Hà Nội", "14/10/2026 07:30", "Khung tranh gỗ sồi A4 ×2", IMG_OAK_FRAME, BigDecimal.valueOf(380000), "PREPARING", "Đang chuẩn bị", "o", "Đã đóng gói", "outline", "MARK_PACKED"),
-                    buildOrder(shop, "#VM240912", "Phạm Đức Long", "0936 998 877", "25 Lý Thường Kiệt, Quận Hoàn Kiếm, Hà Nội", "13/10/2026 21:15", "Bình hoa thủy tinh ×1", IMG_GLASS_VASE, BigDecimal.valueOf(159000), "REFUND_REQUEST", "Hoàn tiền", "r", "Xem xét", "outline", "REVIEW_REFUND")
+        if (orderRepository.findByShopIdOrderByCreatedAtDescIdDesc(shopId).isEmpty()) {
+            User defaultCustomer = userRepository.findAll().stream()
+                    .findFirst()
+                    .orElseGet(() -> shop.getVendor().getUser());
+
+            List<Order> initialOrders = List.of(
+                    buildOrder(shop, defaultCustomer, "#VM240918", "Nguyễn Thu Hà", "0912 345 678", "188 Cầu Giấy, Phường Quan Hoa, Quận Cầu Giấy, Hà Nội", "Đèn ngủ gốm Cloud ×1", IMG_LAMP_CLOUD, BigDecimal.valueOf(420000), OrderStatus.PENDING),
+                    buildOrder(shop, defaultCustomer, "#VM240917", "Trần Minh Quân", "0988 765 432", "72 Nguyễn Trãi, Phường Thượng Đình, Quận Thanh Xuân, Hà Nội", "Nến thơm Lavender ×3", IMG_LAVENDER_CANDLE, BigDecimal.valueOf(267000), OrderStatus.PENDING),
+                    buildOrder(shop, defaultCustomer, "#VM240915", "Lê Phương Anh", "0904 112 233", "Tòa S2 Vinhomes Skylake, Phạm Hùng, Nam Từ Liêm, Hà Nội", "Khung tranh gỗ sồi A4 ×2", IMG_OAK_FRAME, BigDecimal.valueOf(380000), OrderStatus.PREPARING),
+                    buildOrder(shop, defaultCustomer, "#VM240912", "Phạm Đức Long", "0936 998 877", "25 Lý Thường Kiệt, Quận Hoàn Kiếm, Hà Nội", "Bình hoa thủy tinh ×1", IMG_GLASS_VASE, BigDecimal.valueOf(159000), OrderStatus.PACKED)
             );
-            shopOrderRepository.saveAll(initialOrders);
+            orderRepository.saveAll(initialOrders);
         }
 
         if (shopVoucherRepository.findByShopIdOrderByIdDesc(shopId).isEmpty()) {
@@ -180,39 +185,40 @@ public class SellerDashboardService {
         }
     }
 
-    private ShopProduct buildProduct(Shop shop, String name, String variant, String sku, String category, BigDecimal price, int stock, int soldCount, String color, String imageUrl) {
-        ShopProduct p = new ShopProduct();
+    private Product buildProduct(Shop shop, String name, String variant, String sku, String category, BigDecimal price, int stock, int soldCount, String color, String imageUrl) {
+        Product p = new Product();
         p.setShop(shop);
         p.setName(name);
-        p.setVariant(variant);
-        p.setSku(sku);
         p.setCategory(category);
-        p.setPrice(price);
-        p.setStock(stock);
-        p.setSoldCount(soldCount);
-        p.setThumbnailColor(color);
         p.setImageUrl(imageUrl);
-        p.setStatus(stock <= 10 ? "LOW_STOCK" : "ACTIVE");
+        p.setStatus(stock <= 10 ? "LOW_STOCK" : "VISIBLE");
+
+        ProductVariant pv = new ProductVariant();
+        pv.setVariantName(variant);
+        pv.setSku(sku);
+        pv.setPrice(price);
+        pv.setStockQty(stock);
+        pv.setSoldCount(soldCount);
+        pv.setThumbnailColor(color);
+        pv.setImageUrl(imageUrl);
+        pv.setLowStockThreshold(5);
+
+        p.addVariant(pv);
         return p;
     }
 
-    private ShopOrder buildOrder(Shop shop, String code, String customerName, String phone, String address, String createdAtLabel, String summary, String image, BigDecimal amount, String status, String statusLabel, String badgeClass, String actionText, String actionStyle, String nextAction) {
-        ShopOrder o = new ShopOrder();
-        o.setShop(shop);
+    private Order buildOrder(Shop shop, User customer, String code, String customerName, String phone, String address, String summary, String image, BigDecimal amount, OrderStatus status) {
+        Order o = new Order();
+        o.setShopId(shop.getId());
+        o.setCustomer(customer);
         o.setOrderCode(code);
-        o.setCustomerName(customerName);
-        o.setCustomerPhone(phone);
+        o.setReceiverName(customerName);
+        o.setReceiverPhone(phone);
         o.setShippingAddress(address);
-        o.setCreatedAtLabel(createdAtLabel);
         o.setProductSummary(summary);
         o.setProductImage(image);
         o.setTotalAmount(amount);
         o.setStatus(status);
-        o.setStatusLabel(statusLabel);
-        o.setBadgeClass(badgeClass);
-        o.setActionText(actionText);
-        o.setActionStyle(actionStyle);
-        o.setNextAction(nextAction);
         return o;
     }
 
@@ -257,7 +263,16 @@ public class SellerDashboardService {
 
     @Transactional
     public SellerDashboardResponse getDashboardData(Long userId) {
-        Shop shop = getOrCreateInitializedShop(userId);
+        if (userId == null) {
+            throw new IllegalArgumentException("Không xác định được tài khoản người bán");
+        }
+        Vendor vendor = vendorRepository.findByUserId(userId)
+                .filter(v -> v.getApprovalStatus() == ApprovalStatus.APPROVED)
+                .orElseThrow(() -> new IllegalArgumentException("Tài khoản chưa có gian hàng được phê duyệt"));
+        Shop shop = vendor.getShop();
+        if (shop == null || shop.getStatus() != ShopStatus.ACTIVE) {
+            throw new IllegalArgumentException("Không tìm thấy gian hàng đang hoạt động của tài khoản");
+        }
         Long shopId = shop.getId();
 
         String shopName = (shop.getName() != null && !shop.getName().isBlank()) ? shop.getName() : "Lumi Home Decor";
@@ -265,8 +280,8 @@ public class SellerDashboardService {
         String logo = shop.getLogo();
         boolean isApproved = shop.getStatus() == ShopStatus.ACTIVE;
 
-        List<ShopProduct> dbProducts = shopProductRepository.findByShopIdOrderByIdDesc(shopId);
-        List<ShopOrder> dbOrders = shopOrderRepository.findByShopIdOrderByIdDesc(shopId);
+        List<Product> dbProducts = productRepository.findByShopIdOrderByIdDesc(shopId);
+        List<Order> dbOrders = orderRepository.findByShopIdOrderByCreatedAtDescIdDesc(shopId);
         List<ShopVoucher> dbVouchers = shopVoucherRepository.findByShopIdOrderByIdDesc(shopId);
         List<ShopPromotion> dbPromotions = shopPromotionRepository.findByShopIdOrderByIdDesc(shopId);
         List<ShopReview> dbReviews = shopReviewRepository.findByShopIdOrderByIdDesc(shopId);
@@ -275,10 +290,16 @@ public class SellerDashboardService {
                 .map(this::toProductDto)
                 .collect(Collectors.toList());
 
-        List<SellerLowStockDto> lowStock = dbProducts.stream()
-                .filter(p -> p.getStock() != null && p.getStock() <= 10)
-                .map(this::toLowStockDto)
-                .collect(Collectors.toList());
+        List<SellerLowStockDto> lowStock = new ArrayList<>();
+        for (Product p : dbProducts) {
+            if (p.getVariants() != null) {
+                for (ProductVariant v : p.getVariants()) {
+                    if (v.getStockQty() != null && v.getStockQty() <= 10) {
+                        lowStock.add(toLowStockDto(p, v));
+                    }
+                }
+            }
+        }
 
         List<SellerRecentOrderDto> recentOrders = dbOrders.stream()
                 .map(this::toOrderDto)
@@ -306,9 +327,9 @@ public class SellerDashboardService {
                 .businessHours(shop.getBusinessHours() != null ? shop.getBusinessHours() : "08:30 - 21:00 (Thứ 2 - Chủ Nhật)")
                 .build();
 
-        int pendingConfirmCount = (int) dbOrders.stream().filter(o -> "PENDING_CONFIRMATION".equals(o.getStatus())).count();
-        int preparingCount = (int) dbOrders.stream().filter(o -> "PREPARING".equals(o.getStatus())).count();
-        int refundCount = (int) dbOrders.stream().filter(o -> "REFUND_REQUEST".equals(o.getStatus()) || "IN_REVIEW".equals(o.getStatus())).count();
+        int pendingConfirmCount = (int) dbOrders.stream().filter(o -> o.getStatus() == OrderStatus.PENDING).count();
+        int preparingCount = (int) dbOrders.stream().filter(o -> o.getStatus() == OrderStatus.PREPARING || o.getStatus() == OrderStatus.CONFIRMED).count();
+        int refundCount = (int) dbOrders.stream().filter(o -> o.getStatus() == OrderStatus.CANCELLED).count();
         int unansweredReviewCount = (int) dbReviews.stream().filter(r -> r.getReply() == null || r.getReply().isBlank()).count();
 
         SellerDashboardStatsDto stats = SellerDashboardStatsDto.builder()
@@ -385,82 +406,58 @@ public class SellerDashboardService {
         Shop shop = getOrCreateInitializedShop(null);
         String action = request.getAction() != null ? request.getAction() : "";
 
-        Optional<ShopOrder> orderOpt = shopOrderRepository.findByOrderCode(orderCode);
+        Optional<Order> orderOpt = orderRepository.findByOrderCode(orderCode);
         if (orderOpt.isEmpty() && !orderCode.startsWith("#")) {
-            orderOpt = shopOrderRepository.findByOrderCode("#" + orderCode);
+            orderOpt = orderRepository.findByOrderCode("#" + orderCode);
         }
 
-        ShopOrder order = orderOpt.orElseGet(() -> {
-            ShopOrder newOrder = new ShopOrder();
-            newOrder.setShop(shop);
+        Order order = orderOpt.orElseGet(() -> {
+            Order newOrder = new Order();
+            newOrder.setShopId(shop.getId());
             newOrder.setOrderCode(orderCode);
-            newOrder.setCustomerName("Khách hàng");
+            newOrder.setReceiverName("Khách hàng");
             newOrder.setProductSummary("Sản phẩm");
             newOrder.setTotalAmount(BigDecimal.ZERO);
             return newOrder;
         });
 
         if ("CONFIRM".equalsIgnoreCase(action)) {
-            order.setStatus("PREPARING");
-            order.setStatusLabel("Đang chuẩn bị");
-            order.setBadgeClass("o");
-            order.setActionText("Đã đóng gói");
-            order.setActionStyle("outline");
-            order.setNextAction("MARK_PACKED");
+            order.setStatus(OrderStatus.PREPARING);
         } else if ("MARK_PACKED".equalsIgnoreCase(action)) {
-            order.setStatus("PACKED");
-            order.setStatusLabel("Chờ lấy hàng");
-            order.setBadgeClass("o");
-            order.setActionText("Chi tiết");
-            order.setActionStyle("outline");
-            order.setNextAction("VIEW_DETAIL");
-        } else if ("REVIEW_REFUND".equalsIgnoreCase(action)) {
-            order.setStatus("IN_REVIEW");
-            order.setStatusLabel("Đang xem xét");
-            order.setBadgeClass("w");
-            order.setActionText("Duyệt hoàn");
-            order.setActionStyle("red");
-            order.setNextAction("APPROVE_REFUND");
-        } else if ("APPROVE_REFUND".equalsIgnoreCase(action)) {
-            order.setStatus("COMPLETED");
-            order.setStatusLabel("Đã hoàn tiền");
-            order.setBadgeClass("o");
-            order.setActionText("Chi tiết");
-            order.setActionStyle("outline");
-            order.setNextAction("VIEW_DETAIL");
-        } else {
-            order.setStatus("IN_REVIEW");
-            order.setStatusLabel("Đang xem xét");
-            order.setBadgeClass("w");
-            order.setActionText("Chi tiết");
-            order.setActionStyle("outline");
-            order.setNextAction("VIEW_DETAIL");
+            order.setStatus(OrderStatus.PACKED);
+        } else if ("START_SHIPPING".equalsIgnoreCase(action)) {
+            order.setStatus(OrderStatus.SHIPPING);
+        } else if ("APPROVE_REFUND".equalsIgnoreCase(action) || "CANCEL".equalsIgnoreCase(action)) {
+            order.setStatus(OrderStatus.CANCELLED);
         }
 
-        ShopOrder saved = shopOrderRepository.save(order);
+        Order saved = orderRepository.save(order);
         return toOrderDto(saved);
     }
 
     @Transactional
     public SellerLowStockDto updateProductStock(Long productId, SellerStockUpdateRequest request) {
         Shop shop = getOrCreateInitializedShop(null);
-        Optional<ShopProduct> productOpt = shopProductRepository.findById(productId);
+        Optional<Product> productOpt = productRepository.findById(productId);
 
         if (productOpt.isPresent()) {
-            ShopProduct product = productOpt.get();
-            int currentStock = product.getStock() != null ? product.getStock() : 0;
-            int updatedQty;
-            if (request.getNewQuantity() != null) {
-                updatedQty = request.getNewQuantity();
-            } else if (request.getAddQuantity() != null) {
-                updatedQty = currentStock + request.getAddQuantity();
-            } else {
-                updatedQty = currentStock + 20;
+            Product product = productOpt.get();
+            ProductVariant firstVariant = (product.getVariants() != null && !product.getVariants().isEmpty()) ? product.getVariants().get(0) : null;
+            if (firstVariant != null) {
+                int currentStock = firstVariant.getStockQty() != null ? firstVariant.getStockQty() : 0;
+                int updatedQty;
+                if (request.getNewQuantity() != null) {
+                    updatedQty = request.getNewQuantity();
+                } else if (request.getAddQuantity() != null) {
+                    updatedQty = currentStock + request.getAddQuantity();
+                } else {
+                    updatedQty = currentStock + 20;
+                }
+                firstVariant.setStockQty(updatedQty);
+                product.setStatus(updatedQty <= 10 ? "LOW_STOCK" : "VISIBLE");
+                productRepository.save(product);
+                return toLowStockDto(product, firstVariant);
             }
-            product.setStock(updatedQty);
-            product.setStatus(updatedQty <= 10 ? "LOW_STOCK" : "ACTIVE");
-            ShopProduct saved = shopProductRepository.save(product);
-            return toLowStockDto(saved);
         }
 
         int fallbackQty = request.getNewQuantity() != null ? request.getNewQuantity() : 20;
@@ -475,27 +472,31 @@ public class SellerDashboardService {
     public SellerProductDto createProduct(SellerProductDto request) {
         Shop shop = getOrCreateInitializedShop(null);
 
-        ShopProduct product = new ShopProduct();
+        Product product = new Product();
         product.setShop(shop);
         product.setName(request.getName() != null ? request.getName().trim() : "Sản phẩm mới");
-        product.setVariant(request.getVariant() != null && !request.getVariant().isBlank() ? request.getVariant().trim() : "Tiêu chuẩn");
-        product.setSku(request.getSku() != null && !request.getSku().isBlank()
-                ? request.getSku().trim().toUpperCase()
-                : "LM-" + (100 + new Random().nextInt(900)));
         product.setCategory(request.getCategory() != null && !request.getCategory().isBlank() ? request.getCategory().trim() : "Đèn trang trí");
-        product.setPrice(request.getPrice() != null ? request.getPrice() : BigDecimal.valueOf(150000));
-        int stock = request.getStock() != null ? request.getStock() : 20;
-        product.setStock(stock);
-        product.setSoldCount(request.getSoldCount() != null ? request.getSoldCount() : 0);
-        product.setThumbnailColor(request.getThumbnailColor() != null && !request.getThumbnailColor().isBlank()
-                ? request.getThumbnailColor()
-                : "#f3c7c0");
         product.setImageUrl(request.getImageUrl() != null && !request.getImageUrl().isBlank()
                 ? request.getImageUrl()
                 : IMG_LAMP_CLOUD);
-        product.setStatus(stock <= 10 ? "LOW_STOCK" : "ACTIVE");
+        int stock = request.getStock() != null ? request.getStock() : 20;
+        product.setStatus(stock <= 10 ? "LOW_STOCK" : "VISIBLE");
 
-        ShopProduct saved = shopProductRepository.save(product);
+        ProductVariant pv = new ProductVariant();
+        pv.setVariantName(request.getVariant() != null && !request.getVariant().isBlank() ? request.getVariant().trim() : "Tiêu chuẩn");
+        pv.setSku(request.getSku() != null && !request.getSku().isBlank()
+                ? request.getSku().trim().toUpperCase()
+                : "LM-" + (100 + new Random().nextInt(900)));
+        pv.setPrice(request.getPrice() != null ? request.getPrice() : BigDecimal.valueOf(150000));
+        pv.setStockQty(stock);
+        pv.setSoldCount(request.getSoldCount() != null ? request.getSoldCount() : 0);
+        pv.setThumbnailColor(request.getThumbnailColor() != null && !request.getThumbnailColor().isBlank()
+                ? request.getThumbnailColor()
+                : "#f3c7c0");
+        pv.setImageUrl(product.getImageUrl());
+        product.addVariant(pv);
+
+        Product saved = productRepository.save(product);
         return toProductDto(saved);
     }
 
@@ -572,53 +573,146 @@ public class SellerDashboardService {
                 .build();
     }
 
-    private SellerProductDto toProductDto(ShopProduct p) {
+    private SellerProductDto toProductDto(Product p) {
+        ProductVariant firstVariant = (p.getVariants() != null && !p.getVariants().isEmpty()) ? p.getVariants().get(0) : null;
+        BigDecimal price = firstVariant != null ? firstVariant.getPrice() : BigDecimal.ZERO;
+        int stock = p.getVariants() != null ? p.getVariants().stream().mapToInt(v -> v.getStockQty() != null ? v.getStockQty() : 0).sum() : 0;
+        int soldCount = p.getVariants() != null ? p.getVariants().stream().mapToInt(v -> v.getSoldCount() != null ? v.getSoldCount() : 0).sum() : 0;
+        String sku = firstVariant != null ? firstVariant.getSku() : "";
+        String variantName = firstVariant != null ? firstVariant.getVariantName() : "Mặc định";
+        String color = firstVariant != null ? firstVariant.getThumbnailColor() : null;
+
         return SellerProductDto.builder()
                 .id(p.getId())
                 .name(p.getName())
-                .variant(p.getVariant())
-                .sku(p.getSku())
+                .variant(variantName)
+                .sku(sku)
                 .category(p.getCategory())
-                .price(p.getPrice())
-                .stock(p.getStock())
-                .soldCount(p.getSoldCount())
-                .thumbnailColor(p.getThumbnailColor())
+                .price(price)
+                .stock(stock)
+                .soldCount(soldCount)
+                .thumbnailColor(color)
                 .imageUrl(p.getImageUrl())
                 .status(p.getStatus())
                 .build();
     }
 
-    private SellerLowStockDto toLowStockDto(ShopProduct p) {
-        int stock = p.getStock() != null ? p.getStock() : 0;
+    private SellerLowStockDto toLowStockDto(Product p, ProductVariant v) {
+        int stock = v.getStockQty() != null ? v.getStockQty() : 0;
         return SellerLowStockDto.builder()
                 .id(p.getId())
                 .name(p.getName())
-                .variant(p.getVariant())
-                .sku(p.getSku())
+                .variant(v.getVariantName())
+                .sku(v.getSku())
                 .remainingQuantity(stock)
-                .thumbnailColor(p.getThumbnailColor())
-                .imageUrl(p.getImageUrl())
+                .thumbnailColor(v.getThumbnailColor())
+                .imageUrl(v.getImageUrl() != null ? v.getImageUrl() : p.getImageUrl())
                 .badgeType(stock < 5 ? "danger" : "warning")
                 .build();
     }
 
-    private SellerRecentOrderDto toOrderDto(ShopOrder o) {
+    private SellerRecentOrderDto toOrderDto(Order o) {
+        String statusStr = o.getStatus() != null ? o.getStatus().name() : "PENDING";
+        String statusLabel;
+        String badgeClass;
+        String actionText;
+        String actionStyle;
+        String nextAction;
+
+        switch (statusStr) {
+            case "PENDING":
+                statusLabel = "Chờ xác nhận";
+                badgeClass = "w";
+                actionText = "Xác nhận";
+                actionStyle = "red";
+                nextAction = "CONFIRM";
+                break;
+            case "CONFIRMED":
+                statusLabel = "Đã xác nhận";
+                badgeClass = "o";
+                actionText = "Chuẩn bị hàng";
+                actionStyle = "outline";
+                nextAction = "PREPARE";
+                break;
+            case "PREPARING":
+                statusLabel = "Đang chuẩn bị";
+                badgeClass = "o";
+                actionText = "Đã đóng gói";
+                actionStyle = "outline";
+                nextAction = "MARK_PACKED";
+                break;
+            case "PACKED":
+                statusLabel = "Đã đóng gói";
+                badgeClass = "g";
+                actionText = "Giao vận chuyển";
+                actionStyle = "outline";
+                nextAction = "START_SHIPPING";
+                break;
+            case "SHIPPING":
+                statusLabel = "Đang giao hàng";
+                badgeClass = "g";
+                actionText = "Chi tiết";
+                actionStyle = "outline";
+                nextAction = "VIEW_DETAIL";
+                break;
+            case "DELIVERED":
+                statusLabel = "Giao thành công";
+                badgeClass = "g";
+                actionText = "Chi tiết";
+                actionStyle = "outline";
+                nextAction = "VIEW_DETAIL";
+                break;
+            case "CANCELLED":
+                statusLabel = "Đã hủy";
+                badgeClass = "r";
+                actionText = "Chi tiết";
+                actionStyle = "outline";
+                nextAction = "VIEW_DETAIL";
+                break;
+            default:
+                statusLabel = statusStr;
+                badgeClass = "o";
+                actionText = "Chi tiết";
+                actionStyle = "outline";
+                nextAction = "VIEW_DETAIL";
+        }
+
+        String createdAtFormatted = o.getCreatedAt() != null
+                ? o.getCreatedAt().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))
+                : "";
+
+        String customerName = o.getReceiverName() != null && !o.getReceiverName().isBlank()
+                ? o.getReceiverName()
+                : (o.getCustomer() != null ? o.getCustomer().getFullName() : "Khách hàng");
+
+        String customerPhone = o.getReceiverPhone() != null && !o.getReceiverPhone().isBlank()
+                ? o.getReceiverPhone()
+                : (o.getCustomer() != null ? o.getCustomer().getPhone() : "");
+
+        String summary = o.getProductSummary() != null && !o.getProductSummary().isBlank()
+                ? o.getProductSummary()
+                : (o.getItems() != null && !o.getItems().isEmpty() ? o.getItems().get(0).getProductName() + " ×" + o.getItems().get(0).getQuantity() : "Đơn hàng");
+
+        String image = o.getProductImage() != null && !o.getProductImage().isBlank()
+                ? o.getProductImage()
+                : IMG_LAMP_CLOUD;
+
         return SellerRecentOrderDto.builder()
                 .id(o.getId())
                 .orderCode(o.getOrderCode())
-                .customerName(o.getCustomerName())
-                .customerPhone(o.getCustomerPhone())
-                .shippingAddress(o.getShippingAddress())
-                .createdAt(o.getCreatedAtLabel())
-                .productSummary(o.getProductSummary())
-                .productImage(o.getProductImage())
+                .customerName(customerName)
+                .customerPhone(customerPhone)
+                .shippingAddress(o.getShippingAddress() != null ? o.getShippingAddress() : "")
+                .createdAt(createdAtFormatted)
+                .productSummary(summary)
+                .productImage(image)
                 .totalAmount(o.getTotalAmount())
-                .status(o.getStatus())
-                .statusLabel(o.getStatusLabel())
-                .badgeClass(o.getBadgeClass())
-                .actionText(o.getActionText())
-                .actionStyle(o.getActionStyle())
-                .nextAction(o.getNextAction())
+                .status(statusStr)
+                .statusLabel(statusLabel)
+                .badgeClass(badgeClass)
+                .actionText(actionText)
+                .actionStyle(actionStyle)
+                .nextAction(nextAction)
                 .build();
     }
 

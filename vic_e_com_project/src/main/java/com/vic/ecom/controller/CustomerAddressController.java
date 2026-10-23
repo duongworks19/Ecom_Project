@@ -16,7 +16,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/customer/addresses")
-@PreAuthorize("hasRole('CUSTOMER')")
+@PreAuthorize("hasRole('CUSTOMER') or hasRole('VENDOR') or hasRole('ADMIN')")
 @RequiredArgsConstructor
 public class CustomerAddressController {
 

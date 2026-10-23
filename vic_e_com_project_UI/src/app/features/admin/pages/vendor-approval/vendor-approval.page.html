@@ -1,122 +1,274 @@
-<div class="vendor-page">
-  <header class="page-heading">
-    <h1>Duyệt vendor</h1>
-    <p class="subtitle">Kiểm tra hồ sơ đăng ký gian hàng và quyết định cho vendor bắt đầu bán.</p>
-  </header>
+<div class="page-container">
+  <h1>Duyệt vendor</h1>
+  <p class="sub">Kiểm tra hồ sơ đăng ký gian hàng và quyết định cho vendor bắt đầu bán.</p>
 
-  @if (pageError()) {
-    <section class="page-state error-state" role="alert">
-      <h2>Chưa tải được danh sách</h2>
-      <p>{{ pageError() }}</p>
-      <button mat-button class="retry-button" type="button" (click)="retry()">Thử lại</button>
-    </section>
-  } @else {
-    <div class="filter-bar">
-      <mat-chip-listbox aria-label="Lọc theo trạng thái" [value]="filter()" (change)="setFilter($event.value)">
-        <mat-chip-option value="PENDING">Chờ duyệt <small>{{ counts().PENDING }}</small></mat-chip-option>
-        <mat-chip-option value="APPROVED">Đã duyệt <small>{{ counts().APPROVED }}</small></mat-chip-option>
-        <mat-chip-option value="REJECTED">Đã từ chối <small>{{ counts().REJECTED }}</small></mat-chip-option>
-        <mat-chip-option value="ALL">Tất cả <small>{{ counts().ALL }}</small></mat-chip-option>
-      </mat-chip-listbox>
-      <mat-form-field appearance="outline" class="search-field">
-        <input matInput type="search" placeholder="Tìm theo tên shop, email, SĐT, chủ shop" [value]="search()" (input)="setSearch($any($event.target).value)" autocomplete="off" />
-      </mat-form-field>
+  <div class="bar" role="group" aria-label="Lọc theo trạng thái">
+    @for (t of tabs; track t.key) {
+      <button
+        class="chip"
+        type="button"
+        [attr.aria-pressed]="filter() === t.key"
+        (click)="setFilter(t.key)"
+      >
+        {{ t.label }}<small>{{ counts()[t.key] }}</small>
+      </button>
+    }
+    <input
+      class="search"
+      type="search"
+      placeholder="Tìm theo tên shop, email, SĐT…"
+      aria-label="Tìm vendor"
+      [value]="query()"
+      (input)="onSearch($event)"
+    />
+  </div>
+
+  <div class="grid">
+    <div class="list">
+      @if (visibleVendors().length === 0) {
+        <div class="empty panel">Không có hồ sơ nào khớp. Thử đổi bộ lọc hoặc từ khóa.</div>
+      } @else {
+        @for (v of visibleVendors(); track v.id) {
+          <button
+            class="item"
+            type="button"
+            [attr.aria-current]="v.id === selectedVendor()?.id"
+            (click)="selectVendor(v.id)"
+          >
+            <span class="av">{{ initial(v.shop) }}</span>
+            <span>
+              <b>{{ v.shop }}</b>
+              <span class="m">{{ v.owner }} · {{ v.at.slice(0, 10) }}</span>
+            </span>
+            <span class="tag {{ statusClass(v.status) }}">{{ statusLabel(v.status) }}</span>
+          </button>
+        }
+      }
     </div>
 
-    <section class="workspace" aria-label="Danh sách và chi tiết vendor">
-      <aside class="application-column" aria-label="Danh sách hồ sơ vendor">
-        @if (loading()) {
-          <div class="list-state" aria-live="polite">Đang tải hồ sơ…</div>
-        } @else if (visibleApplications().length === 0) {
-          <div class="list-state empty-state" role="status">Không có hồ sơ nào khớp. Thử đổi bộ lọc hoặc từ khóa.</div>
-        } @else {
-          <ul class="application-list">
-            @for (vendor of visibleApplications(); track vendor.id) {
-              <li>
-                <button type="button" class="application-item" [class.selected]="selectedVendor()?.id === vendor.id" [attr.aria-current]="selectedVendor()?.id === vendor.id ? 'true' : null" (click)="selectVendor(vendor)">
-                  <span class="avatar">{{ vendor.businessName.charAt(0) }}</span>
-                  <span class="application-copy">
-                    <strong>{{ vendor.businessName }}</strong>
-                    <span class="owner-line">{{ vendor.ownerName }} · {{ formatDateOnly(vendor.submittedAt) }}</span>
-                  </span>
-                  <span class="status-tag" [class.pending]="vendor.approvalStatus === 'PENDING'" [class.approved]="vendor.approvalStatus === 'APPROVED'" [class.rejected]="vendor.approvalStatus === 'REJECTED'">{{ statusLabel(vendor.approvalStatus) }}</span>
-                </button>
-              </li>
+    <section class="panel" aria-live="polite">
+      @if (selectedVendor(); as v) {
+        <div class="banner">
+          <div class="logo-lg">{{ initial(v.shop) }}</div>
+        </div>
+        <div class="pbody">
+          <div class="head">
+            <h2>{{ v.shop }}</h2>
+            <span class="tag {{ statusClass(v.status) }}">{{ statusLabel(v.status) }}</span>
+          </div>
+          <p class="desc">{{ v.desc || 'Vendor chưa nhập giới thiệu gian hàng.' }}</p>
+
+          <!-- Status Notes -->
+          @if (v.status === 'APPROVED') {
+            <div class="note ok">Đã duyệt bởi {{ v.by || 'Quản trị viên' }} lúc {{ v.dat || v.at }}. Gian hàng đã được kích hoạt.</div>
+          } @else if (v.status === 'REJECTED') {
+            <div class="note no"><b>Lý do từ chối:</b> {{ v.reason || 'Không đạt tiêu chuẩn kiểm duyệt.' }}<br>{{ v.dat || v.at }}</div>
+          } @else if (v.status === 'NEED_INFO') {
+            <div class="note warn">
+              <b>Đang chờ vendor bổ sung</b> (hạn {{ v.due || '7 ngày' }}).<br />
+              Cần bổ sung: {{ v.req?.join(', ') || 'Giấy tờ theo yêu cầu' }}.<br />
+              {{ v.rnote }}<br />
+              {{ keptCount(v) }}/4 mục đã đạt sẽ được giữ nguyên khi vendor gửi lại.
+            </div>
+          } @else if (v.status === 'RESUBMITTED') {
+            <div class="note info">
+              <b>Vendor đã bổ sung hồ sơ.</b> Mục cập nhật: {{ v.req?.join(', ') }}.
+              Giữ nguyên {{ keptCount(v) }}/4 mục đã đạt, chỉ cần kiểm tra lại mục đánh dấu “Cần kiểm tra lại”.
+            </div>
+          }
+
+          <h3>Thông tin đăng ký</h3>
+          <dl>
+            <dt>Chủ gian hàng</dt><dd>{{ v.owner }}</dd>
+            <dt>Email</dt><dd>{{ v.email }}</dd>
+            <dt>Số điện thoại</dt><dd>{{ v.phone }}</dd>
+            <dt>Mô hình kinh doanh</dt><dd>{{ v.model }}</dd>
+            <dt>Danh mục chính</dt><dd>{{ v.cat }}</dd>
+            <dt>Mã số thuế</dt><dd>{{ v.tax || '—' }}</dd>
+            <dt>Kho lấy hàng</dt><dd>{{ v.pickup }}</dd>
+            <dt>Gửi lúc</dt><dd>{{ v.at }}</dd>
+          </dl>
+
+          <h3>Giấy tờ xác minh (KYC)</h3>
+          <div class="docs">
+            @for (d of v.docs; track d) {
+              <div class="doc">
+                <span>{{ d }}</span>
+                @if (v.status === 'RESUBMITTED' && v.fresh?.includes(d)) {
+                  <em class="new">Mới</em>
+                }
+              </div>
             }
-          </ul>
-        }
-      </aside>
-
-      <section class="detail-column" aria-label="Chi tiết hồ sơ vendor" aria-live="polite">
-        @if (selectedVendor(); as vendor) {
-          <article class="detail-card">
-            <div class="detail-banner"><div class="vendor-logo">{{ vendor.businessName.charAt(0) }}</div></div>
-            <div class="detail-content">
-              <header class="vendor-heading">
-                <h2>{{ vendor.businessName }}</h2>
-                <span class="status-tag" [class.pending]="vendor.approvalStatus === 'PENDING'" [class.approved]="vendor.approvalStatus === 'APPROVED'" [class.rejected]="vendor.approvalStatus === 'REJECTED'">{{ statusLabel(vendor.approvalStatus) }}</span>
-              </header>
-              <p class="description">{{ vendor.description || 'Vendor chưa nhập giới thiệu gian hàng.' }}</p>
-
-              @if (vendor.approvalStatus === 'APPROVED') {
-                <div class="decision-note approved-note">Đã duyệt bởi {{ vendor.approvedBy || 'Quản trị viên' }} lúc {{ formatDate(vendor.decidedAt) }}. Gian hàng đã được kích hoạt.</div>
-              } @else if (vendor.approvalStatus === 'REJECTED') {
-                <div class="decision-note rejected-note"><strong>Lý do từ chối:</strong> {{ vendor.rejectReason }}<br>{{ formatDate(vendor.decidedAt) }}</div>
+            @if (v.status === 'NEED_INFO') {
+              @for (r of v.req; track r) {
+                <div class="doc miss"><span>Thiếu: {{ r }}</span></div>
               }
+            }
+          </div>
 
-              <section class="registration-section">
-                <h3>Thông tin đăng ký</h3>
-                <dl class="registration-list">
-                  <dt>Chủ gian hàng</dt><dd>{{ vendor.ownerName }}</dd>
-                  <dt>Email</dt><dd><a [href]="'mailto:' + vendor.email">{{ vendor.email }}</a></dd>
-                  <dt>Số điện thoại</dt><dd><a [href]="'tel:' + vendor.phone.replaceAll(' ', '')">{{ vendor.phone }}</a></dd>
-                  <dt>Mô hình kinh doanh</dt><dd>{{ vendor.businessModel }}</dd>
-                  <dt>Danh mục chính</dt><dd>{{ vendor.category }}</dd>
-                  <dt>Mã số thuế</dt><dd>{{ vendor.taxId || '—' }}</dd>
-                  <dt>Kho lấy hàng</dt><dd>{{ vendor.pickupAddress }}</dd>
-                  <dt>Gửi lúc</dt><dd>{{ formatDate(vendor.submittedAt) }}</dd>
-                </dl>
-              </section>
-
-              <section class="documents-section">
-                <h3>Giấy tờ xác minh (KYC)</h3>
-                <div class="document-grid">
-                  @for (document of vendor.kycDocuments; track document.label) {
-                    <div class="document-card" [attr.aria-label]="document.label">
-                      <span>{{ document.label }}</span>
-                    </div>
-                  }
-                </div>
-              </section>
-
-              @if (vendor.approvalStatus === 'PENDING') {
-                <section class="review-section">
-                  <h3>Kiểm tra trước khi duyệt</h3>
-                  <div class="check-list">
-                    @for (label of checkLabels; track label; let i = $index) {
-                      <div class="check-row"><mat-checkbox [checked]="checks()[i]" (change)="toggleCheck(i, $event.checked)">{{ label }}</mat-checkbox></div>
+          <!-- Review Checks & Actions for Open Applications -->
+          @if (isOpen(v)) {
+            <h3>Kiểm tra trước khi duyệt</h3>
+            <div class="checks">
+              @for (label of checkLabels; track label; let i = $index) {
+                <label>
+                  <input
+                    type="checkbox"
+                    [checked]="currentChecks()[i]"
+                    (change)="toggleCheck(i, $event)"
+                  />
+                  {{ label }}
+                  @if (v.status === 'RESUBMITTED') {
+                    @if (redoIndices(v).has(i)) {
+                      <span class="tag info">Cần kiểm tra lại</span>
+                    } @else {
+                      <span class="tag ok">Giữ nguyên</span>
                     }
-                  </div>
-                </section>
-              }
-
-              @if (actionError()) { <p class="action-error" role="alert">{{ actionError() }}</p> }
-
-              @if (vendor.approvalStatus === 'PENDING') {
-                <footer class="actions">
-                  <button mat-button type="button" class="approve-action" [disabled]="!canApprove()" (click)="approve()">
-                    @if (submitting()) { Đang xử lý… } @else { Duyệt vendor }
-                  </button>
-                  <button mat-button type="button" class="reject-action" [disabled]="submitting()" (click)="openRejectDialog()">Từ chối</button>
-                  @if (!allChecksComplete()) { <span class="action-hint">Tick đủ 4 mục để duyệt.</span> }
-                </footer>
+                  }
+                </label>
               }
             </div>
-          </article>
-        } @else {
-          <div class="empty-detail">Chọn một hồ sơ để xem chi tiết.</div>
-        }
-      </section>
+
+            <div class="acts">
+              <button class="btn p" type="button" [disabled]="!allChecked()" (click)="approve()">
+                Duyệt vendor
+              </button>
+              <button class="btn s" type="button" (click)="openRequestInfoDialog()">
+                Yêu cầu bổ sung
+              </button>
+              <button class="btn s" type="button" (click)="openRejectDialog()">
+                Từ chối
+              </button>
+              @if (!allChecked()) {
+                <span class="hint">Tick đủ 4 mục để duyệt. Thiếu giấy tờ thì chọn “Yêu cầu bổ sung”, đừng từ chối.</span>
+              }
+            </div>
+          }
+
+          <!-- Demo Sim Button -->
+          @if (v.status === 'NEED_INFO') {
+            <div class="acts" style="border: 0; padding: 0 0 24px;">
+              <button class="btn s" type="button" (click)="simulateResubmit()">
+                Demo: giả lập vendor đã bổ sung
+              </button>
+              <span class="hint">Chỉ có trong bản demo. Thực tế vendor tự cập nhật ở kênh người bán.</span>
+            </div>
+          }
+
+          <!-- Danger Action: Xóa tài khoản shop vi phạm luật cấm -->
+          @if (v.status === 'APPROVED') {
+            <div class="acts danger-acts">
+              <button class="btn danger" type="button" (click)="openTerminateDialog()">
+                Xóa tài khoản shop (Vi phạm luật cấm)
+              </button>
+              <span class="hint">Áp dụng khi shop bán hàng giả, hàng cấm, lừa đảo hoặc vi phạm pháp luật.</span>
+            </div>
+          }
+
+          <!-- Processing History Timeline -->
+          @if (v.h && v.h.length > 0) {
+            <div style="margin-top: 24px;">
+              <h3>Lịch sử xử lý</h3>
+              <ol class="tl">
+                @for (entry of v.h; track entry.t) {
+                  <li><b>{{ entry.t }}</b> {{ entry.x }}</li>
+                }
+              </ol>
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="empty">Chọn một hồ sơ để xem chi tiết.</div>
+      }
     </section>
-  }
+  </div>
 </div>
+
+<!-- Modal 1: Từ chối hồ sơ -->
+<div class="scrim" [class.on]="showRejectModal()" role="dialog" aria-modal="true" (click)="$event.target === $event.currentTarget && closeModals()">
+  <div class="modal">
+    <h2>Từ chối hồ sơ</h2>
+    <p class="hint">{{ selectedVendor()?.shop }}</p>
+    <textarea [(ngModel)]="rejectReason" placeholder="Nêu rõ lý do để vendor biết cần sửa gì…" maxlength="500"></textarea>
+    @if (rejectError()) {
+      <div class="err" role="alert">{{ rejectError() }}</div>
+    }
+    <div class="quick">
+      @for (item of quickSuggestions; track item) {
+        <button type="button" class="chip" (click)="addRejectSuggestion(item)">{{ item }}</button>
+      }
+    </div>
+    <div class="acts" style="border: 0; padding-top: 20px; justify-content: flex-end;">
+      <button class="btn s" type="button" (click)="closeModals()">Hủy</button>
+      <button class="btn p" type="button" (click)="confirmReject()">Từ chối hồ sơ</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal 2: Yêu cầu bổ sung hồ sơ -->
+<div class="scrim" [class.on]="showReqModal()" role="dialog" aria-modal="true" (click)="$event.target === $event.currentTarget && closeModals()">
+  <div class="modal">
+    <h2>Yêu cầu bổ sung hồ sơ</h2>
+    <p class="hint">{{ selectedVendor()?.shop }}</p>
+    <div class="quick" style="margin: 14px 0 0;">
+      @for (item of availableDocChecks; track item) {
+        <button
+          type="button"
+          class="chip"
+          [attr.aria-pressed]="isReqItemSelected(item)"
+          (click)="toggleReqItem(item)"
+        >
+          {{ item }}
+        </button>
+      }
+    </div>
+    <textarea [(ngModel)]="reqNote" placeholder="Hướng dẫn cụ thể cho vendor, ví dụ: chụp rõ 4 góc CCCD…" maxlength="500"></textarea>
+    @if (reqError()) {
+      <div class="err" role="alert">{{ reqError() }}</div>
+    }
+    <p class="hint" style="margin: 4px 0 0;">Hạn bổ sung: 7 ngày. Các mục bạn đã tick được giữ nguyên, khi vendor gửi lại chỉ cần kiểm tra các mục liên quan.</p>
+    <div class="acts" style="border: 0; padding-top: 20px; justify-content: flex-end;">
+      <button class="btn s" type="button" (click)="closeModals()">Hủy</button>
+      <button class="btn p" type="button" (click)="confirmReq()">Gửi yêu cầu</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal 3: Xóa tài khoản shop vi phạm luật cấm -->
+<div class="scrim" [class.on]="showTerminateModal()" role="dialog" aria-modal="true" (click)="$event.target === $event.currentTarget && closeModals()">
+  <div class="modal">
+    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+      <span style="font-size: 22px;">⚠️</span>
+      <h2 style="color: var(--err); margin: 0;">Xóa tài khoản shop vi phạm</h2>
+    </div>
+    <p class="hint">Shop: <strong>{{ selectedVendor()?.shop }}</strong> · Chủ tài khoản: <strong>{{ selectedVendor()?.owner }}</strong></p>
+    <div style="background: var(--err-bg); border: 1px solid var(--err); color: var(--err); border-radius: 12px; padding: 12px 16px; font-size: 13px; margin: 12px 0;">
+      <strong>CẢNH BÁO:</strong> Thao tác này sẽ xóa vĩnh viễn quyền người bán, vô hiệu hóa tài khoản người dùng, ẩn toàn bộ sản phẩm và hủy tất cả phiên đăng nhập hiện tại của shop.
+    </div>
+    <div class="quick" style="margin: 10px 0;">
+      @for (item of violationTypes; track item) {
+        <button
+          type="button"
+          class="chip"
+          [class.active]="selectedViolation === item"
+          (click)="selectedViolation = item"
+        >
+          {{ item }}
+        </button>
+      }
+    </div>
+    <textarea [(ngModel)]="terminateReason" placeholder="Ghi rõ hành vi vi phạm (ví dụ: phát hiện bán hàng nhái thương hiệu X, kinh doanh sản phẩm cấm theo nghị định...)" maxlength="500"></textarea>
+    @if (terminateError()) {
+      <div class="err" role="alert">{{ terminateError() }}</div>
+    }
+    <div class="acts" style="border: 0; padding-top: 20px; justify-content: flex-end;">
+      <button class="btn s" type="button" (click)="closeModals()">Hủy</button>
+      <button class="btn danger" type="button" (click)="confirmTerminate()">Xác nhận xóa tài khoản</button>
+    </div>
+  </div>
+</div>
+
+<!-- Floating Toast Notification -->
+@if (toastMessage()) {
+  <div class="toast on" role="status">{{ toastMessage() }}</div>
+}

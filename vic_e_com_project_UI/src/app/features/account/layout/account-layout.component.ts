@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { ProfileApiService } from '../profile/data-access/profile-api.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { AvatarComponent } from '../../../shared/ui/avatar/avatar.component';
 
 @Component({
@@ -13,6 +14,7 @@ import { AvatarComponent } from '../../../shared/ui/avatar/avatar.component';
 })
 export class AccountLayoutComponent implements OnInit {
   readonly profileService = inject(ProfileApiService);
+  readonly authService = inject(AuthService);
 
   ngOnInit(): void {
     this.profileService.ensureProfileLoaded();

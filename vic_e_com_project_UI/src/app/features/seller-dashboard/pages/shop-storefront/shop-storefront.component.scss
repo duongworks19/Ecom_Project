@@ -356,6 +356,39 @@ a {
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 16px;
   margin-bottom: 24px;
+
+  &.is-empty {
+    display: block;
+  }
+}
+
+.empty-storefront-products {
+  background: var(--card);
+  border: 1px dashed var(--line);
+  border-radius: var(--r);
+  padding: 60px 24px;
+  text-align: center;
+  max-width: 520px;
+  margin: 20px auto;
+
+  .empty-icon {
+    font-size: 52px;
+    margin-bottom: 12px;
+  }
+
+  h3 {
+    margin: 0 0 8px;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  p {
+    margin: 0 0 20px;
+    color: var(--mute);
+    font-size: 14px;
+    line-height: 1.5;
+  }
 }
 
 .product-card {

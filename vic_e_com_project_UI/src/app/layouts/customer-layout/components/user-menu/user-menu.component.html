@@ -43,6 +43,18 @@
         Đơn mua
       </button>
 
+      @if (authService.currentRoleSignal() === 'VENDOR' || authService.currentRoleSignal() === 'ROLE_VENDOR') {
+        <button
+          #menuItem
+          type="button"
+          role="menuitem"
+          class="user-menu__item"
+          (click)="navigateToSellerDashboard()"
+        >
+          Kênh người bán
+        </button>
+      }
+
       <hr class="user-menu__divider" />
 
       <button
