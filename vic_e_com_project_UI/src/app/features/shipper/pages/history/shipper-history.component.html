@@ -1,0 +1,65 @@
+<div class="history-page">
+  <div class="page-header">
+    <span class="badge-subtitle">LỊCH SỬ GIAO NHẬN</span>
+    <h1 class="page-title">Nhật ký hoàn thành & sự cố</h1>
+    <p class="page-desc">Toàn bộ các vận đơn đã giao thành công hoặc báo cáo giao thất bại chuyển điều phối xử lý.</p>
+  </div>
+
+  <div class="table-card">
+    <div class="table-responsive">
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th>Mã Vận Đơn</th>
+            <th>Thời Gian Hoàn Tất</th>
+            <th>Khách Hàng</th>
+            <th>Tiền COD Thu Được</th>
+            <th>Kết Quả</th>
+            <th>Ghi Chú Sự Kiện</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of historyList(); track item.id) {
+            <tr class="table-row">
+              <td>
+                <button type="button" class="btn-code" (click)="activeDetailShipment.set(item)">
+                  <span>{{ item.code }}</span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                </button>
+              </td>
+              <td class="text-mute">{{ getLastEventTime(item) }}</td>
+              <td class="text-ink-strong">{{ item.customerName }}</td>
+              <td class="text-cod" [class.text-cod--zero]="item.status === 'FAILED'">
+                {{ item.status === 'DELIVERED' ? formatCurrency(item.codAmount) : '0 đ' }}
+              </td>
+              <td>
+                @if (item.status === 'DELIVERED') {
+                  <span class="result-badge result-badge--success">Thành công</span>
+                } @else {
+                  <span class="result-badge result-badge--fail">Thất bại</span>
+                }
+              </td>
+              <td class="event-desc-cell">
+                {{ getLastEventDesc(item) }}
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (historyList().length === 0) {
+      <div class="empty-state">
+        Chưa có lịch sử giao hàng nào trong ca hôm nay.
+      </div>
+    }
+  </div>
+
+  <app-shipment-detail-dialog
+    [open]="activeDetailShipment() !== null"
+    [shipment]="activeDetailShipment()"
+    (closed)="activeDetailShipment.set(null)"
+  />
+</div>

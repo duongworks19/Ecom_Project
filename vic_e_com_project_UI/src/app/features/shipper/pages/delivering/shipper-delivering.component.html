@@ -1,0 +1,77 @@
+<div class="delivering-page">
+  <div class="page-header">
+    <span class="badge-subtitle">ĐANG TRÊN ĐƯỜNG GIAO</span>
+    <h1 class="page-title">Đơn hàng đang phát cho khách</h1>
+    <p class="page-desc">Liên hệ trực tiếp với người nhận, tiến hành thu tiền COD hoặc ghi nhận sự cố giao thất bại.</p>
+  </div>
+
+  @if (deliveringShipments().length === 0) {
+    <div class="empty-card">
+      <p>Hiện bạn không có đơn nào đang trên đường giao.</p>
+    </div>
+  } @else {
+    <div class="delivering-cards-grid">
+      @for (item of deliveringShipments(); track item.id) {
+        <div class="delivering-card">
+          <div class="card-main">
+            <div class="card-top-row">
+              <button type="button" class="btn-code" (click)="activeDetailShipment.set(item)">
+                {{ item.code }}
+              </button>
+              <span class="tag-delivering">Đang giao</span>
+            </div>
+
+            <h3 class="customer-title">{{ item.customerName }} - {{ item.customerPhone }}</h3>
+            <div class="customer-address-row">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              </svg>
+              <span>{{ item.customerAddress }}</span>
+            </div>
+
+            <div class="pkg-cod-box">
+              <div class="pkg-info">
+                <span class="box-lbl">Sản phẩm:</span>
+                <strong class="box-val">{{ item.itemSummary }}</strong>
+              </div>
+              <div class="cod-info">
+                <span class="box-lbl">Tiền thu COD:</span>
+                <span class="cod-amount">{{ formatCurrency(item.codAmount) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-footer">
+            <button type="button" class="btn-deliver-success" (click)="activeDeliveryShipment.set(item)">
+              Giao thành công & Thu COD
+            </button>
+            <button type="button" class="btn-report-fail" (click)="activeFailureShipment.set(item)">
+              Báo thất bại
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Dialogs -->
+  <app-confirm-delivery-dialog
+    [open]="activeDeliveryShipment() !== null"
+    [shipment]="activeDeliveryShipment()"
+    (confirmed)="handleDeliveryConfirmed($event)"
+    (closed)="activeDeliveryShipment.set(null)"
+  />
+
+  <app-report-failure-dialog
+    [open]="activeFailureShipment() !== null"
+    [shipment]="activeFailureShipment()"
+    (reported)="handleFailureReported($event)"
+    (closed)="activeFailureShipment.set(null)"
+  />
+
+  <app-shipment-detail-dialog
+    [open]="activeDetailShipment() !== null"
+    [shipment]="activeDetailShipment()"
+    (closed)="activeDetailShipment.set(null)"
+  />
+</div>

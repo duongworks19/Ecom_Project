@@ -1,0 +1,46 @@
+<app-dialog
+  [open]="open()"
+  [title]="'Báo cáo giao hàng thất bại'"
+  [maxWidth]="'480px'"
+  (closed)="onCancel()"
+>
+  @if (shipment(); as item) {
+    <div class="failure-dialog-body">
+      <div class="warning-icon-circle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+      </div>
+      <p class="order-code-sub">
+        Vận đơn: <strong>{{ item.code }}</strong>. Sự cố sẽ được chuyển về Admin điều phối trạm.
+      </p>
+
+      <div class="form-group">
+        <label class="form-label" for="reasonSelect">Lý do thất bại (failure_reason):</label>
+        <select id="reasonSelect" [(ngModel)]="selectedReason" class="select-input">
+          <option value="CUSTOMER_UNREACHABLE">Khách không nghe máy (Gọi quá 3 lần)</option>
+          <option value="WRONG_ADDRESS">Sai thông tin địa chỉ / Không tìm thấy số nhà</option>
+          <option value="CUSTOMER_RESCHEDULED">Khách hẹn lại ngày/giờ giao khác</option>
+          <option value="CUSTOMER_REJECTED">Khách từ chối nhận hàng (Không ưng ý / Đã hủy)</option>
+          <option value="GOODS_DAMAGED">Hàng hóa bị rách / hư hỏng trong quá trình vận chuyển</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="notesTextarea">Ghi chú cụ thể:</label>
+        <textarea
+          id="notesTextarea"
+          [(ngModel)]="notes"
+          rows="3"
+          placeholder="Ví dụ: Đã gọi lúc 14:15 và 14:30 nhưng thuê bao không liên lạc được..."
+          class="textarea-input"
+        ></textarea>
+      </div>
+
+      <div class="dialog-actions">
+        <button type="button" class="btn-cancel" (click)="onCancel()">Hủy bỏ</button>
+        <button type="button" class="btn-report" (click)="onReport()">Gửi báo cáo sự cố</button>
+      </div>
+    </div>
+  }
+</app-dialog>

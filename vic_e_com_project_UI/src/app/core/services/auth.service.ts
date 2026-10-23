@@ -204,8 +204,6 @@ export class MockAuthService extends AuthService {
   private readonly latencyMs = 300;
   private readonly accounts = new Map<string, { password: string; role: string; userId: number; mustChangePassword: boolean; fullName?: string }>([
     ['admin@demo.local', { password: 'Admin@123', role: 'ADMIN', userId: 1, mustChangePassword: false, fullName: 'Quản trị viên' }],
-    ['shipper@demo.local', { password: 'Shipper@123', role: 'SHIPPER', userId: 2, mustChangePassword: false, fullName: 'Nguyễn Minh Anh' }],
-    ['shipper-first@demo.local', { password: 'Temp@12345', role: 'SHIPPER', userId: 3, mustChangePassword: true, fullName: 'Nguyễn Minh Anh' }],
   ]);
 
   constructor() {

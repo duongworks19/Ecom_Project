@@ -1,0 +1,110 @@
+.confirm-delivery-body {
+  padding: 8px 0 4px;
+  text-align: center;
+}
+
+.status-icon-circle {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background-color: var(--color-success-pale, #c7f0da);
+  color: var(--color-success-deep, #103c25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+  svg {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+.order-code-sub {
+  font-size: 13px;
+  color: var(--color-mute, #62625b);
+  margin-bottom: 16px;
+  strong {
+    color: var(--color-ink, #000000);
+  }
+}
+
+.info-card {
+  background-color: var(--color-surface-card, #f6f6f3);
+  border: 1px solid var(--color-hairline-soft, #e5e5e0);
+  border-radius: 12px;
+  padding: 16px;
+  text-align: left;
+  margin-bottom: 20px;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12.5px;
+  margin-bottom: 10px;
+  .label {
+    color: var(--color-mute, #62625b);
+  }
+  .val {
+    color: var(--color-ink, #000000);
+    &--amount {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--color-primary, #e60023);
+    }
+  }
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--color-hairline, #dadad3);
+  font-size: 11.5px;
+  color: var(--color-mute, #62625b);
+  cursor: pointer;
+  input {
+    cursor: pointer;
+    accent-color: var(--color-primary, #e60023);
+  }
+  label {
+    cursor: pointer;
+  }
+}
+
+.dialog-actions {
+  display: flex;
+  gap: 12px;
+  button {
+    flex: 1;
+    padding: 11px 0;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition-fast, 0.15s ease);
+  }
+  .btn-cancel {
+    background-color: transparent;
+    border: 1px solid var(--color-hairline, #dadad3);
+    color: var(--color-mute, #62625b);
+    &:hover {
+      background-color: var(--color-surface-card, #f6f6f3);
+      color: var(--color-ink, #000000);
+    }
+  }
+  .btn-confirm {
+    background-color: #059669;
+    border: none;
+    color: #ffffff;
+    &:hover:not(:disabled) {
+      background-color: #047857;
+    }
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+}
