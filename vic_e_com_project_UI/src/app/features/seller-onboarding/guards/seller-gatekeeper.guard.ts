@@ -1,7 +1,6 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
-import { SellerOnboardingService } from '../services/seller-onboarding.service';
 
 /**
  * Gatekeeping Guard:
@@ -10,7 +9,6 @@ import { SellerOnboardingService } from '../services/seller-onboarding.service';
  */
 export const sellerGatekeeperGuard: CanActivateFn = (route, state) => {
   const authService = inject(AuthService);
-  const onboardingService = inject(SellerOnboardingService);
   const router = inject(Router);
 
   // 1. Kiểm tra đã đăng nhập chưa
@@ -20,11 +18,15 @@ export const sellerGatekeeperGuard: CanActivateFn = (route, state) => {
     });
   }
 
-  const role = authService.getRole();
-  const status = onboardingService.currentStatus();
+  const role = authService.getRole()?.toUpperCase();
 
-  // 2. Nếu đã là VENDOR và trạng thái APPROVED -> Cho phép truy cập
-  if (role === 'VENDOR' || status === 'APPROVED') {
+  // Chỉ role do backend xác nhận mới được vào Seller Center.
+  if (
+    role === 'VENDOR' ||
+    role === 'ROLE_VENDOR' ||
+    role === 'ADMIN' ||
+    role === 'ROLE_ADMIN'
+  ) {
     return true;
   }
 

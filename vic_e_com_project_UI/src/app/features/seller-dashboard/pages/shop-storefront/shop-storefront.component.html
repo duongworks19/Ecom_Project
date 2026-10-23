@@ -1,8 +1,8 @@
 @if (toastMessage(); as msg) {
-  <div class="store-toast" role="status">
-    <span>✓</span>
-    <span>{{ msg }}</span>
-  </div>
+<div class="store-toast" role="status">
+  <span>✓</span>
+  <span>{{ msg }}</span>
+</div>
 }
 
 <div class="storefront-page">
@@ -19,19 +19,15 @@
 
     <div class="search-box">
       <label for="storefront-search-input" class="sr-only">Tìm sản phẩm trong shop</label>
-      <input
-        id="storefront-search-input"
-        aria-label="Tìm sản phẩm trong shop"
-        type="search"
-        placeholder="Tìm sản phẩm trong {{ data().shopName }}..."
-        [ngModel]="searchQuery()"
+      <input id="storefront-search-input" aria-label="Tìm sản phẩm trong shop" type="search"
+        placeholder="Tìm sản phẩm trong {{ shopName() }}..." [ngModel]="searchQuery()"
         (ngModelChange)="searchQuery.set($event)" />
     </div>
 
     <div class="top-actions">
       <a routerLink="/" class="pill">← Trang chủ mua sắm</a>
       <a routerLink="/seller/onboarding" class="pill">Đăng ký bán hàng</a>
-      <a routerLink="/seller/dashboard" class="pill red">Quản lý Shop (Kênh người bán)</a>
+      <!-- <a routerLink="/seller/dashboard" class="pill red">Quản lý Shop (Kênh người bán)</a> -->
     </div>
   </header>
 
@@ -39,34 +35,30 @@
   <section class="shop-hero">
     <div class="shop-hero-inner">
       <div class="shop-identity">
-        <div class="shop-av">{{ data().shopAvatarLetter }}</div>
+        <div class="shop-av">{{ shopAvatarLetter() }}</div>
         <div class="shop-meta">
           <div class="shop-title-row">
-            <h1>{{ data().shopName }}</h1>
+            <h1>{{ shopName() }}</h1>
             <span class="verified-badge">✓ Official Store</span>
           </div>
-          <p class="tagline">{{ profile().tagline }}</p>
+          <p class="tagline">Chuyên ngành {{ shopCategory() }}</p>
           <div class="shop-stats-inline">
-            <span>★ <b>{{ data().stats.averageRating }}</b> ({{ data().stats.totalReviews }} đánh giá)</span>
+            <span>★ <b>4.8</b> (128 đánh giá)</span>
             <span>·</span>
             <span><b>{{ products().length }}</b> Sản phẩm</span>
             <span>·</span>
-            <span>Kho: <b>{{ profile().pickupAddress }}</b></span>
+            <span>Kho: <b>{{ shopPickupAddress() }}</b></span>
           </div>
         </div>
       </div>
 
       <div class="shop-cta">
-        <button
-          type="button"
-          class="pill"
-          [class.red]="!isFollowing()"
-          (click)="toggleFollow()">
+        <button type="button" class="pill" [class.red]="!isFollowing()" (click)="toggleFollow()">
           {{ isFollowing() ? '✓ Đang theo dõi' : '+ Theo dõi Shop' }}
         </button>
-        <a routerLink="/seller/dashboard" class="pill">
+        <!-- <a routerLink="/seller/dashboard" class="pill">
           Tùy chỉnh giao diện Shop
-        </a>
+        </a> -->
       </div>
     </div>
   </section>
@@ -74,78 +66,71 @@
   <main class="store-main">
     <!-- Shop Vouchers Strip -->
     @if (vouchers().length > 0) {
-      <section class="card voucher-strip">
-        <div class="head">
-          <h2>Mã giảm giá của Shop</h2>
-          <small>Áp dụng trực tiếp khi thanh toán đơn hàng tại {{ data().shopName }}</small>
+    <section class="card voucher-strip">
+      <div class="head">
+        <h2>Mã giảm giá của Shop</h2>
+        <small>Áp dụng trực tiếp khi thanh toán đơn hàng tại {{ shopName() }}</small>
+      </div>
+      <div class="voucher-row">
+        @for (v of vouchers(); track v.id) {
+        <div class="voucher-ticket" [class.disabled]="!v.active">
+          <div class="v-left">
+            <span class="v-code">{{ v.code }}</span>
+            <strong>{{ v.discountText }}</strong>
+            <small>Đơn từ {{ v.minOrderAmount | number:'1.0-0' }}₫ · HSD {{ v.expiryDate }}</small>
+          </div>
+          <button type="button" class="pill" [class.red]="!claimedVouchers()[v.id]" [disabled]="claimedVouchers()[v.id]"
+            (click)="claimVoucher(v.id, v.code)">
+            {{ claimedVouchers()[v.id] ? 'Đã lưu' : 'Lưu mã' }}
+          </button>
         </div>
-        <div class="voucher-row">
-          @for (v of vouchers(); track v.id) {
-            <div class="voucher-ticket" [class.disabled]="!v.active">
-              <div class="v-left">
-                <span class="v-code">{{ v.code }}</span>
-                <strong>{{ v.discountText }}</strong>
-                <small>Đơn từ {{ v.minOrderAmount | number:'1.0-0' }}₫ · HSD {{ v.expiryDate }}</small>
-              </div>
-              <button
-                type="button"
-                class="pill"
-                [class.red]="!claimedVouchers()[v.id]"
-                [disabled]="claimedVouchers()[v.id]"
-                (click)="claimVoucher(v.id, v.code)">
-                {{ claimedVouchers()[v.id] ? 'Đã lưu' : 'Lưu mã' }}
-              </button>
-            </div>
-          }
-        </div>
-      </section>
+        }
+      </div>
+    </section>
     }
 
     <!-- Category Filter Tabs -->
     <div class="cat-tabs" role="tablist">
       @for (cat of categories(); track cat) {
-        <button
-          type="button"
-          class="cat-chip"
-          [class.on]="activeCategory() === cat"
-          (click)="activeCategory.set(cat)">
-          {{ cat === 'ALL' ? 'Tất cả sản phẩm (' + products().length + ')' : cat }}
-        </button>
+      <button type="button" class="cat-chip" [class.on]="activeCategory() === cat" (click)="activeCategory.set(cat)">
+        {{ cat === 'ALL' ? 'Tất cả sản phẩm (' + products().length + ')' : cat }}
+      </button>
       }
     </div>
 
     <!-- Product Grid -->
-    <section class="product-grid" aria-label="Danh sách sản phẩm của shop">
+    <section class="product-grid" [class.is-empty]="filteredProducts().length === 0"
+      aria-label="Danh sách sản phẩm của shop">
       @for (prod of filteredProducts(); track prod.id) {
-        <article
-          class="product-card"
-          tabindex="0"
-          (click)="openProductDetail(prod)"
-          (keydown.enter)="openProductDetail(prod)">
-          <div class="img-wrap" [style.background]="prod.thumbnailColor">
-            <img [src]="prod.imageUrl" [alt]="prod.name" loading="lazy" />
-            @if (prod.stock <= 10) {
-              <span class="stock-badge">Chỉ còn {{ prod.stock }}</span>
+      <article class="product-card" tabindex="0" (click)="openProductDetail(prod)"
+        (keydown.enter)="openProductDetail(prod)">
+        <div class="img-wrap" [style.background]="prod.thumbnailColor">
+          <img [src]="prod.imageUrl" [alt]="prod.name" loading="lazy" />
+          @if (prod.stock <= 10) { <span class="stock-badge">Chỉ còn {{ prod.stock }}</span>
             }
-          </div>
-          <div class="prod-body">
-            <small class="cat">{{ prod.category }} · SKU {{ prod.sku }}</small>
-            <h3>{{ prod.name }}</h3>
-            <p class="variant">Phân loại: {{ prod.variant }}</p>
-            <div class="prod-foot">
-              <div>
-                <strong class="price">{{ prod.price | number:'1.0-0' }}₫</strong>
-                <span class="sold">Đã bán {{ prod.soldCount }}</span>
-              </div>
-              <button
-                type="button"
-                class="pill red sm"
-                (click)="buyNow(prod, $event)">
-                + Giỏ hàng
-              </button>
+        </div>
+        <div class="prod-body">
+          <small class="cat">{{ prod.category }} · SKU {{ prod.sku }}</small>
+          <h3>{{ prod.name }}</h3>
+          <p class="variant">Phân loại: {{ prod.variant }}</p>
+          <div class="prod-foot">
+            <div>
+              <strong class="price">{{ prod.price | number:'1.0-0' }}₫</strong>
+              <span class="sold">Đã bán {{ prod.soldCount }}</span>
             </div>
+            <button type="button" class="pill red sm" (click)="buyNow(prod, $event)">
+              + Giỏ hàng
+            </button>
           </div>
-        </article>
+        </div>
+      </article>
+      } @empty {
+      <div class="empty-storefront-products">
+        <div class="empty-icon">📦</div>
+        <h3>Gian hàng chưa có sản phẩm nào</h3>
+        <p>Chủ shop đang chuẩn bị và cập nhật các sản phẩm mới. Vui lòng quay lại sau nhé!</p>
+        <a routerLink="/seller/dashboard" class="pill red">+ Đăng tải sản phẩm lên shop</a>
+      </div>
       }
     </section>
 
@@ -169,21 +154,21 @@
         </div>
         <div class="review-list">
           @for (rev of reviews(); track rev.id) {
-            <div class="rev-item">
-              <div class="rev-top">
-                <strong>{{ rev.customerName }}</strong>
-                <span class="stars">{{ '★'.repeat(rev.rating) }}</span>
-                <small>{{ rev.createdAt }}</small>
-              </div>
-              <p class="rev-prod">Sản phẩm: {{ rev.productName }}</p>
-              <p class="rev-comment">{{ rev.comment }}</p>
-              @if (rev.reply) {
-                <div class="seller-reply">
-                  <strong>Phản hồi từ {{ data().shopName }}:</strong>
-                  <p>{{ rev.reply }}</p>
-                </div>
-              }
+          <div class="rev-item">
+            <div class="rev-top">
+              <strong>{{ rev.customerName }}</strong>
+              <span class="stars">{{ '★'.repeat(rev.rating) }}</span>
+              <small>{{ rev.createdAt }}</small>
             </div>
+            <p class="rev-prod">Sản phẩm: {{ rev.productName }}</p>
+            <p class="rev-comment">{{ rev.comment }}</p>
+            @if (rev.reply) {
+            <div class="seller-reply">
+              <strong>Phản hồi từ {{ data().shopName }}:</strong>
+              <p>{{ rev.reply }}</p>
+            </div>
+            }
+          </div>
           }
         </div>
       </section>
@@ -193,37 +178,30 @@
 
 <!-- Quick Product Modal -->
 @if (selectedProduct(); as item) {
-  <div
-    class="modal-backdrop"
-    tabindex="0"
-    (click)="selectedProduct.set(null)"
-    (keydown.escape)="selectedProduct.set(null)">
-    <div
-      class="modal-card"
-      tabindex="0"
-      (click)="$event.stopPropagation()"
-      (keydown)="$event.stopPropagation()">
-      <button type="button" class="close-btn" (click)="selectedProduct.set(null)">✕</button>
-      <div class="modal-grid">
-        <div class="modal-img">
-          <img [src]="item.imageUrl" [alt]="item.name" />
-        </div>
-        <div class="modal-info">
-          <span class="cat-badge">{{ item.category }}</span>
-          <h2>{{ item.name }}</h2>
-          <p class="sku">Mã SKU: {{ item.sku }} · Phân loại: {{ item.variant }}</p>
-          <strong class="big-price">{{ item.price | number:'1.0-0' }}₫</strong>
-          <p class="stock-info">Tồn kho sẵn có: <b>{{ item.stock }}</b> sản phẩm · Đã bán <b>{{ item.soldCount }}</b></p>
-          <div class="modal-actions">
-            <button type="button" class="pill red" (click)="buyNow(item)">
-              Thêm vào giỏ hàng ngay
-            </button>
-            <button type="button" class="pill" (click)="selectedProduct.set(null)">
-              Tiếp tục xem Shop
-            </button>
-          </div>
+<div class="modal-backdrop" tabindex="0" (click)="selectedProduct.set(null)"
+  (keydown.escape)="selectedProduct.set(null)">
+  <div class="modal-card" tabindex="0" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
+    <button type="button" class="close-btn" (click)="selectedProduct.set(null)">✕</button>
+    <div class="modal-grid">
+      <div class="modal-img">
+        <img [src]="item.imageUrl" [alt]="item.name" />
+      </div>
+      <div class="modal-info">
+        <span class="cat-badge">{{ item.category }}</span>
+        <h2>{{ item.name }}</h2>
+        <p class="sku">Mã SKU: {{ item.sku }} · Phân loại: {{ item.variant }}</p>
+        <strong class="big-price">{{ item.price | number:'1.0-0' }}₫</strong>
+        <p class="stock-info">Tồn kho sẵn có: <b>{{ item.stock }}</b> sản phẩm · Đã bán <b>{{ item.soldCount }}</b></p>
+        <div class="modal-actions">
+          <button type="button" class="pill red" (click)="buyNow(item)">
+            Thêm vào giỏ hàng ngay
+          </button>
+          <button type="button" class="pill" (click)="selectedProduct.set(null)">
+            Tiếp tục xem Shop
+          </button>
         </div>
       </div>
     </div>
   </div>
+</div>
 }

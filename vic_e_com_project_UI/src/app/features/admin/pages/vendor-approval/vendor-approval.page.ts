@@ -1,239 +1,401 @@
 import { Component, OnDestroy, computed, inject, signal } from '@angular/core';
-import { HttpErrorResponse } from '@angular/common/http';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Subject, debounceTime, takeUntil } from 'rxjs';
-import { RejectDialogComponent } from './reject-dialog.component';
-import { VendorApplication, VendorApprovalService, VendorApprovalStatus } from '../../services/vendor-approval.service';
+import {
+  VENDOR_DOCUMENT_CHECKS,
+  VendorApplication,
+  VendorApprovalService,
+  VendorApprovalStatus,
+} from '../../services/vendor-approval.service';
 
-type FilterStatus = VendorApprovalStatus | 'ALL';
+export type TabKey = 'TODO' | 'NEED_INFO' | 'APPROVED' | 'REJECTED' | 'ALL';
 
 @Component({
   selector: 'vic-vendor-approval-page',
   standalone: true,
-  imports: [MatButtonModule, MatCheckboxModule, MatChipsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatSnackBarModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './vendor-approval.page.html',
   styleUrl: './vendor-approval.page.scss',
 })
 export class VendorApprovalPage implements OnDestroy {
   private readonly service = inject(VendorApprovalService);
-  private readonly dialog = inject(MatDialog);
-  private readonly snackBar = inject(MatSnackBar);
   private readonly searchChanges = new Subject<string>();
   private readonly destroy$ = new Subject<void>();
-  private countsInitialized = false;
 
-  readonly applications = signal<VendorApplication[]>([]);
-  readonly selectedVendor = signal<VendorApplication | null>(null);
-  readonly filter = signal<FilterStatus>('PENDING');
-  readonly search = signal('');
-  readonly checks = signal([false, false, false, false]);
-  readonly loading = signal(true);
-  readonly pageError = signal<string | null>(null);
-  readonly actionError = signal<string | null>(null);
-  readonly submitting = signal(false);
-  readonly canApprove = computed(() => this.selectedVendor()?.approvalStatus === 'PENDING' && this.checks().every(Boolean) && !this.submitting());
-  readonly reviewCount = computed(() => this.checks().filter((checked) => checked).length);
-  readonly allChecksComplete = computed(() => this.reviewCount() === this.checkLabels.length);
-  readonly visibleApplications = computed(() => this.applications().filter((item) => this.filter() === 'ALL' || item.approvalStatus === this.filter()));
-  readonly counts = signal({ PENDING: 0, APPROVED: 0, REJECTED: 0, ALL: 0 });
+  readonly tabs: { key: TabKey; label: string }[] = [
+    { key: 'TODO', label: 'Cần xử lý' },
+    { key: 'NEED_INFO', label: 'Chờ vendor bổ sung' },
+    { key: 'APPROVED', label: 'Đã duyệt' },
+    { key: 'REJECTED', label: 'Đã từ chối' },
+    { key: 'ALL', label: 'Tất cả' },
+  ];
+
   readonly checkLabels = [
     'Họ tên khớp với giấy tờ KYC',
-    'Giấy tờ rõ nét và còn hiệu lực',
-    'Tên shop không vi phạm quy định',
+    'Giấy tờ rõ nét, còn hiệu lực',
+    'Tên gian hàng không vi phạm chính sách',
     'Địa chỉ kho lấy hàng hợp lệ',
   ];
 
+  readonly quickSuggestions = [
+    'Giấy tờ KYC bị mờ',
+    'Thông tin không khớp giấy tờ',
+    'Tên shop vi phạm chính sách',
+    'Thiếu địa chỉ kho',
+  ];
+
+  readonly violationTypes = [
+    'Bán hàng giả / hàng nhái',
+    'Kinh doanh mặt hàng cấm',
+    'Lừa đảo / gian lận thương mại',
+    'Xâm phạm sở hữu trí tuệ',
+  ];
+
+  readonly availableDocChecks = Object.keys(VENDOR_DOCUMENT_CHECKS);
+
+  readonly applications = signal<VendorApplication[]>([]);
+  readonly filter = signal<TabKey>('TODO');
+  readonly selectedId = signal<number>(1);
+  readonly query = signal<string>('');
+  readonly toastMessage = signal<string | null>(null);
+  readonly checksMap = signal<Record<number, boolean[]>>({
+    6: [false, false, true, true],
+    7: [false, false, true, true],
+  });
+
+  // Modal States
+  readonly showRejectModal = signal(false);
+  readonly showReqModal = signal(false);
+  readonly showTerminateModal = signal(false);
+
+  rejectReason = '';
+  rejectError = signal('');
+
+  reqNote = '';
+  selectedReqItems = signal<string[]>([]);
+  reqError = signal('');
+
+  selectedViolation = this.violationTypes[0];
+  terminateReason = '';
+  terminateError = signal('');
+
+  private toastTimeout?: ReturnType<typeof setTimeout>;
+  private readonly storageListener = () => {
+    this.loadVendors();
+  };
+
+  readonly counts = computed(() => {
+    const list = this.applications();
+    return {
+      TODO: list.filter((v) => v.status === 'PENDING' || v.status === 'RESUBMITTED').length,
+      NEED_INFO: list.filter((v) => v.status === 'NEED_INFO').length,
+      APPROVED: list.filter((v) => v.status === 'APPROVED').length,
+      REJECTED: list.filter((v) => v.status === 'REJECTED').length,
+      ALL: list.length,
+    };
+  });
+
+  readonly visibleVendors = computed(() => {
+    const list = this.applications();
+    const f = this.filter();
+    const q = this.query().trim().toLowerCase();
+    const cleanQ = q.replace(/\s+/g, '');
+
+    return list.filter((v) => {
+      let matchesTab = true;
+      if (f === 'TODO') matchesTab = v.status === 'PENDING' || v.status === 'RESUBMITTED';
+      else if (f !== 'ALL') matchesTab = v.status === f;
+
+      if (!matchesTab) return false;
+      if (!q) return true;
+
+      const searchable = (v.shop + v.owner + v.email).toLowerCase();
+      const phoneClean = v.phone.replace(/\s+/g, '');
+      return searchable.includes(q) || phoneClean.includes(cleanQ);
+    });
+  });
+
+  readonly selectedVendor = computed(() => {
+    const list = this.visibleVendors();
+    const id = this.selectedId();
+    return list.find((v) => v.id === id) || (list.length > 0 ? list[0] : null);
+  });
+
+  readonly currentChecks = computed(() => {
+    const v = this.selectedVendor();
+    if (!v) return [false, false, false, false];
+    const map = this.checksMap();
+    return map[v.id] || [false, false, false, false];
+  });
+
+  readonly allChecked = computed(() => {
+    return this.currentChecks().every(Boolean);
+  });
+
   constructor() {
-    this.searchChanges.pipe(debounceTime(300), takeUntil(this.destroy$)).subscribe((query) => this.loadApplications(query));
-    this.loadApplications('');
+    this.searchChanges
+      .pipe(debounceTime(200), takeUntil(this.destroy$))
+      .subscribe((val) => this.query.set(val));
+    this.loadVendors();
+
+    window.addEventListener('storage', this.storageListener);
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
     this.searchChanges.complete();
+    window.removeEventListener('storage', this.storageListener);
+    if (this.toastTimeout) clearTimeout(this.toastTimeout);
   }
 
-  setSearch(value: string): void {
-    this.search.set(value);
-    this.searchChanges.next(value);
+  loadVendors(): void {
+    this.service
+      .getVendors()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((list) => {
+        this.applications.set(list);
+        if (list.length > 0 && !list.some((v) => v.id === this.selectedId())) {
+          this.selectedId.set(list[0].id);
+        }
+      });
   }
 
-  setFilter(filter: FilterStatus): void {
-    this.filter.set(filter);
-    const available = this.visibleApplications();
-    const current = this.selectedVendor();
-    if (!available.length) {
-      this.selectedVendor.set(null);
-      this.checks.set([false, false, false, false]);
-    } else if (!available.some((item) => item.id === current?.id)) {
-      this.selectVendor(available[0]);
+  setFilter(key: TabKey): void {
+    this.filter.set(key);
+    this.service.syncUserOnboardingDraft();
+    const visible = this.visibleVendors();
+    if (visible.length > 0 && !visible.some((v) => v.id === this.selectedId())) {
+      this.selectedId.set(visible[0].id);
     }
   }
 
-  selectVendor(vendor: VendorApplication): void {
-    this.selectedVendor.set(vendor);
-    this.checks.set([false, false, false, false]);
-    this.actionError.set(null);
-    this.service.getVendor(vendor.id).pipe(takeUntil(this.destroy$)).subscribe({
-      next: (detail) => {
-        this.selectedVendor.set(detail);
-      },
-      error: (error: unknown) => {
-        this.handleError(error, true);
-      },
+  selectVendor(id: number): void {
+    this.selectedId.set(id);
+  }
+
+  onSearch(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.searchChanges.next(input.value);
+  }
+
+  toggleCheck(index: number, event: Event): void {
+    const checked = (event.target as HTMLInputElement).checked;
+    const vendor = this.selectedVendor();
+    if (!vendor) return;
+
+    this.checksMap.update((map) => {
+      const current = map[vendor.id] ? [...map[vendor.id]] : [false, false, false, false];
+      current[index] = checked;
+      return { ...map, [vendor.id]: current };
     });
   }
 
-  toggleCheck(index: number, checked: boolean): void {
-    this.checks.update((checks) => checks.map((value, i) => (i === index ? checked : value)));
+  isOpen(v: VendorApplication): boolean {
+    return v.status === 'PENDING' || v.status === 'RESUBMITTED';
+  }
+
+  redoIndices(v: VendorApplication): Set<number> {
+    const set = new Set<number>();
+    if (!v.req) return set;
+    for (const r of v.req) {
+      const indices: number[] = VENDOR_DOCUMENT_CHECKS[r] || [];
+      indices.forEach((i: number) => set.add(i));
+    }
+    return set;
+  }
+
+  keptCount(v: VendorApplication): number {
+    const checks = this.checksMap()[v.id] || [false, false, false, false];
+    const redo = this.redoIndices(v);
+    return checks.filter((checked, i) => checked && !redo.has(i)).length;
   }
 
   approve(): void {
     const vendor = this.selectedVendor();
-    if (!vendor || !this.canApprove()) return;
-    this.submitting.set(true);
-    this.actionError.set(null);
-    this.service.approveVendor(vendor.id).pipe(takeUntil(this.destroy$)).subscribe({
-      next: (updated) => {
-        this.updateVendor(updated);
-        this.submitting.set(false);
-        this.snackBar.open(`Đã duyệt ${updated.businessName}. Gian hàng đã được kích hoạt.`, 'Đóng', { duration: 4500 });
-      },
-      error: (error: unknown) => {
-        this.submitting.set(false);
-        this.handleError(error, true);
-      },
-    });
+    if (!vendor || !this.allChecked()) return;
+
+    this.service
+      .approveVendor(vendor.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((updated) => {
+        this.applications.update((list) => list.map((v) => (v.id === updated.id ? updated : v)));
+        this.showToast(`Đã duyệt ${updated.shop}. Gian hàng đã được kích hoạt.`);
+      });
   }
 
+  // --- REJECT MODAL ---
   openRejectDialog(): void {
+    this.rejectReason = '';
+    this.rejectError.set('');
+    this.showRejectModal.set(true);
+  }
+
+  addRejectSuggestion(suggestion: string): void {
+    const cur = this.rejectReason.trim();
+    this.rejectReason = cur ? `${cur} ${suggestion}.` : `${suggestion}.`;
+    this.rejectError.set('');
+  }
+
+  confirmReject(): void {
+    const reason = this.rejectReason.trim();
+    if (reason.length < 10) {
+      this.rejectError.set('Nhập lý do từ chối ít nhất 10 ký tự để vendor biết cần sửa gì.');
+      return;
+    }
     const vendor = this.selectedVendor();
-    if (!vendor || vendor.approvalStatus !== 'PENDING' || this.submitting()) return;
-    this.dialog.open(RejectDialogComponent, {
-      width: 'min(480px, calc(100vw - 32px))',
-      maxWidth: '100vw',
-      autoFocus: 'textarea',
-      restoreFocus: true,
-      data: { businessName: vendor.businessName },
-      panelClass: 'vendor-reject-dialog',
-      backdropClass: 'vendor-dialog-backdrop',
-    }).afterClosed().pipe(takeUntil(this.destroy$)).subscribe((reason?: string) => {
-      if (reason) this.reject(vendor, reason);
-    });
+    if (!vendor) return;
+
+    this.service
+      .rejectVendor(vendor.id, reason)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((updated) => {
+        this.applications.update((list) => list.map((v) => (v.id === updated.id ? updated : v)));
+        this.showRejectModal.set(false);
+        this.showToast(`Đã từ chối ${updated.shop}. Lý do đã gửi cho vendor.`);
+      });
   }
 
-  private reject(vendor: VendorApplication, reason: string): void {
-    this.submitting.set(true);
-    this.actionError.set(null);
-    this.service.rejectVendor(vendor.id, reason).pipe(takeUntil(this.destroy$)).subscribe({
-      next: (updated) => {
-        this.updateVendor(updated);
-        this.submitting.set(false);
-        this.snackBar.open(`Đã từ chối ${updated.businessName}. Lý do đã gửi cho vendor.`, 'Đóng', { duration: 4500 });
-      },
-      error: (error: unknown) => {
-        this.submitting.set(false);
-        this.handleError(error, true, true);
-      },
-    });
+  // --- REQUEST INFO MODAL ---
+  openRequestInfoDialog(): void {
+    this.reqNote = '';
+    this.selectedReqItems.set([]);
+    this.reqError.set('');
+    this.showReqModal.set(true);
   }
 
-  retry(): void {
-    this.loadApplications(this.search());
+  toggleReqItem(item: string): void {
+    this.selectedReqItems.update((items) =>
+      items.includes(item) ? items.filter((i) => i !== item) : [...items, item]
+    );
+    this.reqError.set('');
+  }
+
+  isReqItemSelected(item: string): boolean {
+    return this.selectedReqItems().includes(item);
+  }
+
+  confirmReq(): void {
+    const items = this.selectedReqItems();
+    const note = this.reqNote.trim();
+    if (!items.length || note.length < 10) {
+      this.reqError.set('Chọn ít nhất một mục cần bổ sung và nhập hướng dẫn tối thiểu 10 ký tự.');
+      return;
+    }
+    const vendor = this.selectedVendor();
+    if (!vendor) return;
+
+    this.service
+      .requestAdditionalInfo(vendor.id, items, note)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((updated) => {
+        this.applications.update((list) => list.map((v) => (v.id === updated.id ? updated : v)));
+        this.showReqModal.set(false);
+        this.filter.set('NEED_INFO');
+        this.selectedId.set(updated.id);
+        this.showToast(`Đã gửi yêu cầu bổ sung cho ${updated.shop}. Hồ sơ chuyển sang Chờ vendor bổ sung.`);
+      });
+  }
+
+  // --- TERMINATE MODAL ---
+  openTerminateDialog(): void {
+    this.terminateReason = '';
+    this.terminateError.set('');
+    this.selectedViolation = this.violationTypes[0];
+    this.showTerminateModal.set(true);
+  }
+
+  confirmTerminate(): void {
+    const reason = this.terminateReason.trim();
+    if (reason.length < 10) {
+      this.terminateError.set('Vui lòng nhập chi tiết vi phạm tối thiểu 10 ký tự.');
+      return;
+    }
+    const vendor = this.selectedVendor();
+    if (!vendor) return;
+
+    this.service
+      .terminateVendorAccount(vendor.id, this.selectedViolation, reason)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((updated) => {
+        this.applications.update((list) => list.map((v) => (v.id === updated.id ? updated : v)));
+        this.showTerminateModal.set(false);
+        this.filter.set('REJECTED');
+        this.selectedId.set(updated.id);
+        this.showToast(`Đã xóa tài khoản shop ${updated.shop} do vi phạm quy định cấm.`);
+      });
+  }
+
+  closeModals(): void {
+    this.showRejectModal.set(false);
+    this.showReqModal.set(false);
+    this.showTerminateModal.set(false);
+  }
+
+  simulateResubmit(): void {
+    const vendor = this.selectedVendor();
+    if (!vendor) return;
+
+    this.service
+      .simulateVendorResubmission(vendor.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((updated) => {
+        const redo = this.redoIndices(updated);
+        this.checksMap.update((map) => {
+          const current = map[updated.id] ? [...map[updated.id]] : [false, false, false, false];
+          redo.forEach((i) => (current[i] = false));
+          return { ...map, [updated.id]: current };
+        });
+
+        this.applications.update((list) => list.map((v) => (v.id === updated.id ? updated : v)));
+        this.filter.set('TODO');
+        this.selectedId.set(updated.id);
+        this.showToast(`${updated.shop} đã bổ sung hồ sơ.`);
+      });
+  }
+
+  showToast(message: string): void {
+    this.toastMessage.set(message);
+    if (this.toastTimeout) clearTimeout(this.toastTimeout);
+    this.toastTimeout = setTimeout(() => {
+      this.toastMessage.set(null);
+    }, 2600);
   }
 
   statusLabel(status: VendorApprovalStatus): string {
-    return status === 'PENDING' ? 'Chờ duyệt' : status === 'APPROVED' ? 'Đã duyệt' : 'Đã từ chối';
-  }
-
-  formatDate(value?: string): string {
-    if (!value) return '—';
-    const parts = new Intl.DateTimeFormat('vi-VN', {
-      timeZone: 'Asia/Ho_Chi_Minh', day: '2-digit', month: '2-digit', year: 'numeric',
-      hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
-    }).formatToParts(new Date(value));
-    const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((item) => item.type === type)?.value ?? '';
-    return `${part('day')}/${part('month')}/${part('year')} ${part('hour')}:${part('minute')}`;
-  }
-
-  formatDateOnly(value: string): string {
-    return this.formatDate(value).slice(0, 10);
-  }
-
-  private loadApplications(query: string): void {
-    this.loading.set(true);
-    this.pageError.set(null);
-    this.service.getVendors({ status: 'ALL', q: query }).pipe(takeUntil(this.destroy$)).subscribe({
-      next: (items) => {
-        this.applications.set(items);
-        if (!this.countsInitialized || !query) {
-          this.counts.set({
-            PENDING: items.filter((item) => item.approvalStatus === 'PENDING').length,
-            APPROVED: items.filter((item) => item.approvalStatus === 'APPROVED').length,
-            REJECTED: items.filter((item) => item.approvalStatus === 'REJECTED').length,
-            ALL: items.length,
-          });
-          this.countsInitialized = true;
-        }
-        this.loading.set(false);
-        const available = items.filter((item) => this.filter() === 'ALL' || item.approvalStatus === this.filter());
-        const selected = available.find((item) => item.id === this.selectedVendor()?.id) ?? available[0] ?? null;
-        if (!selected) {
-          this.selectedVendor.set(null);
-          this.checks.set([false, false, false, false]);
-        } else if (selected.id !== this.selectedVendor()?.id) {
-          this.selectVendor(selected);
-        } else {
-          this.selectedVendor.set(selected);
-        }
-      },
-      error: (error: unknown) => {
-        this.loading.set(false);
-        this.pageError.set(this.errorMessage(error));
-      },
-    });
-  }
-
-  private updateVendor(updated: VendorApplication): void {
-    const current = this.applications().find((item) => item.id === updated.id) ?? this.selectedVendor();
-    if (current && current.approvalStatus !== updated.approvalStatus) {
-      this.counts.update((counts) => ({
-        ...counts,
-        [current.approvalStatus]: counts[current.approvalStatus] - 1,
-        [updated.approvalStatus]: counts[updated.approvalStatus] + 1,
-      }));
+    switch (status) {
+      case 'PENDING':
+        return 'Chờ duyệt';
+      case 'RESUBMITTED':
+        return 'Đã bổ sung';
+      case 'NEED_INFO':
+        return 'Chờ bổ sung';
+      case 'APPROVED':
+        return 'Đã duyệt';
+      case 'REJECTED':
+        return 'Đã từ chối';
+      default:
+        return status;
     }
-    this.applications.update((items) => items.map((item) => item.id === updated.id ? updated : item));
-    this.selectedVendor.set(updated);
   }
 
-  private handleError(error: unknown, refreshList: boolean, rejecting = false): void {
-    const status = error instanceof HttpErrorResponse ? error.status : 0;
-    if (status === 401) return; // The existing auth interceptor owns expired-session handling.
-    if (status === 404 || status === 409) {
-      this.actionError.set(status === 404 ? 'Hồ sơ không còn tồn tại.' : 'Hồ sơ đã được xử lý.');
-      if (refreshList) this.loadApplications(this.search());
-      return;
+  statusClass(status: VendorApprovalStatus): string {
+    switch (status) {
+      case 'RESUBMITTED':
+        return 'info';
+      case 'NEED_INFO':
+        return 'warn';
+      case 'APPROVED':
+        return 'ok';
+      case 'REJECTED':
+        return 'no';
+      default:
+        return '';
     }
-    if (status === 403) this.actionError.set('Bạn không có quyền thực hiện thao tác này.');
-    else if (status === 400 || status === 422) {
-      this.actionError.set(rejecting ? 'Lý do từ chối cần có từ 10 đến 500 ký tự.' : 'Thông tin gửi lên không hợp lệ. Vui lòng kiểm tra lại.');
-    }
-    else this.actionError.set('Không thể hoàn tất thao tác. Vui lòng thử lại sau.');
   }
 
-  private errorMessage(error: unknown): string {
-    const status = error instanceof HttpErrorResponse ? error.status : 0;
-    if (status === 401) return '';
-    if (status === 403) return 'Bạn không có quyền xem danh sách vendor.';
-    if (status >= 500) return 'Hệ thống đang gặp sự cố. Vui lòng thử lại.';
-    return 'Không thể tải danh sách hồ sơ. Vui lòng thử lại.';
+  initial(name: string): string {
+    return name ? name.trim().charAt(0).toUpperCase() : 'V';
   }
 }

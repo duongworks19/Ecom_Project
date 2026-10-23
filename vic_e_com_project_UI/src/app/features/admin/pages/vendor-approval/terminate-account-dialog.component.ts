@@ -1,13 +1,6 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, EventEmitter, Input, Output, signal } from '@angular/core';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { MatButtonModule } from '@angular/material/button';
-
-export interface TerminateDialogData {
-  id: number;
-  shop: string;
-  owner: string;
-}
+import { CommonModule } from '@angular/common';
 
 export interface TerminateResult {
   violationType: string;
@@ -17,15 +10,15 @@ export interface TerminateResult {
 @Component({
   selector: 'vic-terminate-account-dialog',
   standalone: true,
-  imports: [ReactiveFormsModule, MatDialogModule, MatButtonModule],
+  imports: [CommonModule, ReactiveFormsModule],
   template: `
-    <div class="modal" (keydown)="onKeydown($event)">
+    <div class="modal">
       <div class="header-danger">
         <span class="warning-icon">⚠️</span>
         <h2>Xóa tài khoản shop vi phạm</h2>
       </div>
       <p class="hint">
-        Shop: <strong>{{ data.shop }}</strong> · Chủ tài khoản: <strong>{{ data.owner }}</strong>
+        Shop: <strong>{{ shop }}</strong> · Chủ tài khoản: <strong>{{ owner }}</strong>
       </p>
 
       <div class="danger-box">
@@ -39,7 +32,6 @@ export interface TerminateResult {
             type="button"
             class="chip"
             [class.active]="selectedViolation() === item"
-            [attr.aria-pressed]="selectedViolation() === item"
             (click)="selectViolation(item)"
           >
             {{ item }}
@@ -50,7 +42,7 @@ export interface TerminateResult {
       <label class="section-label" style="margin-top: 14px;">Mô tả chi tiết vi phạm & căn cứ xử lý:</label>
       <textarea
         [formControl]="reason"
-        placeholder="Ghi rõ hành vi vi phạm (ví dụ: phát hiện bán hàng nhái thương hiệu X, kinh doanh sản phẩm cấm theo nghị định...)"
+        placeholder="Ghi rõ hành vi vi phạm…"
         maxlength="500"
       ></textarea>
 
@@ -59,131 +51,34 @@ export interface TerminateResult {
       }
 
       <div class="acts">
-        <button class="btn s" type="button" (click)="dialogRef.close()">Hủy</button>
-        <button class="btn danger" type="button" (click)="confirm()">Xác nhận xóa tài khoản</button>
+        <button class="btn s" type="button" (click)="cancel.emit()">Hủy</button>
+        <button class="btn danger" type="button" (click)="confirm()">Xác nhận xóa tài khoản vĩnh viễn</button>
       </div>
     </div>
   `,
   styles: [`
-    .modal {
-      padding: 32px;
-      color: var(--color-ink, #000);
-    }
-    .header-danger {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 6px;
-    }
-    .warning-icon {
-      font-size: 24px;
-    }
-    h2 {
-      margin: 0;
-      font-size: 22px;
-      font-weight: 700;
-      color: var(--color-error, #9e0a0a);
-    }
-    .hint {
-      margin: 0 0 16px;
-      font-size: 13px;
-      color: var(--color-mute, #62625b);
-    }
-    .danger-box {
-      background: var(--err-bg, #fbe3e3);
-      border: 1px solid var(--err, #9e0a0a);
-      color: var(--err, #9e0a0a);
-      border-radius: 12px;
-      padding: 12px 16px;
-      font-size: 13px;
-      line-height: 1.45;
-      margin-bottom: 18px;
-    }
-    .section-label {
-      display: block;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--color-ink, #000);
-      margin-bottom: 6px;
-    }
-    .quick {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-    .quick .chip {
-      font-size: 13px;
-      padding: 8px 12px;
-      min-height: 36px;
-      border: 1px solid var(--color-hairline-soft, #e5e5e0);
-      border-radius: 9999px;
-      background: var(--color-surface-card, #f6f6f3);
-      color: var(--color-ink, #000);
-      font-weight: 600;
-      cursor: pointer;
-    }
-    .quick .chip.active {
-      background: var(--color-error, #9e0a0a);
-      border-color: var(--color-error, #9e0a0a);
-      color: #fff;
-    }
-    textarea {
-      width: 100%;
-      min-height: 96px;
-      margin: 4px 0 4px;
-      border: 1px solid var(--color-ash, #91918c);
-      border-radius: 16px;
-      padding: 12px 15px;
-      background: var(--color-canvas, #fff);
-      color: var(--color-ink, #000);
-      font-family: inherit;
-      font-size: 14px;
-      resize: vertical;
-      box-sizing: border-box;
-    }
-    textarea:focus {
-      outline: 4px solid var(--color-focus, #435ee5);
-      border-color: var(--color-ink, #000);
-    }
-    .err {
-      color: var(--color-error, #9e0a0a);
-      font-size: 13px;
-      min-height: 18px;
-      margin-top: 4px;
-    }
-    .acts {
-      display: flex;
-      gap: 8px;
-      border: 0;
-      padding-top: 20px;
-      justify-content: flex-end;
-    }
-    .btn {
-      border: 0;
-      border-radius: 16px;
-      padding: 14px 22px;
-      font-weight: 700;
-      font-size: 14px;
-      line-height: 1;
-      cursor: pointer;
-      min-height: 44px;
-    }
-    .btn.s {
-      background: var(--color-hairline-soft, #e5e5e0);
-      color: var(--color-ink, #000);
-    }
-    .btn.danger {
-      background: var(--color-error, #9e0a0a);
-      color: #fff;
-    }
-    .btn.danger:hover {
-      background: #7d0808;
-    }
+    .modal { padding: 32px; color: var(--color-ink, #000); }
+    .header-danger { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .header-danger h2 { margin: 0; font-size: 22px; font-weight: 700; color: #b70c0c; }
+    .hint { margin: 0; font-size: 13px; color: var(--color-mute, #62625b); }
+    .danger-box { margin: 16px 0; padding: 12px 16px; background: #fff1f0; border: 1px solid #ffccc7; border-radius: 12px; color: #cf1322; font-size: 13px; line-height: 1.5; }
+    .section-label { display: block; font-size: 13px; font-weight: 700; color: var(--color-ink, #000); margin-bottom: 8px; }
+    .quick { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+    .chip { font-size: 13px; padding: 8px 12px; min-height: 36px; border: 1px solid #d9d9d9; border-radius: 9999px; background: #fff; cursor: pointer; }
+    .chip.active { background: #cf1322; color: #fff; border-color: #cf1322; }
+    textarea { width: 100%; min-height: 80px; padding: 10px 14px; border: 1px solid #d9d9d9; border-radius: 12px; font-family: inherit; font-size: 14px; box-sizing: border-box; }
+    .err { color: #cf1322; font-size: 13px; margin-top: 4px; }
+    .acts { display: flex; gap: 8px; justify-content: flex-end; padding-top: 16px; }
+    .btn { border: 0; border-radius: 16px; padding: 12px 20px; font-weight: 700; font-size: 14px; cursor: pointer; }
+    .btn.s { background: #f0f0f0; }
+    .btn.danger { background: #cf1322; color: #fff; }
   `],
 })
 export class TerminateAccountDialogComponent {
-  readonly data = inject<TerminateDialogData>(MAT_DIALOG_DATA);
-  readonly dialogRef = inject(MatDialogRef<TerminateAccountDialogComponent, TerminateResult>);
+  @Input() shop = '';
+  @Input() owner = '';
+  @Output() confirmed = new EventEmitter<TerminateResult>();
+  @Output() cancel = new EventEmitter<void>();
 
   readonly violationTypes = [
     'Bán hàng giả / hàng nhái',
@@ -211,13 +106,9 @@ export class TerminateAccountDialogComponent {
       this.errorMessage.set('Vui lòng nhập chi tiết vi phạm tối thiểu 10 ký tự.');
       return;
     }
-    this.dialogRef.close({
+    this.confirmed.emit({
       violationType: this.selectedViolation(),
       reason: val,
     });
-  }
-
-  onKeydown(event: KeyboardEvent): void {
-    if (event.key === 'Escape') this.dialogRef.close();
   }
 }

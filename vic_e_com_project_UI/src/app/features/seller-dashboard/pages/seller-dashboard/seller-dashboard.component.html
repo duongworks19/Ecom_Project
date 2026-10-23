@@ -1,749 +1,982 @@
-<!-- Toast feedback -->
-@if (toast(); as message) {
-  <div class="toast-bar animate-fade-in" role="status">
-    <span class="toast-icon">✓</span>
-    <span>{{ message }}</span>
-  </div>
-}
+<!-- Header top bar -->
+<header class="top">
+  <a routerLink="/seller/dashboard" class="brand" aria-label="VICMART Seller Center">
+    <span class="dot">P</span>
+    <span>VIC<b>MART</b></span>
+    <span class="tagk">SELLER</span>
+  </a>
+  <span class="sp"></span>
+  <a routerLink="/seller/shop" class="pill hide-m">Xem shop như khách</a>
+  <a routerLink="/" class="pill hide-m">Trang mua sắm</a>
+  <button class="pill bell" type="button" aria-label="Thông báo, 6 chưa đọc">
+    🔔<i>{{ totalTodoCount() }}</i>
+  </button>
+  <div class="me-wrap">
+    <button
+      type="button"
+      class="me"
+      (click)="toggleUserMenu($event)"
+      [attr.aria-expanded]="userMenuOpen()"
+      [title]="'Tài khoản: ' + userAccountName() + ' · Gian hàng: ' + shopName()">
+      <span class="av">{{ userAvatarLetter() }}</span>
+      <span class="t hide-m">{{ userAccountName() }}</span>
+      <span class="caret" [class.open]="userMenuOpen()">▾</span>
+    </button>
 
-<!-- Modular Top Header -->
-<app-seller-header
-  [shopName]="data().shopName"
-  [shopAvatarLetter]="data().shopAvatarLetter"
-  [unreadCount]="unreadNotificationCount()"
-  [notifications]="notifications()"
-  (viewShopAsGuest)="onViewShopAsGuest()"
-  (selectNotification)="onNotificationSelect($event)"
-  (markAllRead)="onMarkAllRead()"
-  (openShopProfile)="selectNav($event)">
-</app-seller-header>
-
-<!-- Main Layout Wrapper (Sidebar + Main Content) -->
-<div class="wrap">
-  <!-- Modular Sidebar Navigation -->
-  <aside>
-    <app-seller-sidebar
-      [activeNav]="activeNav()"
-      [todos]="data().todos"
-      (navSelect)="selectNav($event)"
-      (addProductClick)="onAddProduct()">
-    </app-seller-sidebar>
-  </aside>
-
-  <!-- Main Content Area -->
-  <main>
-    <!-- Welcome Greeting Header -->
-    <div class="hello">
-      <div>
-        @if (data().adminApproved) {
-          <span class="ok">✓ Gian hàng đã được Admin duyệt</span>
-        }
-        <h1>{{ data().greetingTitle }}</h1>
-        <p class="sub">{{ data().currentDateText }}</p>
-      </div>
-      <div class="hello-actions">
-        @if (activeNav() !== 'overview') {
-          <button class="pill" type="button" (click)="selectNav('overview')">
-            ← Về Tổng quan
-          </button>
-        }
-        <button class="pill red" type="button" (click)="onAddProduct()">
-          + Thêm sản phẩm
+    @if (userMenuOpen()) {
+      <div class="user-dropdown" role="menu">
+        <div class="user-dropdown-header">
+          <div class="user-dropdown-name">{{ userAccountName() }}</div>
+          <div class="user-dropdown-shop">Gian hàng: <b>{{ shopName() }}</b></div>
+        </div>
+        <div class="user-dropdown-divider"></div>
+        <a class="user-dropdown-item" routerLink="/seller/shop" (click)="closeUserMenu()">
+          <span class="item-icon">🏪</span>
+          <span>Xem shop như khách</span>
+        </a>
+        <a class="user-dropdown-item" (click)="setView('shop'); closeUserMenu()">
+          <span class="item-icon">⚙️</span>
+          <span>Hồ sơ gian hàng</span>
+        </a>
+        <a class="user-dropdown-item" routerLink="/" (click)="closeUserMenu()">
+          <span class="item-icon">🛍️</span>
+          <span>Trang mua sắm</span>
+        </a>
+        <div class="user-dropdown-divider"></div>
+        <button type="button" class="user-dropdown-item danger" (click)="onLogout()">
+          <svg class="item-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
+          <span>Đăng xuất</span>
         </button>
       </div>
-    </div>
-
-    <!-- ========================================== -->
-    <!-- TAB 1: TỔNG QUAN (OVERVIEW)                -->
-    <!-- ========================================== -->
-    @if (activeNav() === 'overview') {
-      <!-- Section 1: Việc cần làm (To-Do Cards) -->
-      <section class="card" aria-label="Việc cần làm">
-        <div class="head">
-          <h2>Việc cần làm</h2>
-        </div>
-        <div class="todo">
-          <a
-            class="hot"
-            href="#orders"
-            (click)="onTodoClick('orders', 'PENDING_CONFIRMATION', $event)">
-            <strong>{{ data().todos.pendingConfirmationOrders }}</strong>
-            <span>Đơn chờ xác nhận</span>
-          </a>
-          <a
-            href="#orders"
-            (click)="onTodoClick('orders', 'PREPARING', $event)">
-            <strong>{{ data().todos.pendingPackagingOrders }}</strong>
-            <span>Chờ đóng gói</span>
-          </a>
-          <a
-            class="hot"
-            href="#refunds"
-            (click)="onTodoClick('refunds', 'REFUND', $event)">
-            <strong>{{ data().todos.refundRequests }}</strong>
-            <span>Yêu cầu hoàn tiền</span>
-          </a>
-          <a
-            href="#inventory"
-            (click)="onTodoClick('inventory', undefined, $event)">
-            <strong>{{ data().todos.lowStockAlerts }}</strong>
-            <span>Sắp hết hàng</span>
-          </a>
-          <a
-            href="#reviews"
-            (click)="onTodoClick('reviews', undefined, $event)">
-            <strong>{{ data().todos.unansweredQuestions }}</strong>
-            <span>Câu hỏi chưa trả lời</span>
-          </a>
-        </div>
-      </section>
-
-      <!-- Section 2: Banner Hoàn thiện gian hàng -->
-      <section class="start">
-        <div>
-          <h2>Hoàn thiện gian hàng để bán tốt hơn</h2>
-          <p>Đã xong {{ data().completedSteps }}/{{ data().totalSteps }} bước cơ bản</p>
-          <div class="prog" aria-hidden="true">
-            <i [style.width.%]="(data().completedSteps / data().totalSteps) * 100"></i>
-          </div>
-        </div>
-        <div class="steps">
-          <a class="d" href="#profile" (click)="onTodoClick('profile', undefined, $event)">
-            ✓ Hồ sơ shop
-          </a>
-          <a class="d" href="#profile" (click)="onTodoClick('profile', undefined, $event)">
-            ✓ Địa chỉ kho
-          </a>
-          <a
-            [class.d]="stepProductsDone()"
-            href="#add-product"
-            (click)="onAddProduct($event)">
-            {{ stepProductsDone() ? '✓ ' : '' }}Đăng 5 sản phẩm
-          </a>
-          <a
-            [class.d]="stepVoucherDone()"
-            href="#vouchers"
-            (click)="onTodoClick('vouchers', undefined, $event)">
-            {{ stepVoucherDone() ? '✓ ' : '' }}Tạo voucher đầu tiên
-          </a>
-        </div>
-      </section>
-
-      <!-- Section 3: Chỉ số kinh doanh (Key Stats) -->
-      <section class="stats" aria-label="Chỉ số hiệu quả">
-        <div class="card stat">
-          <small>Doanh thu hôm nay</small>
-          <b>{{ data().stats.todayRevenue | number:'1.0-0' }}₫</b>
-          <span class="up">▲ {{ data().stats.revenueGrowthPercent }}% so với hôm qua</span>
-        </div>
-        <div class="card stat">
-          <small>Đơn hàng</small>
-          <b>{{ data().stats.totalOrdersToday }}</b>
-          <span class="up">▲ {{ data().stats.orderGrowthCount }} đơn</span>
-        </div>
-        <div class="card stat">
-          <small>Tỷ lệ hủy</small>
-          <b>{{ data().stats.cancellationRate }}%</b>
-          <span class="dn">▲ {{ data().stats.cancellationRateDiff }} điểm</span>
-        </div>
-        <div class="card stat">
-          <small>Đánh giá trung bình</small>
-          <b>{{ data().stats.averageRating }} ★</b>
-          <span class="up">{{ data().stats.totalReviews }} lượt đánh giá</span>
-        </div>
-      </section>
-
-      <!-- Section 4: Grid (Biểu đồ doanh thu + Sắp hết hàng) -->
-      <div class="grid">
-        <app-revenue-chart
-          [chart7Days]="data().revenueChart7Days"
-          [chart30Days]="data().revenueChart30Days"
-          [selectedRange]="selectedRange()"
-          (rangeChange)="onTabChange($event)">
-        </app-revenue-chart>
-
-        <app-low-stock-panel
-          [products]="data().lowStockProducts"
-          (updateStockNavigate)="onUpdateStock()"
-          (quickRestock)="openRestockForLowStock($event)">
-        </app-low-stock-panel>
-      </div>
-
-      <!-- Section 5: Đơn hàng mới (Recent Orders Table) -->
-      <div class="mt-block">
-        <app-recent-orders-table
-          [orders]="data().recentOrders"
-          [showViewAll]="true"
-          (viewAllClick)="selectNav('orders')"
-          (orderAction)="onOrderAction($event)"
-          (viewOrderDetail)="openOrderDetail($event)">
-        </app-recent-orders-table>
-      </div>
     }
+  </div>
+</header>
 
-    <!-- ========================================== -->
-    <!-- TAB 2: TẤT CẢ ĐƠN HÀNG & HOÀN TIỀN        -->
-    <!-- ========================================== -->
-    @if (activeNav() === 'orders' || activeNav() === 'refunds') {
-      <section class="card section-panel">
-        <div class="filter-bar">
-          <button
-            type="button"
-            class="filter-chip"
-            [class.active]="orderFilter() === 'ALL'"
-            (click)="dashboardService.setOrderFilter('ALL')">
-            Tất cả ({{ data().recentOrders.length }})
-          </button>
-          <button
-            type="button"
-            class="filter-chip"
-            [class.active]="orderFilter() === 'PENDING_CONFIRMATION'"
-            (click)="dashboardService.setOrderFilter('PENDING_CONFIRMATION')">
-            Chờ xác nhận ({{ data().todos.pendingConfirmationOrders }})
-          </button>
-          <button
-            type="button"
-            class="filter-chip"
-            [class.active]="orderFilter() === 'PREPARING'"
-            (click)="dashboardService.setOrderFilter('PREPARING')">
-            Đang chuẩn bị
-          </button>
-          <button
-            type="button"
-            class="filter-chip"
-            [class.active]="orderFilter() === 'PACKED'"
-            (click)="dashboardService.setOrderFilter('PACKED')">
-            Chờ lấy hàng
-          </button>
-          <button
-            type="button"
-            class="filter-chip"
-            [class.active]="orderFilter() === 'REFUND'"
-            (click)="dashboardService.setOrderFilter('REFUND')">
-            Đổi trả / Hoàn tiền ({{ refundOrders().length }})
-          </button>
-        </div>
+<div class="shell">
+  <!-- Side navigation -->
+  <nav class="side" aria-label="Menu người bán">
+    <h6>TỔNG QUAN</h6>
+    <a (click)="setView('dash')" [class.on]="currentView() === 'dash'">
+      <span>Tổng quan</span>
+    </a>
 
-        <app-recent-orders-table
-          [title]="activeNav() === 'refunds' ? 'Danh sách yêu cầu Đổi trả / Hoàn tiền' : 'Quản lý đơn hàng'"
-          [orders]="filteredOrders()"
-          [showViewAll]="false"
-          (orderAction)="onOrderAction($event)"
-          (viewOrderDetail)="openOrderDetail($event)">
-        </app-recent-orders-table>
-      </section>
-    }
+    <h6>ĐƠN HÀNG</h6>
+    <a (click)="setView('orders')" [class.on]="currentView() === 'orders'">
+      <span>Tất cả đơn</span>
+      @if (openOrdersCount() > 0) {
+        <em>{{ openOrdersCount() }}</em>
+      }
+    </a>
+    <a (click)="setView('returns')" [class.on]="currentView() === 'returns'">
+      <span>Đổi trả / Hoàn tiền</span>
+      @if (pendingReturnCount() > 0) {
+        <em>{{ pendingReturnCount() }}</em>
+      }
+    </a>
 
-    <!-- ========================================== -->
-    <!-- TAB 3: DANH SÁCH SẢN PHẨM & KHO HÀNG       -->
-    <!-- ========================================== -->
-    @if (activeNav() === 'products' || activeNav() === 'inventory') {
-      <section class="card section-panel">
-        <div class="head wrap-gap">
-          <div>
-            <h2>
-              {{ activeNav() === 'inventory' ? 'Quản lý Kho hàng & Tồn kho' : 'Danh sách sản phẩm của shop' }}
-            </h2>
-            <small class="muted-sub">
-              Hiển thị {{ searchedProducts().length }} sản phẩm · Nhấn "Nhập kho" để bổ sung số lượng ngay
-            </small>
-          </div>
-          <div class="toolbar">
-            <label for="seller-product-search" class="sr-only">Tìm theo tên sản phẩm, mã SKU</label>
-            <input
-              id="seller-product-search"
-              aria-label="Tìm theo tên sản phẩm, mã SKU"
-              type="search"
-              class="search-input"
-              placeholder="Tìm theo tên sản phẩm, mã SKU..."
-              [ngModel]="productSearchQuery()"
-              (ngModelChange)="productSearchQuery.set($event)" />
-            <button type="button" class="pill red" (click)="onAddProduct()">
-              + Thêm sản phẩm mới
-            </button>
-          </div>
-        </div>
+    <h6>SẢN PHẨM</h6>
+    <a (click)="setView('products')" [class.on]="currentView() === 'products'">
+      <span>Danh sách sản phẩm</span>
+    </a>
+    <a (click)="setView('pform')">
+      <span>+ Thêm sản phẩm</span>
+    </a>
+    <a (click)="setView('inv')" [class.on]="currentView() === 'inv'">
+      <span>Kho hàng</span>
+      @if (lowStockItems().length > 0) {
+        <em>{{ lowStockItems().length }}</em>
+      }
+    </a>
 
-        <div class="product-grid">
-          @for (prod of searchedProducts(); track prod.id) {
-            <article class="product-card">
-              <div class="product-img-wrap" [style.background-color]="prod.thumbnailColor">
-                <img [src]="prod.imageUrl" [alt]="prod.name" loading="lazy" />
-                <span
-                  class="stock-tag"
-                  [class.danger]="prod.stock < 5"
-                  [class.warn]="prod.stock >= 5 && prod.stock <= 10"
-                  [class.ok-tag]="prod.stock > 10">
-                  Kho: {{ prod.stock }}
-                </span>
-              </div>
-              <div class="product-body">
-                <span class="cat-label">{{ prod.category }} · SKU {{ prod.sku }}</span>
-                <h3>{{ prod.name }}</h3>
-                <p class="variant-text">Phân loại: {{ prod.variant }}</p>
-                <div class="price-row">
-                  <strong class="price">{{ prod.price | number:'1.0-0' }}₫</strong>
-                  <small>Đã bán {{ prod.soldCount }}</small>
-                </div>
-                <div class="card-actions">
-                  <button
-                    type="button"
-                    class="pill w-full"
-                    [class.red]="prod.stock <= 10"
-                    (click)="openRestockForProduct(prod)">
-                    + Nhập thêm kho
-                  </button>
-                </div>
-              </div>
-            </article>
-          }
-        </div>
-      </section>
-    }
+    <h6>MARKETING</h6>
+    <a (click)="setView('vouchers')" [class.on]="currentView() === 'vouchers'">
+      <span>Voucher của shop</span>
+    </a>
+    <a (click)="setView('camps')" [class.on]="currentView() === 'camps'">
+      <span>Chương trình giảm giá</span>
+    </a>
 
-    <!-- ========================================== -->
-    <!-- TAB 4: VOUCHER & CHƯƠNG TRÌNH GIẢM GIÁ     -->
-    <!-- ========================================== -->
-    @if (activeNav() === 'vouchers' || activeNav() === 'promotions') {
-      <section class="card section-panel">
-        <div class="head">
-          <div>
-            <h2>Voucher &amp; Chương trình khuyến mãi</h2>
-            <small class="muted-sub">Tạo mã giảm giá để tăng tỷ lệ chuyển đổi đơn hàng</small>
-          </div>
-          <button type="button" class="pill red" (click)="openCreateVoucherModal()">
-            + Tạo Voucher mới
-          </button>
-        </div>
+    <h6>CHĂM SÓC KHÁCH HÀNG</h6>
+    <a (click)="setView('reviews')" [class.on]="currentView() === 'reviews'">
+      <span>Đánh giá</span>
+      @if (unrepliedReviewCount() > 0) {
+        <em>{{ unrepliedReviewCount() }}</em>
+      }
+    </a>
+    <a (click)="setView('qa')" [class.on]="currentView() === 'qa'">
+      <span>Hỏi đáp</span>
+      @if (unrepliedQuestionCount() > 0) {
+        <em>{{ unrepliedQuestionCount() }}</em>
+      }
+    </a>
 
-        <div class="voucher-grid">
-          @for (v of vouchers(); track v.id) {
-            <div class="voucher-card" [class.off]="!v.active">
-              <div class="voucher-left">
-                <span class="v-code">{{ v.code }}</span>
-                <small>Đơn từ {{ v.minOrderAmount | number:'1.0-0' }}₫</small>
-              </div>
-              <div class="voucher-mid">
-                <strong>{{ v.discountText }}</strong>
-                <p>{{ v.title }}</p>
-                <small>Đã dùng {{ v.usedCount }}/{{ v.totalQuota }} · HSD: {{ v.expiryDate }}</small>
-              </div>
-              <div class="voucher-right">
-                <button
-                  type="button"
-                  class="pill"
-                  (click)="dashboardService.toggleVoucherStatus(v.id)">
-                  {{ v.active ? 'Tạm dừng' : 'Kích hoạt' }}
-                </button>
-              </div>
+    <h6>CÀI ĐẶT</h6>
+    <a routerLink="/account/profile">
+      <span>Hồ sơ tài khoản ({{ userAccountName() }})</span>
+    </a>
+    <a (click)="setView('profile')" [class.on]="currentView() === 'profile'">
+      <span>Hồ sơ gian hàng ({{ shopName() }})</span>
+    </a>
+  </nav>
+
+  <!-- Main content -->
+  <main>
+    <!-- NẾU GIAN HÀNG ĐÃ DUYỆT (APPROVED) -->
+    @if (shopStatus() === 'APPROVED') {
+      @switch (currentView()) {
+
+        <!-- VIEW: TỔNG QUAN (DASH) -->
+        @case ('dash') {
+          <div class="hd">
+            <div>
+              <h1>Chào {{ userAccountName() }}, hôm nay có {{ totalTodoCount() }} việc cần xử lý</h1>
+              <p class="sub">Gian hàng: <b>{{ shopName() }}</b> · Xác nhận đơn mới trước 17:00 để bàn giao cho bưu tá đúng hẹn.</p>
             </div>
-          }
-        </div>
-
-        <div class="head" style="margin-top: 24px">
-          <h2>Chiến dịch Flash Sale &amp; Combo</h2>
-        </div>
-        <div class="promo-list">
-          @for (promo of promotions(); track promo.id) {
-            <div class="promo-item">
-              <div>
-                <strong>{{ promo.name }}</strong>
-                <p>{{ promo.timeRange }} · {{ promo.productCount }} sản phẩm tham gia</p>
-              </div>
-              <div class="promo-meta">
-                <span class="b o">Giảm {{ promo.discountPercent }}%</span>
-                <span class="b" [class.o]="promo.status === 'RUNNING'" [class.w]="promo.status === 'UPCOMING'">
-                  {{ promo.status === 'RUNNING' ? 'Đang diễn ra' : 'Sắp diễn ra' }}
-                </span>
-              </div>
-            </div>
-          }
-        </div>
-      </section>
-    }
-
-    <!-- ========================================== -->
-    <!-- TAB 5: ĐÁNH GIÁ & HỎI ĐÁP KHÁCH HÀNG       -->
-    <!-- ========================================== -->
-    @if (activeNav() === 'reviews') {
-      <section class="card section-panel">
-        <div class="head">
-          <div>
-            <h2>Đánh giá &amp; Hỏi đáp khách hàng</h2>
-            <small class="muted-sub">Phản hồi nhanh giúp tăng uy tín gian hàng Lumi Home Decor</small>
           </div>
-        </div>
 
-        <div class="review-list">
-          @for (rv of reviews(); track rv.id) {
-            <div class="review-card">
-              <img [src]="rv.productImage" [alt]="rv.productName" class="rv-thumb" />
-              <div class="rv-content">
-                <div class="rv-top">
-                  <strong>{{ rv.customerName }}</strong>
-                  <span class="stars">{{ '★'.repeat(rv.rating) }}</span>
-                  <small>{{ rv.createdAt }} · {{ rv.productName }}</small>
-                </div>
-                <p class="rv-question">{{ rv.comment }}</p>
+          <!-- Việc cần làm -->
+          <div class="box">
+            <h2>Việc cần làm</h2>
+            <div class="tiles">
+              <button class="tile" [class.active]="filterOrder() === 'PENDING'" (click)="filterOrder.set('PENDING'); setView('orders')">
+                <b>{{ pendingOrderCount() }}</b>
+                <span>Đơn chờ xác nhận</span>
+              </button>
+              <button class="tile" [class.active]="filterOrder() === 'PREPARING'" (click)="filterOrder.set('PREPARING'); setView('orders')">
+                <b>{{ preparingOrderCount() }}</b>
+                <span>Chờ đóng gói</span>
+              </button>
+              <button class="tile" (click)="setView('returns')">
+                <b>{{ pendingReturnCount() }}</b>
+                <span>Yêu cầu đổi trả</span>
+              </button>
+              <button class="tile" (click)="setView('inv')">
+                <b>{{ lowStockItems().length }}</b>
+                <span>Sắp hết hàng</span>
+              </button>
+              <button class="tile" (click)="setView('qa')">
+                <b>{{ unrepliedQuestionCount() }}</b>
+                <span>Câu hỏi chưa trả lời</span>
+              </button>
+            </div>
+          </div>
 
-                @if (rv.reply) {
-                  <div class="rv-reply-box">
-                    <strong>Phản hồi của Lumi Home Decor:</strong>
-                    <p>{{ rv.reply }}</p>
-                  </div>
-                } @else {
-                  <div class="rv-reply-form">
-                    <label for="reply-input" class="sr-only">Nhập câu trả lời cho khách hàng</label>
-                    <input
-                      id="reply-input"
-                      [attr.id]="'reply-input-' + rv.id"
-                      aria-label="Nhập câu trả lời cho khách hàng"
-                      type="text"
-                      class="search-input"
-                      placeholder="Nhập câu trả lời cho khách hàng..."
-                      [(ngModel)]="replyDrafts[rv.id]" />
-                    <button type="button" class="pill red" (click)="submitReply(rv.id)">
-                      Gửi phản hồi
+          <div class="cols">
+            <!-- Cột trái -->
+            <div>
+              <div class="box">
+                <h2>
+                  <span>Đơn hàng cần xử lý</span>
+                  <span class="quick">
+                    <button class="chip" [class.active]="filterOrder() === 'ALL'" (click)="filterOrder.set('ALL')">
+                      Tất cả ({{ openOrdersCount() }})
                     </button>
+                  </span>
+                </h2>
+
+                @if (filteredOrders().length > 0) {
+                  @for (o of filteredOrders(); track o.c) {
+                    <div class="row">
+                      <div class="g">
+                        <b>{{ o.c }}</b>
+                        <span class="m">{{ o.n }} · {{ o.k }} sản phẩm · {{ o.h }}</span>
+                      </div>
+                      <b>{{ formatVnd(o.t) }}</b>
+                      <span class="tag" [class.warn]="o.s === 'PENDING'" [class.info]="o.s === 'READY_TO_SHIP'">
+                        {{ o.s === 'PENDING' ? 'Chờ xác nhận' : (o.s === 'PREPARING' ? 'Đang chuẩn bị' : (o.s === 'PACKED' ? 'Đã đóng gói' : 'Sẵn sàng giao')) }}
+                      </span>
+
+                      @if (o.s === 'PENDING') {
+                        <button class="btn p sm" (click)="confirmOrder(o.c)">Xác nhận</button>
+                        <button class="btn sm" (click)="openRejectOrderModal(o.c)">Từ chối</button>
+                      } @else if (o.s === 'PREPARING') {
+                        <button class="btn sm" (click)="nextOrderStatus(o.c)">Đã đóng gói</button>
+                      } @else if (o.s === 'PACKED') {
+                        <button class="btn sm" (click)="nextOrderStatus(o.c)">Sẵn sàng giao</button>
+                      }
+                    </div>
+                  }
+                } @else {
+                  <p style="color: var(--mute); margin: 0">Không còn đơn nào ở mục này. Tốt lắm!</p>
+                }
+              </div>
+
+              <!-- KPIs -->
+              <div class="kpis">
+                <div class="kpi">
+                  <span>Doanh thu hôm nay</span>
+                  <b>4.280.000đ</b>
+                  <small>+12% so với hôm qua · đơn đã giao</small>
+                </div>
+                <div class="kpi">
+                  <span>Đơn hàng hôm nay</span>
+                  <b>{{ orders().length + 2 }}</b>
+                  <small>{{ pendingOrderCount() }} chờ xác nhận</small>
+                </div>
+                <div class="kpi">
+                  <span>Tỷ lệ hủy</span>
+                  <b>3,2%</b>
+                  <small>30 ngày gần nhất</small>
+                </div>
+                <div class="kpi">
+                  <span>Đánh giá trung bình</span>
+                  <b>4,8 ★</b>
+                  <small>126 đánh giá</small>
+                </div>
+              </div>
+
+              <!-- Biểu đồ -->
+              <div class="box">
+                <h2>Doanh thu 7 ngày <span style="font-size: 13px; font-weight: 500; color: var(--mute)">triệu đồng, đơn DELIVERED</span></h2>
+                <div class="chart" role="img" aria-label="Doanh thu 7 ngày gần nhất">
+                  @for (v of revChart; track $index) {
+                    <div>
+                      <span>{{ v }}</span>
+                      <i [style.height.%]="(v / 5) * 80"></i>
+                      <span>{{ revDays[$index] }}</span>
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+
+            <!-- Cột phải -->
+            <div>
+              <div class="box">
+                <h2>Hoàn thiện gian hàng <span class="tag">2/4</span></h2>
+                <div class="bar"><i style="width: 50%"></i></div>
+                <div class="ck d"><s>✓</s>Hồ sơ shop</div>
+                <div class="ck d"><s>✓</s>Địa chỉ kho lấy hàng</div>
+                <div class="ck"><s></s>Đăng 5 sản phẩm (đã có {{ products().length }})</div>
+                <div class="ck"><s></s>Tạo voucher đầu tiên</div>
+              </div>
+
+              <!-- Sắp hết hàng -->
+              <div class="box">
+                <h2>Sắp hết hàng <span class="tag warn">{{ lowStockItems().length }}</span></h2>
+                @for (s of lowStockItems(); track s.sku) {
+                  <div class="row">
+                    <div class="g">
+                      <b>{{ s.n }}</b>
+                      <span class="m">Ngưỡng cảnh báo: {{ s.l }}</span>
+                    </div>
+                    <span class="tag warn">Còn {{ s.q }}</span>
+                    <button class="btn sm" (click)="setView('inv')">Nhập kho</button>
                   </div>
                 }
               </div>
+
+              <!-- Cần phản hồi -->
+              <div class="box">
+                <h2>Cần phản hồi <span class="tag">{{ unrepliedQuestionCount() + pendingReturnCount() }}</span></h2>
+                @for (q of questions(); track q.id) {
+                  @if (!q.a) {
+                    <div class="row">
+                      <div class="g">
+                        <span class="m">Hỏi đáp</span>
+                        <b>{{ q.x }}</b>
+                      </div>
+                      <button class="btn sm" (click)="setView('qa')">Trả lời</button>
+                    </div>
+                  }
+                }
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- VIEW: SẢN PHẨM (PRODUCTS) - ĐẦY ĐỦ THÊM / SỬA / XÓA / ẨN HIỆN -->
+        @case ('products') {
+          <div class="hd">
+            <div>
+              <h1 style="font-size: 28px">Quản lý sản phẩm</h1>
+              <p class="sub">{{ filteredProducts().length }} sản phẩm trong gian hàng của bạn.</p>
+            </div>
+            <div class="quick" style="margin-bottom: 24px">
+              <button class="btn p" (click)="openCreateProductModal()">+ Thêm sản phẩm</button>
+            </div>
+          </div>
+
+          <!-- Tabs lọc và tìm kiếm -->
+          <div class="quick" style="margin-bottom: 16px; align-items: center">
+            <button class="chip" [class.active]="productFilterStatus() === 'ALL'" (click)="productFilterStatus.set('ALL')">
+              Tất cả ({{ products().length }})
+            </button>
+            <button class="chip" [class.active]="productFilterStatus() === 'VISIBLE'" (click)="productFilterStatus.set('VISIBLE')">
+              Đang bán
+            </button>
+            <button class="chip" [class.active]="productFilterStatus() === 'HIDDEN'" (click)="productFilterStatus.set('HIDDEN')">
+              Đã ẩn
+            </button>
+            <button class="chip" [class.active]="productFilterStatus() === 'DRAFT'" (click)="productFilterStatus.set('DRAFT')">
+              Nháp
+            </button>
+
+            <input
+              class="inp"
+              type="search"
+              aria-label="Tìm kiếm sản phẩm"
+              placeholder="Tìm kiếm sản phẩm, SKU…"
+              [ngModel]="searchQuery()"
+              (ngModelChange)="searchQuery.set($event)"
+              style="width: 240px; margin: 0 0 0 auto; border-radius: 9999px"
+            />
+          </div>
+
+          <!-- Danh sách sản phẩm -->
+          <div class="box">
+            @if (filteredProducts().length > 0) {
+              @for (p of filteredProducts(); track p.id) {
+                <div class="row">
+                  <div class="g">
+                    <b>{{ p.n }}</b>
+                    <span class="m">{{ p.c }} · {{ p.v.length }} biến thể · đã bán {{ p.sold }}</span>
+                  </div>
+
+                  <span class="m">
+                    {{ formatVnd(getMinPrice(p)) }}
+                    @if (getMaxPrice(p) > getMinPrice(p)) {
+                      – {{ formatVnd(getMaxPrice(p)) }}
+                    }
+                  </span>
+
+                  <span class="tag" [class.warn]="p.v && p.v.length > 0 && p.v[0].q <= p.v[0].l">
+                    Kho {{ getTotalStock(p) }}
+                  </span>
+
+                  <span class="tag" [class.ok]="p.s === 'VISIBLE'" [class.warn]="p.s === 'DRAFT'">
+                    {{ p.s === 'VISIBLE' ? 'Đang bán' : (p.s === 'HIDDEN' ? 'Đã ẩn' : 'Nháp') }}
+                  </span>
+
+                  <button class="btn sm" (click)="openEditProductModal(p)">Sửa</button>
+                  <button class="btn sm" (click)="toggleProductVisibility(p)">
+                    {{ p.s === 'VISIBLE' ? 'Ẩn' : 'Hiện' }}
+                  </button>
+                  <button class="btn sm" style="color: var(--err)" (click)="confirmDeleteProduct(p)">Xóa</button>
+                </div>
+              }
+            } @else {
+              <div style="padding: 48px 16px; text-align: center;">
+                <div style="font-size: 44px; margin-bottom: 12px;">📦</div>
+                <h3 style="font-size: 17px; font-weight: 700; margin: 0 0 6px; color: var(--ink);">Gian hàng chưa có sản phẩm nào</h3>
+                <p style="margin: 0 0 20px; color: var(--mute); font-size: 14px;">Bắt đầu đăng tải sản phẩm đầu tiên của bạn để sẵn sàng bán hàng trên VIC MART!</p>
+                <button class="btn p" (click)="openCreateProductModal()">+ Thêm sản phẩm đầu tiên</button>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- VIEW: KHO HÀNG (INV) -->
+        @case ('inv') {
+          <div class="hd">
+            <div>
+              <h1 style="font-size: 28px">Kho hàng</h1>
+              <p class="sub">Cập nhật tồn kho theo biến thể. Mọi thay đổi được ghi nhật ký tự động.</p>
+            </div>
+          </div>
+
+          <div class="quick" style="margin-bottom: 16px; align-items: center">
+            <button class="chip" [class.active]="!lowStockOnly()" (click)="lowStockOnly.set(false)">Tất cả</button>
+            <button class="chip" [class.active]="lowStockOnly()" (click)="lowStockOnly.set(true)">
+              Sắp hết hàng ({{ lowStockItems().length }})
+            </button>
+          </div>
+
+          <div class="box">
+            @for (item of inventoryList(); track item.p.id + '-' + item.idx) {
+              <div class="row">
+                <div class="g">
+                  <b>{{ item.p.n }} · {{ item.v.a }}</b>
+                  <span class="m">SKU: {{ item.v.sku }}</span>
+                </div>
+
+                @if (item.v.q <= item.v.l) {
+                  <span class="tag warn">Sắp hết</span>
+                }
+
+                <label class="m" style="display: inline-flex; align-items: center; gap: 4px;">
+                  Tồn
+                  <input #qInput class="inp" type="number" min="0" [value]="item.v.q" style="width: 80px; margin: 0;" />
+                </label>
+
+                <label class="m" style="display: inline-flex; align-items: center; gap: 4px;">
+                  Ngưỡng
+                  <input #lInput class="inp" type="number" min="0" [value]="item.v.l" style="width: 70px; margin: 0;" />
+                </label>
+
+                <button class="btn sm" (click)="saveInventoryStock(item.p.id, item.idx, qInput.value, lInput.value)">Lưu</button>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- VIEW: ĐƠN HÀNG (ORDERS) -->
+        @case ('orders') {
+          <div class="hd">
+            <div>
+              <h1 style="font-size: 28px">Đơn hàng</h1>
+              <p class="sub">Xem, xác nhận và cập nhật trạng thái đơn hàng của gian hàng.</p>
+            </div>
+            <div class="quick" style="margin-bottom: 24px">
+              <button class="chip" [class.active]="orderDaysFilter() === '0'" (click)="orderDaysFilter.set('0')">Hôm nay</button>
+              <button class="chip" [class.active]="orderDaysFilter() === '7'" (click)="orderDaysFilter.set('7')">7 ngày</button>
+              <button class="chip" [class.active]="orderDaysFilter() === 'ALL'" (click)="orderDaysFilter.set('ALL')">Mọi lúc</button>
+            </div>
+          </div>
+
+          <div class="quick" style="margin-bottom: 16px; align-items: center">
+            <button class="chip" [class.active]="filterOrder() === 'ALL'" (click)="filterOrder.set('ALL')">Tất cả</button>
+            <button class="chip" [class.active]="filterOrder() === 'PENDING'" (click)="filterOrder.set('PENDING')">Chờ xác nhận ({{ pendingOrderCount() }})</button>
+            <button class="chip" [class.active]="filterOrder() === 'PREPARING'" (click)="filterOrder.set('PREPARING')">Chờ đóng gói ({{ preparingOrderCount() }})</button>
+            <button class="chip" [class.active]="filterOrder() === 'PACKED'" (click)="filterOrder.set('PACKED')">Đã đóng gói</button>
+            <button class="chip" [class.active]="filterOrder() === 'READY_TO_SHIP'" (click)="filterOrder.set('READY_TO_SHIP')">Sẵn sàng giao</button>
+            <button class="chip" [class.active]="filterOrder() === 'DELIVERED'" (click)="filterOrder.set('DELIVERED')">Đã giao</button>
+
+            <input
+              class="inp"
+              type="search"
+              placeholder="Tìm mã đơn, tên khách…"
+              [ngModel]="searchQuery()"
+              (ngModelChange)="searchQuery.set($event)"
+              style="width: 220px; margin: 0 0 0 auto; border-radius: 9999px"
+            />
+          </div>
+
+          <div class="box">
+            @if (filteredOrders().length > 0) {
+              @for (o of filteredOrders(); track o.c) {
+                <div class="row">
+                  <div class="g">
+                    <b>{{ o.c }}</b>
+                    <span class="m">{{ o.n }} · {{ o.k }} sản phẩm · {{ o.h }}</span>
+                  </div>
+                  <b>{{ formatVnd(o.t) }}</b>
+                  <span class="tag" [class.warn]="o.s === 'PENDING'" [class.ok]="o.s === 'DELIVERED'">
+                    {{ o.s === 'PENDING' ? 'Chờ xác nhận' : (o.s === 'PREPARING' ? 'Đang chuẩn bị' : (o.s === 'PACKED' ? 'Đã đóng gói' : (o.s === 'READY_TO_SHIP' ? 'Sẵn sàng giao' : 'Đã giao'))) }}
+                  </span>
+
+                  @if (o.s === 'PENDING') {
+                    <button class="btn sm" style="background: var(--on); color: var(--on-t);" (click)="confirmOrder(o.c)">Xác nhận</button>
+                    <button class="btn sm" (click)="openRejectOrderModal(o.c)">Từ chối</button>
+                  } @else if (o.s === 'PREPARING') {
+                    <button class="btn sm" (click)="nextOrderStatus(o.c)">Đã đóng gói</button>
+                  } @else if (o.s === 'PACKED') {
+                    <button class="btn sm" (click)="nextOrderStatus(o.c)">Sẵn sàng giao</button>
+                  }
+
+                  <button class="btn sm" (click)="openOrderDetail(o)">Chi tiết</button>
+                </div>
+              }
+            } @else {
+              <p style="margin: 0; color: var(--mute)">Không có đơn nào khớp với bộ lọc.</p>
+            }
+          </div>
+        }
+
+        <!-- VIEW: ĐỔI TRẢ (RETURNS) -->
+        @case ('returns') {
+          <div class="hd">
+            <div>
+              <h1 style="font-size: 28px">Đổi trả / Hoàn tiền</h1>
+              <p class="sub">Khi chấp nhận, hệ thống hoàn tiền cho khách và tự động cộng lại tồn kho.</p>
+            </div>
+          </div>
+
+          <div class="box">
+            @for (r of returns(); track r.id) {
+              <div class="row">
+                <div class="g">
+                  <b>{{ r.o }} · {{ r.type }}</b>
+                  <span class="m">{{ r.n }} · {{ r.why }} · {{ r.img }} ảnh minh chứng</span>
+                </div>
+                <b>{{ formatVnd(r.amt) }}</b>
+                <span class="tag" [class.warn]="r.st === 'PENDING'" [class.ok]="r.st === 'APPROVED'" [class.no]="r.st === 'REJECTED'">
+                  {{ r.st === 'PENDING' ? 'Chờ xử lý' : (r.st === 'APPROVED' ? 'Đã chấp nhận' : 'Đã từ chối') }}
+                </span>
+
+                @if (r.st === 'PENDING') {
+                  <button class="btn sm" style="background: var(--on); color: var(--on-t);" (click)="approveReturn(r.id)">Chấp nhận</button>
+                  <button class="btn sm" (click)="rejectReturn(r.id)">Từ chối</button>
+                }
+              </div>
+            }
+          </div>
+        }
+
+        <!-- VIEW: VOUCHERS -->
+        @case ('vouchers') {
+          <div class="hd">
+            <div>
+              <h1 style="font-size: 28px">Voucher của shop</h1>
+              <p class="sub">Tạo và quản lý mã giảm giá kích cầu mua sắm riêng cho gian hàng.</p>
+            </div>
+            <div class="quick" style="margin-bottom: 24px">
+              <button class="btn p" (click)="openCreateVoucherModal()">+ Tạo voucher</button>
+            </div>
+          </div>
+
+          <div class="box">
+            @for (v of vouchers(); track v.code) {
+              <div class="row">
+                <div class="g">
+                  <span class="mono">{{ v.code }}</span>
+                  <span class="m">
+                    {{ v.t === 'PERCENT' ? 'Giảm ' + v.val + '%' : 'Giảm ' + formatVnd(v.val) }} · Đơn từ {{ formatVnd(v.min) }} · Đã dùng {{ v.used }}/{{ v.lim }}
+                  </span>
+                </div>
+                <span class="tag" [class.ok]="v.st === 'ACTIVE'" [class.warn]="v.st === 'PAUSED'">
+                  {{ v.st === 'ACTIVE' ? 'Đang chạy' : (v.st === 'PAUSED' ? 'Tạm dừng' : 'Hết hạn') }}
+                </span>
+
+                @if (v.st !== 'EXPIRED') {
+                  <button class="btn sm" (click)="toggleVoucher(v.code)">
+                    {{ v.st === 'ACTIVE' ? 'Tạm dừng' : 'Tiếp tục' }}
+                  </button>
+                }
+                <button class="btn sm" (click)="deleteVoucher(v.code)">Xóa</button>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- VIEW: GIẢM GIÁ / FLASH SALE (CAMPS) -->
+        @case ('camps') {
+          <div class="hd">
+            <div>
+              <h1 style="font-size: 28px">Chương trình giảm giá</h1>
+              <p class="sub">Flash sale, combo và mua kèm theo khung thời gian.</p>
+            </div>
+          </div>
+
+          <div class="box">
+            @for (c of campaigns(); track c.id) {
+              <div class="row">
+                <div class="g">
+                  <b>{{ c.n }}</b>
+                  <span class="m">{{ c.t }} · {{ c.from }} đến {{ c.to }} · {{ c.k }} biến thể · Giảm {{ c.val }}{{ c.dt }}</span>
+                </div>
+                <span class="tag" [class.ok]="c.st === 'ACTIVE'" [class.warn]="c.st === 'PAUSED'">
+                  {{ c.st === 'ACTIVE' ? 'Đang chạy' : (c.st === 'PAUSED' ? 'Tạm dừng' : 'Đã kết thúc') }}
+                </span>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- VIEW: ĐÁNH GIÁ (REVIEWS) -->
+        @case ('reviews') {
+          <div class="hd">
+            <div>
+              <h1 style="font-size: 28px">Đánh giá của khách hàng</h1>
+              <p class="sub">Phản hồi khách mua để tăng điểm uy tín và tỷ lệ quay lại của gian hàng.</p>
+            </div>
+          </div>
+
+          <div class="box">
+            @for (r of reviews(); track r.id) {
+              <div class="row">
+                <div class="g">
+                  <span class="m">{{ r.p }} · {{ r.who }}</span>
+                  <b>★ {{ r.st }} sao</b> — {{ r.x }}
+                  @if (r.re) {
+                    <span class="m" style="color: var(--ok); margin-top: 4px;">Phản hồi từ shop: {{ r.re }}</span>
+                  }
+                </div>
+                @if (r.re) {
+                  <span class="tag ok">Đã phản hồi</span>
+                } @else {
+                  <button class="btn sm" (click)="r.re = 'Cảm ơn bạn đã tin tưởng và ủng hộ gian hàng của Lumi!'">Phản hồi</button>
+                }
+              </div>
+            }
+          </div>
+        }
+
+        <!-- VIEW: HỎI ĐÁP (QA) -->
+        @case ('qa') {
+          <div class="hd">
+            <div>
+              <h1 style="font-size: 28px">Hỏi đáp sản phẩm</h1>
+              <p class="sub">Tư vấn nhanh chóng để khách hàng tự tin đặt đơn ngay.</p>
+            </div>
+          </div>
+
+          <div class="box">
+            @for (q of questions(); track q.id) {
+              <div class="row">
+                <div class="g">
+                  <span class="m">{{ q.p }} · {{ q.who }}</span>
+                  <b>{{ q.x }}</b>
+                  @if (q.a) {
+                    <span class="m" style="color: var(--ok); margin-top: 4px;">Trả lời: {{ q.a }}</span>
+                  }
+                </div>
+                @if (q.a) {
+                  <span class="tag ok">Đã trả lời</span>
+                } @else {
+                  <button class="btn sm" (click)="q.a = 'Chào bạn, sản phẩm hiện đang sẵn kho và được bảo hành chính hãng 12 tháng ạ.'">Trả lời</button>
+                }
+              </div>
+            }
+          </div>
+        }
+
+        <!-- VIEW: HỒ SƠ SHOP (PROFILE) -->
+        @case ('profile') {
+          <div class="hd">
+            <div>
+              <h1 style="font-size: 28px">Hồ sơ gian hàng ({{ shopName() }})</h1>
+              <p class="sub">Tài khoản chủ sở hữu: <b>{{ userAccountName() }}</b> · Thông tin hiển thị công khai trên sàn thương mại điện tử.</p>
+            </div>
+          </div>
+
+          <div class="box" style="max-width: 720px;">
+            <div class="g2">
+              <label style="display: block; margin-top: 12px; font-size: 13px; font-weight: 600;">
+                Tên gian hàng *
+                <input class="inp" type="text" [(ngModel)]="shopProfile().n" />
+              </label>
+
+              <label style="display: block; margin-top: 12px; font-size: 13px; font-weight: 600;">
+                Số điện thoại liên hệ *
+                <input class="inp" type="tel" [(ngModel)]="shopProfile().ph" />
+              </label>
+
+              <label style="display: block; margin-top: 12px; font-size: 13px; font-weight: 600;">
+                Email
+                <input class="inp" type="email" [(ngModel)]="shopProfile().em" />
+              </label>
+
+              <label style="display: block; margin-top: 12px; font-size: 13px; font-weight: 600;">
+                Giờ hoạt động
+                <input class="inp" type="text" [(ngModel)]="shopProfile().hr" />
+              </label>
+            </div>
+
+            <label style="display: block; margin-top: 12px; font-size: 13px; font-weight: 600;">
+              Giới thiệu shop
+              <textarea [(ngModel)]="shopProfile().d"></textarea>
+            </label>
+
+            <label style="display: block; margin-top: 12px; font-size: 13px; font-weight: 600;">
+              Địa chỉ kho lấy hàng *
+              <input class="inp" type="text" [(ngModel)]="shopProfile().ad" />
+            </label>
+
+            <div style="margin-top: 18px;">
+              <button class="btn p" (click)="saveProfile()">Lưu thay đổi</button>
+            </div>
+          </div>
+        }
+
+      }
+    } @else {
+      <!-- NẾU GIAN HÀNG CHƯA ĐƯỢC DUYỆT (STATE VIEW) -->
+      @if (shopStatus() === 'PENDING' || shopStatus() === 'RESUBMITTED') {
+        <section class="state">
+          <span class="tag info">{{ shopStatus() === 'RESUBMITTED' ? 'Đã gửi bổ sung' : 'Chờ duyệt' }}</span>
+          <h1>{{ shopStatus() === 'RESUBMITTED' ? 'Đã nhận bổ sung của bạn' : 'Hồ sơ đang chờ Admin duyệt' }}</h1>
+          <p class="sub">
+            {{ shopStatus() === 'RESUBMITTED' ? 'Admin chỉ cần kiểm tra lại các mục bạn vừa nộp, những mục đã đạt được giữ nguyên.' : 'Thường mất 1–2 ngày làm việc. Chúng tôi sẽ thông báo ngay khi có kết quả.' }}
+          </p>
+          <div class="steps">
+            <span class="d">✓ Đã gửi hồ sơ</span>
+            <span class="c">Admin xem xét</span>
+            <span>Bắt đầu bán</span>
+          </div>
+        </section>
+      } @else if (shopStatus() === 'NEED_INFO') {
+        <section class="state">
+          <span class="tag warn">Cần bổ sung</span>
+          <h1>Admin cần thêm giấy tờ từ bạn</h1>
+          <p class="sub">Hạn bổ sung: 28/10/2026. Bạn chỉ cần nộp các mục dưới đây, không phải đăng ký lại.</p>
+          <div class="note warn"><b>Lời nhắn từ Admin:</b> Thiếu CCCD mặt sau, vui lòng bổ sung kèm giấy phép kinh doanh.</div>
+
+          <div class="steps">
+            <span class="d">✓ Đã gửi hồ sơ</span>
+            <span class="c">Admin xem xét</span>
+            <span>Bắt đầu bán</span>
+          </div>
+
+          @for (r of requiredDocs; track r) {
+            <div class="row">
+              <div class="g">
+                <b>{{ r }}</b>
+                <span class="m">{{ uploadedFiles()[r] ? '✓ ' + uploadedFiles()[r] : 'Chưa có tệp · JPG, PNG hoặc PDF, tối đa 5MB' }}</span>
+              </div>
+              <label class="btn sm">
+                {{ uploadedFiles()[r] ? 'Đổi tệp' : 'Chọn tệp' }}
+                <input type="file" hidden (change)="onFileSelect($event, r)" accept=".jpg,.jpeg,.png,.pdf" />
+              </label>
             </div>
           }
-        </div>
-      </section>
-    }
 
-    <!-- ========================================== -->
-    <!-- TAB 6: HỒ SƠ GIAN HÀNG                     -->
-    <!-- ========================================== -->
-    @if (activeNav() === 'profile') {
-      <section class="card section-panel">
-        <div class="head">
-          <h2>Hồ sơ gian hàng &amp; Địa chỉ kho</h2>
-        </div>
-        <form class="profile-form" (ngSubmit)="saveProfile()">
-          <div class="form-grid">
-            <label>
-              <span>Tên gian hàng</span>
-              <input type="text" [(ngModel)]="profileForm.shopName" name="shopName" required />
-            </label>
-            <label>
-              <span>Slogan / Định vị</span>
-              <input type="text" [(ngModel)]="profileForm.tagline" name="tagline" />
-            </label>
-            <label>
-              <span>Số điện thoại hotline</span>
-              <input type="text" [(ngModel)]="profileForm.phone" name="phone" />
-            </label>
-            <label>
-              <span>Email liên hệ</span>
-              <input type="email" [(ngModel)]="profileForm.email" name="email" />
-            </label>
-            <label class="full-col">
-              <span>Địa chỉ kho lấy hàng</span>
-              <input
-                type="text"
-                [(ngModel)]="profileForm.pickupAddress"
-                name="pickupAddress" />
-            </label>
-            <label class="full-col">
-              <span>Giới thiệu gian hàng</span>
-              <textarea
-                rows="3"
-                [(ngModel)]="profileForm.description"
-                name="description"></textarea>
-            </label>
+          <div style="margin-top: 14px">
+            <button class="btn p" type="button" (click)="submitAdditionalDocs()">Gửi bổ sung</button>
           </div>
-          <div class="form-actions">
-            <button type="submit" class="pill red">Lưu thay đổi hồ sơ</button>
-          </div>
-        </form>
-      </section>
+        </section>
+      } @else if (shopStatus() === 'REJECTED') {
+        <section class="state">
+          <span class="tag no">Bị từ chối</span>
+          <h1>Hồ sơ chưa được duyệt</h1>
+          <div class="note no"><b>Lý do:</b> Thông tin chủ shop không khớp với giấy tờ KYC.</div>
+          <p class="sub">Bạn có thể chỉnh sửa thông tin rồi gửi lại hồ sơ.</p>
+          <button class="btn p" type="button" routerLink="/seller/register">Chỉnh sửa và đăng ký lại</button>
+        </section>
+      } @else if (shopStatus() === 'LOCKED') {
+        <section class="state">
+          <span class="tag no">Bị khóa</span>
+          <h1>Gian hàng tạm thời bị khóa</h1>
+          <div class="note no"><b>Lý do:</b> Phát hiện đăng bán sản phẩm vi phạm chính sách cấm (bán hàng giả, hàng nhái).</div>
+          <p class="sub">Đơn đang xử lý vẫn cần hoàn tất. Liên hệ hỗ trợ để được xem xét mở khóa.</p>
+          <button class="btn" type="button" (click)="showToast('Mở cổng khiếu nại & hỗ trợ gian hàng')">Liên hệ hỗ trợ</button>
+        </section>
+      }
     }
   </main>
 </div>
 
-<!-- ========================================================= -->
-<!-- MODAL 1: THÊM SẢN PHẨM MỚI (CÓ CHỌN ẢNH SẢN PHẨM)        -->
-<!-- ========================================================= -->
-@if (showAddProductModal()) {
-  <div
-    class="modal-backdrop"
-    tabindex="0"
-    (click)="showAddProductModal.set(false)"
-    (keydown.escape)="showAddProductModal.set(false)">
-    <div
-      class="modal-box"
-      tabindex="0"
-      (click)="$event.stopPropagation()"
-      (keydown)="$event.stopPropagation()">
-      <div class="modal-head">
-        <h3>Đăng sản phẩm mới</h3>
-        <button type="button" class="close-btn" (click)="showAddProductModal.set(false)">✕</button>
-      </div>
+<!-- MODAL TỪ CHỐI ĐƠN HÀNG -->
+<div class="scrim" [class.on]="rejectModalOpen()" role="dialog" aria-modal="true">
+  <div class="modal">
+    <h2>Từ chối đơn hàng</h2>
+    <p style="margin: 0; font-size: 13px; color: var(--mute)">Đơn {{ rejectTargetCode() }}</p>
 
-      <div class="modal-body">
-        <div class="block-label">Chọn ảnh sản phẩm phù hợp (hoặc dán URL):</div>
-        <div class="preset-picker">
-          @for (preset of presetImages; track preset.url) {
-            <button
-              type="button"
-              class="preset-item"
-              [class.selected]="newProductForm.imageUrl === preset.url"
-              (click)="selectPresetImage(preset)">
-              <img [src]="preset.url" [alt]="preset.label" />
-              <small>{{ preset.label }}</small>
-            </button>
-          }
-        </div>
+    <textarea
+      placeholder="Nêu lý do để khách hàng biết…"
+      maxlength="300"
+      [ngModel]="rejectReason()"
+      (ngModelChange)="rejectReason.set($event)"
+    ></textarea>
 
-        <div class="form-grid">
-          <label class="full-col">
-            <span>Tên sản phẩm</span>
-            <input
-              type="text"
-              placeholder="VD: Đèn ngủ gốm Cloud Bắc Âu"
-              [(ngModel)]="newProductForm.name" />
-          </label>
-          <label>
-            <span>Phân loại / Màu sắc</span>
-            <input type="text" [(ngModel)]="newProductForm.variant" />
-          </label>
-          <label>
-            <span>Mã SKU</span>
-            <input type="text" [(ngModel)]="newProductForm.sku" />
-          </label>
-          <label>
-            <span>Giá bán (VNĐ)</span>
-            <input type="number" [(ngModel)]="newProductForm.price" />
-          </label>
-          <label>
-            <span>Tồn kho ban đầu</span>
-            <input type="number" [(ngModel)]="newProductForm.stock" />
-          </label>
-          <label class="full-col">
-            <span>URL hình ảnh sản phẩm</span>
-            <input type="url" [(ngModel)]="newProductForm.imageUrl" />
-          </label>
-        </div>
-      </div>
+    @if (rejectError()) {
+      <div class="err" role="alert">{{ rejectError() }}</div>
+    }
 
-      <div class="modal-foot">
-        <button type="button" class="pill" (click)="showAddProductModal.set(false)">Hủy</button>
-        <button type="button" class="pill red" (click)="submitNewProduct()">
-          Đăng sản phẩm ngay
-        </button>
-      </div>
+    <div class="quick" style="margin-top: 8px;">
+      <button class="chip" (click)="rejectReason.set('Hết hàng.')">Hết hàng</button>
+      <button class="chip" (click)="rejectReason.set('Sản phẩm ngừng kinh doanh.')">Sản phẩm ngừng bán</button>
+      <button class="chip" (click)="rejectReason.set('Không giao được tới khu vực này.')">Khu vực ngoài tuyến</button>
+    </div>
+
+    <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px;">
+      <button class="btn" type="button" (click)="closeRejectModal()">Hủy</button>
+      <button class="btn p" type="button" (click)="submitRejectOrder()">Từ chối đơn</button>
     </div>
   </div>
-}
+</div>
 
-<!-- ========================================================= -->
-<!-- MODAL 2: CẬP NHẬT KHO NHANH (RESTOCK)                     -->
-<!-- ========================================================= -->
-@if (selectedProductForRestock(); as restockProd) {
-  <div
-    class="modal-backdrop"
-    tabindex="0"
-    (click)="selectedProductForRestock.set(null)"
-    (keydown.escape)="selectedProductForRestock.set(null)">
-    <div
-      class="modal-box small"
-      tabindex="0"
-      (click)="$event.stopPropagation()"
-      (keydown)="$event.stopPropagation()">
-      <div class="modal-head">
-        <h3>Nhập thêm hàng vào kho</h3>
-        <button type="button" class="close-btn" (click)="selectedProductForRestock.set(null)">✕</button>
-      </div>
-      <div class="modal-body">
-        <div class="restock-preview">
-          <img [src]="restockProd.imageUrl" [alt]="restockProd.name" />
-          <div>
-            <strong>{{ restockProd.name }}</strong>
-            <p>{{ restockProd.variant }} · SKU {{ restockProd.sku }}</p>
-            <span class="b r">Tồn hiện tại: {{ restockProd.currentStock }}</span>
-          </div>
-        </div>
-        <label class="full-col" style="margin-top: 14px; display: block">
-          <span>Số lượng nhập thêm:</span>
-          <input
-            type="number"
-            min="1"
-            class="restock-input"
-            [ngModel]="restockQuantity()"
-            (ngModelChange)="restockQuantity.set($event)" />
+<!-- GENERIC MODAL: THÊM / SỬA SẢN PHẨM, XÓA, CHI TIẾT ĐƠN,... -->
+<div class="scrim" [class.on]="genericModalOpen()" role="dialog" aria-modal="true">
+  <div class="modal">
+    <h2>{{ modalTitle() }}</h2>
+
+    <!-- FORM THÊM / SỬA SẢN PHẨM -->
+    @if (modalType() === 'pform') {
+      <label style="display: block; margin-top: 12px; font-size: 13px; font-weight: 600;">
+        Tên sản phẩm *
+        <input class="inp" type="text" [ngModel]="formProductName()" (ngModelChange)="formProductName.set($event)" placeholder="VD: Đèn ngủ gỗ sồi Bắc Âu" maxlength="150" />
+      </label>
+
+      <div class="g2">
+        <label style="display: block; margin-top: 12px; font-size: 13px; font-weight: 600;">
+          Danh mục *
+          <select class="inp" [ngModel]="formCategory()" (ngModelChange)="formCategory.set($event)">
+            @for (cat of categories; track cat) {
+              <option [value]="cat">{{ cat }}</option>
+            }
+          </select>
+        </label>
+
+        <label style="display: block; margin-top: 12px; font-size: 13px; font-weight: 600;">
+          Trạng thái
+          <select class="inp" [ngModel]="formStatus()" (ngModelChange)="formStatus.set($event)">
+            <option value="VISIBLE">Đang bán</option>
+            <option value="HIDDEN">Đã ẩn</option>
+            <option value="DRAFT">Nháp</option>
+          </select>
         </label>
       </div>
-      <div class="modal-foot">
-        <button type="button" class="pill" (click)="selectedProductForRestock.set(null)">Đóng</button>
-        <button type="button" class="pill red" (click)="confirmRestock()">
-          Xác nhận nhập kho
-        </button>
-      </div>
-    </div>
-  </div>
-}
 
-<!-- ========================================================= -->
-<!-- MODAL 3: CHI TIẾT ĐƠN HÀNG                                -->
-<!-- ========================================================= -->
-@if (selectedOrderForModal(); as ord) {
-  <div
-    class="modal-backdrop"
-    tabindex="0"
-    (click)="selectedOrderForModal.set(null)"
-    (keydown.escape)="selectedOrderForModal.set(null)">
-    <div
-      class="modal-box small"
-      tabindex="0"
-      (click)="$event.stopPropagation()"
-      (keydown)="$event.stopPropagation()">
-      <div class="modal-head">
-        <h3>Chi tiết đơn hàng {{ ord.orderCode }}</h3>
-        <button type="button" class="close-btn" (click)="selectedOrderForModal.set(null)">✕</button>
-      </div>
-      <div class="modal-body">
-        <div class="restock-preview">
-          @if (ord.productImage) {
-            <img [src]="ord.productImage" [alt]="ord.productSummary" />
-          }
-          <div>
-            <strong>{{ ord.productSummary }}</strong>
-            <p>Khách hàng: {{ ord.customerName }} · {{ ord.customerPhone || '0908 321 654' }}</p>
-            <span
-              class="b"
-              [class.w]="ord.badgeClass === 'w'"
-              [class.o]="ord.badgeClass === 'o'"
-              [class.r]="ord.badgeClass === 'r'">
-              {{ ord.statusLabel }}
-            </span>
-          </div>
-        </div>
+      <label style="display: block; margin-top: 12px; font-size: 13px; font-weight: 600;">
+        Mô tả sản phẩm
+        <textarea [ngModel]="formDescription()" (ngModelChange)="formDescription.set($event)" placeholder="Mô tả chất liệu, kích thước, công dụng..."></textarea>
+      </label>
 
-        <div class="order-info-box">
-          <div>
-            <small>Địa chỉ giao hàng:</small>
-            <p>{{ ord.shippingAddress || 'Quận 1, TP. Hồ Chí Minh' }}</p>
+      <!-- Hình ảnh sản phẩm -->
+      <div class="image-uploader-section" style="margin-top: 14px;">
+        <label style="display: block; font-size: 13px; font-weight: 700; margin-bottom: 6px; color: var(--ink);">
+          Ảnh đại diện sản phẩm
+        </label>
+
+        <!-- Preview ảnh trực quan nếu có -->
+        @if (formImageUrl()) {
+          <div class="img-preview-box">
+            <img [src]="formImageUrl()" alt="Xem trước sản phẩm" (error)="onImageError()" />
+            <button type="button" class="btn-clear-img" (click)="clearImage()" title="Gỡ ảnh">
+              ✕
+            </button>
           </div>
-          <div>
-            <small>Thời gian đặt:</small>
-            <p>{{ ord.createdAt || 'Hôm nay' }}</p>
-          </div>
-          <div>
-            <small>Tổng thanh toán:</small>
-            <strong class="price">{{ ord.totalAmount | number:'1.0-0' }}₫</strong>
-          </div>
-        </div>
-      </div>
-      <div class="modal-foot">
-        <button type="button" class="pill" (click)="selectedOrderForModal.set(null)">Đóng</button>
-        @if (ord.nextAction !== 'VIEW_DETAIL') {
-          <button
-            type="button"
-            class="pill red"
-            (click)="triggerModalOrderAction(ord, ord.nextAction)">
-            {{ ord.actionText }}
-          </button>
         }
-      </div>
-    </div>
-  </div>
-}
 
-<!-- ========================================================= -->
-<!-- MODAL 4: TẠO VOUCHER MỚI                                  -->
-<!-- ========================================================= -->
-@if (showCreateVoucherModal()) {
-  <div
-    class="modal-backdrop"
-    tabindex="0"
-    (click)="showCreateVoucherModal.set(false)"
-    (keydown.escape)="showCreateVoucherModal.set(false)">
-    <div
-      class="modal-box small"
-      tabindex="0"
-      (click)="$event.stopPropagation()"
-      (keydown)="$event.stopPropagation()">
-      <div class="modal-head">
-        <h3>Tạo mã giảm giá mới</h3>
-        <button type="button" class="close-btn" (click)="showCreateVoucherModal.set(false)">✕</button>
-      </div>
-      <div class="modal-body">
-        <div class="form-grid">
-          <label>
-            <span>Mã Voucher</span>
-            <input type="text" [(ngModel)]="newVoucherForm.code" />
-          </label>
-          <label>
-            <span>Mức giảm hiển thị</span>
-            <input type="text" [(ngModel)]="newVoucherForm.discountText" />
-          </label>
-          <label class="full-col">
-            <span>Tên chương trình</span>
-            <input type="text" [(ngModel)]="newVoucherForm.title" />
-          </label>
-          <label>
-            <span>Đơn tối thiểu (VNĐ)</span>
-            <input type="number" [(ngModel)]="newVoucherForm.minOrderAmount" />
-          </label>
-          <label>
-            <span>Tổng lượt sử dụng</span>
-            <input type="number" [(ngModel)]="newVoucherForm.totalQuota" />
-          </label>
-        </div>
-      </div>
-      <div class="modal-foot">
-        <button type="button" class="pill" (click)="showCreateVoucherModal.set(false)">Hủy</button>
-        <button type="button" class="pill red" (click)="submitCreateVoucher()">
-          Lưu &amp; Kích hoạt
-        </button>
-      </div>
-    </div>
-  </div>
-}
-
-<!-- ========================================================= -->
-<!-- MODAL 5: XEM SHOP NHƯ KHÁCH (GUEST STOREFRONT PREVIEW)    -->
-<!-- ========================================================= -->
-@if (showShopPreviewModal()) {
-  <div
-    class="modal-backdrop"
-    tabindex="0"
-    (click)="showShopPreviewModal.set(false)"
-    (keydown.escape)="showShopPreviewModal.set(false)">
-    <div
-      class="modal-box large"
-      tabindex="0"
-      (click)="$event.stopPropagation()"
-      (keydown)="$event.stopPropagation()">
-      <div class="modal-head">
-        <h3>Giao diện khách hàng — {{ data().shopName }}</h3>
-        <button type="button" class="close-btn" (click)="showShopPreviewModal.set(false)">✕</button>
-      </div>
-      <div class="modal-body">
-        <div class="guest-banner">
-          <div class="guest-av">{{ data().shopAvatarLetter }}</div>
-          <div>
-            <h4>{{ data().shopName }}</h4>
-            <p>{{ dashboardService.shopProfile().tagline }} · ★ {{ data().stats.averageRating }} ({{ data().stats.totalReviews }} đánh giá)</p>
-          </div>
-        </div>
-        <div class="product-grid compact">
-          @for (prod of products(); track prod.id) {
-            <div class="product-card">
-              <div class="product-img-wrap">
-                <img [src]="prod.imageUrl" [alt]="prod.name" />
-              </div>
-              <div class="product-body">
-                <h3>{{ prod.name }}</h3>
-                <strong class="price">{{ prod.price | number:'1.0-0' }}₫</strong>
-              </div>
-            </div>
+        <!-- Nhập link ảnh URL -->
+        <div style="display: flex; gap: 8px; align-items: center; margin-top: 8px;">
+          <input
+            class="inp"
+            type="text"
+            style="flex: 1;"
+            [ngModel]="formImageUrl()"
+            (ngModelChange)="formImageUrl.set($event)"
+            placeholder="Dán link ảnh tại đây (https://...)"
+          />
+          @if (formImageUrl()) {
+            <button type="button" class="btn sm" (click)="clearImage()">Gỡ ảnh</button>
           }
         </div>
+
+        <!-- Tải ảnh trực tiếp từ máy -->
+        <div style="margin-top: 10px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+          <label class="btn sm upload-btn" style="cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+            <span>📁</span> Chọn ảnh từ máy tính
+            <input type="file" accept="image/*" (change)="onImageFileSelected($event)" style="display: none;" />
+          </label>
+          <span style="font-size: 12px; color: var(--mute);">Hỗ trợ link online hoặc tải file từ máy</span>
+        </div>
+
+        <!-- Ảnh gợi ý sẵn -->
+        <div style="margin-top: 12px;">
+          <span style="font-size: 12px; color: var(--mute); display: block; margin-bottom: 6px;">Hoặc chọn ảnh mẫu nhanh:</span>
+          <div class="quick-img-row">
+            @for (preset of sampleImages; track preset.label) {
+              <button
+                type="button"
+                class="img-preset-chip"
+                [class.selected]="formImageUrl() === preset.url"
+                (click)="selectPresetImage(preset.url)"
+                [title]="preset.label"
+              >
+                <img [src]="preset.url" [alt]="preset.label" />
+                <span>{{ preset.label }}</span>
+              </button>
+            }
+          </div>
+        </div>
       </div>
-    </div>
+
+      <!-- Biến thể sản phẩm -->
+      <h3 style="margin: 16px 0 6px; font-size: 15px;">Biến thể: SKU · Phân loại · Giá · Tồn kho · Ngưỡng cảnh báo</h3>
+      @for (v of formVariants(); track $index) {
+        <div class="vr">
+          <input class="inp" placeholder="SKU" [(ngModel)]="v.sku" />
+          <input class="inp" placeholder="Phân loại" [(ngModel)]="v.a" />
+          <input class="inp" type="number" min="0" placeholder="Giá (đ)" [(ngModel)]="v.p" />
+          <input class="inp" type="number" min="0" placeholder="Tồn kho" [(ngModel)]="v.q" />
+          <input class="inp" type="number" min="0" placeholder="Ngưỡng" [(ngModel)]="v.l" />
+          <button class="btn sm" (click)="removeVariantRow($index)" [disabled]="formVariants().length <= 1">×</button>
+        </div>
+      }
+
+      <button class="btn sm" style="margin-top: 8px;" (click)="addVariantRow()">+ Thêm biến thể</button>
+
+      @if (modalError()) {
+        <div class="err" style="margin-top: 10px;" role="alert">{{ modalError() }}</div>
+      }
+
+      <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px;">
+        <button class="btn" type="button" (click)="closeGenericModal()">Đóng</button>
+        <button class="btn p" type="button" (click)="saveProduct()">Lưu sản phẩm</button>
+      </div>
+    }
+
+    <!-- XÁC NHẬN XÓA SẢN PHẨM -->
+    @if (modalType() === 'delete_confirm') {
+      <p style="font-size: 15px; margin: 14px 0;">
+        Bạn có chắc chắn muốn xóa sản phẩm <b>"{{ modalData()?.n }}"</b>? Sản phẩm sẽ bị gỡ bỏ khỏi gian hàng của bạn.
+      </p>
+
+      <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px;">
+        <button class="btn" type="button" (click)="closeGenericModal()">Hủy</button>
+        <button class="btn p" style="background: var(--err);" type="button" (click)="executeDeleteProduct()">Xác nhận xóa</button>
+      </div>
+    }
+
+    <!-- CHI TIẾT ĐƠN HÀNG -->
+    @if (modalType() === 'order_detail') {
+      <span class="tag" [class.ok]="modalData()?.s === 'DELIVERED'" [class.warn]="modalData()?.s === 'PENDING'">
+        {{ modalData()?.s === 'PENDING' ? 'Chờ xác nhận' : (modalData()?.s === 'PREPARING' ? 'Đang chuẩn bị' : (modalData()?.s === 'PACKED' ? 'Đã đóng gói' : (modalData()?.s === 'READY_TO_SHIP' ? 'Sẵn sàng giao' : 'Đã giao'))) }}
+      </span>
+
+      <p style="font-size: 14px; margin: 12px 0;">
+        <b>{{ modalData()?.n }}</b> · 0912 345 678<br />
+        Địa chỉ giao: Số 45 Nguyễn Chí Thanh, Đống Đa, Hà Nội<br />
+        Phương thức thanh toán: COD (Thu tiền khi nhận hàng)<br />
+        Vận chuyển: {{ modalData()?.s === 'READY_TO_SHIP' || modalData()?.s === 'DELIVERED' ? 'Đã điều phối bưu tá VICMART' : 'Chưa điều phối shipper' }}
+      </p>
+
+      <div class="row">
+        <div class="g">Sản phẩm đặt mua ({{ modalData()?.k }} món)</div>
+        <b>{{ formatVnd(modalData()?.t - 30000) }}</b>
+      </div>
+      <div class="row">
+        <div class="g m">Phí vận chuyển</div>
+        <b>30.000đ</b>
+      </div>
+      <div class="row">
+        <div class="g"><b>Tổng cộng</b></div>
+        <b>{{ formatVnd(modalData()?.t) }}</b>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; margin-top: 18px;">
+        <button class="btn p" type="button" (click)="closeGenericModal()">Đóng</button>
+      </div>
+    }
+
+    <!-- FORM VOUCHER -->
+    @if (modalType() === 'voucher_form') {
+      <div class="g2">
+        <label style="display: block; margin-top: 12px; font-size: 13px; font-weight: 600;">
+          Mã voucher *
+          <input class="inp" type="text" [(ngModel)]="formVoucher().code" placeholder="VD: SALE10" maxlength="20" />
+        </label>
+
+        <label style="display: block; margin-top: 12px; font-size: 13px; font-weight: 600;">
+          Loại giảm
+          <select class="inp" [(ngModel)]="formVoucher().t">
+            <option value="PERCENT">Giảm theo %</option>
+            <option value="FIXED">Giảm số tiền cố định</option>
+          </select>
+        </label>
+
+        <label style="display: block; margin-top: 12px; font-size: 13px; font-weight: 600;">
+          Giá trị giảm *
+          <input class="inp" type="number" [(ngModel)]="formVoucher().val" min="1" />
+        </label>
+
+        <label style="display: block; margin-top: 12px; font-size: 13px; font-weight: 600;">
+          Đơn tối thiểu (đ)
+          <input class="inp" type="number" [(ngModel)]="formVoucher().min" min="0" />
+        </label>
+      </div>
+
+      @if (modalError()) {
+        <div class="err" style="margin-top: 10px;" role="alert">{{ modalError() }}</div>
+      }
+
+      <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px;">
+        <button class="btn" type="button" (click)="closeGenericModal()">Đóng</button>
+        <button class="btn p" type="button" (click)="saveVoucher()">Lưu voucher</button>
+      </div>
+    }
+  </div>
+</div>
+
+<!-- TOAST THÔNG BÁO -->
+@if (toastMessage()) {
+  <div class="toast on" role="status">
+    {{ toastMessage() }}
   </div>
 }

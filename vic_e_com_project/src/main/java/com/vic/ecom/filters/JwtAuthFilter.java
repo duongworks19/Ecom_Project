@@ -44,16 +44,29 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         String subject = jwtUtil.extractSubject(token);
         String role = jwtUtil.extractRole(token);
+        Integer tokenVersionInToken = jwtUtil.extractTokenVersion(token);
 
         if (subject != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            boolean isLocked = userRepository.findByEmail(subject)
-                    .or(() -> userRepository.findByPhone(subject))
-                    .map(u -> u.getStatus() == UserStatus.LOCKED || u.getStatus() == UserStatus.PENDING)
-                    .orElse(false);
-            if (isLocked) {
+            var userOpt = userRepository.findByEmail(subject).or(() -> userRepository.findByPhone(subject));
+            if (userOpt.isEmpty()) {
                 chain.doFilter(request, response);
                 return;
             }
+            var user = userOpt.get();
+            if (user.getStatus() == UserStatus.LOCKED || user.getStatus() == UserStatus.PENDING) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json;charset=UTF-8");
+                response.getWriter().write("{\"code\":\"UNAUTHORIZED\",\"message\":\"Tài khoản đã bị khóa hoặc chưa kích hoạt\"}");
+                return;
+            }
+
+            if (tokenVersionInToken != null && user.getTokenVersion() != null && !tokenVersionInToken.equals(user.getTokenVersion())) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json;charset=UTF-8");
+                response.getWriter().write("{\"code\":\"UNAUTHORIZED\",\"message\":\"Phiên đăng nhập đã bị vô hiệu hóa\"}");
+                return;
+            }
+
             String authorityName = (role != null && role.startsWith("ROLE_"))
                     ? role
                     : "ROLE_" + (role != null ? role : "");

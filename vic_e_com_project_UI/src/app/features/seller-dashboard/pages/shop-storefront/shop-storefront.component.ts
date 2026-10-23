@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  OnInit,
   computed,
   inject,
   signal,
@@ -19,8 +20,12 @@ import { SellerProduct } from '../../models/seller-dashboard.model';
   styleUrl: './shop-storefront.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ShopStorefrontComponent {
+export class ShopStorefrontComponent implements OnInit {
   readonly dashboardService = inject(SellerDashboardService);
+
+  ngOnInit(): void {
+    this.dashboardService.loadShopProductsFromStorage();
+  }
 
   readonly data = this.dashboardService.dashboard;
   readonly profile = this.dashboardService.shopProfile;
@@ -34,6 +39,55 @@ export class ShopStorefrontComponent {
   readonly claimedVouchers = signal<Record<number, boolean>>({});
   readonly selectedProduct = signal<SellerProduct | null>(null);
   readonly toastMessage = signal<string | null>(null);
+
+  readonly shopName = computed(() => {
+    const draftRaw = localStorage.getItem('vic_seller_onboarding_draft');
+    if (draftRaw) {
+      try {
+        const draft = JSON.parse(draftRaw);
+        if (draft.shopInfo?.shopName) {
+          return draft.shopInfo.shopName;
+        }
+      } catch {}
+    }
+    return this.data().shopName || 'VICMART Shop';
+  });
+
+  readonly shopAvatarLetter = computed(() => {
+    return this.shopName().charAt(0).toUpperCase();
+  });
+
+  readonly shopCategory = computed(() => {
+    const draftRaw = localStorage.getItem('vic_seller_onboarding_draft');
+    if (draftRaw) {
+      try {
+        const draft = JSON.parse(draftRaw);
+        if (draft.shopInfo?.primaryCategory) {
+          return draft.shopInfo.primaryCategory;
+        }
+      } catch {}
+    }
+    return this.profile().tagline || 'Thể thao & Dã ngoại';
+  });
+
+  readonly shopPickupAddress = computed(() => {
+    const draftRaw = localStorage.getItem('vic_seller_onboarding_draft');
+    if (draftRaw) {
+      try {
+        const draft = JSON.parse(draftRaw);
+        if (draft.contactInfo) {
+          const parts = [
+            draft.contactInfo.detailedAddress,
+            draft.contactInfo.ward,
+            draft.contactInfo.district,
+            draft.contactInfo.province,
+          ].filter(Boolean);
+          if (parts.length > 0) return parts.join(', ');
+        }
+      } catch {}
+    }
+    return this.profile().pickupAddress || 'Hà Nội';
+  });
 
   readonly categories = computed(() => {
     const set = new Set<string>();

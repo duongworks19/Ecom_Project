@@ -77,6 +77,48 @@ export class SellerDashboardService {
 
   constructor() {
     this.loadDashboardData();
+    this.loadShopProductsFromStorage();
+  }
+
+  loadShopProductsFromStorage(): void {
+    const raw = localStorage.getItem('vic_seller_products');
+    if (raw) {
+      try {
+        const list = JSON.parse(raw);
+        if (Array.isArray(list)) {
+          this.syncProducts(list);
+          return;
+        }
+      } catch {}
+    }
+    this.products.set([]);
+  }
+
+  syncProducts(list: any[]): void {
+    const mapped: SellerProduct[] = (list || [])
+      .filter((item: any) => item.s !== 'DELETED' && item.s !== 'HIDDEN')
+      .map((item: any) => {
+        const variants = item.v || [];
+        const firstVar = variants.length > 0 ? variants[0] : null;
+        const minPrice = variants.length > 0 ? Math.min(...variants.map((v: any) => v.p || 0)) : (item.price || 0);
+        const totalStock = variants.length > 0 ? variants.reduce((sum: number, v: any) => sum + (v.q || 0), 0) : (item.stock || 0);
+        const variantText = variants.length > 0 ? variants.map((v: any) => v.a).join(', ') : 'Tiêu chuẩn';
+
+        return {
+          id: item.id,
+          name: item.n || item.name || 'Sản phẩm mới',
+          variant: variantText,
+          sku: firstVar?.sku || item.sku || ('SKU-' + item.id),
+          category: item.c || item.category || 'Nhà cửa & Đời sống',
+          price: minPrice,
+          stock: totalStock,
+          soldCount: item.sold ?? 0,
+          thumbnailColor: '#f3c7c0',
+          imageUrl: item.imageUrl || 'https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=300&q=80',
+          status: totalStock <= 5 ? 'LOW_STOCK' : 'ACTIVE',
+        };
+      });
+    this.products.set(mapped);
   }
 
   /**

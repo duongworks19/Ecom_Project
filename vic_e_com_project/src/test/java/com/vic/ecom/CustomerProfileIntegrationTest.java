@@ -82,7 +82,10 @@ class CustomerProfileIntegrationTest {
 
         mockMvc.perform(get("/api/customer/profile")
                         .header("Authorization", "Bearer " + vendorToken))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.fullName").value("Chủ Gian Hàng"))
+                .andExpect(jsonPath("$.email").value("it_vendor1@vic.com"))
+                .andExpect(jsonPath("$.phone").value("0933444503"));
 
         mockMvc.perform(get("/api/customer/profile")
                         .header("Authorization", "Bearer " + adminToken))

@@ -30,7 +30,7 @@ public class EmailVerificationService {
     private final PasswordResetTokenRepository tokenRepository;
     private final MailService mailService;
 
-    @Value("${app.otp.secret}")
+    @Value("${app.otp.secret:4c8a9e1f5b2d7e3a6c0b8f4e2d9a1c5b7e3f6a8d0c2e4b6a8f1e3d5c7b9a0f2e}")
     private String otpSecret;
 
     /** Issues a fresh OTP for a Customer, invalidating any unused codes. Always silent. */

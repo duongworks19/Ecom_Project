@@ -66,10 +66,17 @@
       <a href="#discovery-grid" class="nav-link hide-mobile">Khám phá</a>
       <a href="#editorial-section" class="nav-link hide-mobile">Bộ sưu tập</a>
       <a routerLink="/seller/shop" class="nav-link hide-mobile" id="btn-nav-shop-home">Gian hàng nổi bật</a>
-      <a routerLink="/seller/onboarding" class="nav-link seller-link" id="btn-nav-seller">
-        <span class="seller-dot"></span>
-        <span>Đăng ký bán hàng</span>
-      </a>
+      @if (authService.currentRoleSignal() === 'VENDOR' || authService.currentRoleSignal() === 'ROLE_VENDOR') {
+        <a routerLink="/seller/dashboard" class="nav-link seller-link" id="btn-nav-seller">
+          <span class="seller-dot"></span>
+          <span>Kênh người bán</span>
+        </a>
+      } @else {
+        <a routerLink="/seller/onboarding" class="nav-link seller-link" id="btn-nav-seller">
+          <span class="seller-dot"></span>
+          <span>Đăng ký bán hàng</span>
+        </a>
+      }
 
       @if (authService.isLoggedInSignal()) {
         @if (authService.currentRoleSignal() === 'ADMIN') {

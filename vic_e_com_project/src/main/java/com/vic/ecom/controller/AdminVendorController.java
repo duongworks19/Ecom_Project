@@ -102,6 +102,17 @@ public class AdminVendorController {
         return ResponseEntity.ok(ApiResponse.ok("Xét duyệt hồ sơ người bán thành công", res));
     }
 
+    @PostMapping("/{id}/terminate")
+    public ResponseEntity<ApiResponse<Void>> terminateVendor(
+            Authentication auth,
+            @PathVariable Long id,
+            @Valid @RequestBody com.vic.ecom.dto.vendor.VendorTerminateRequest req
+    ) {
+        String adminPrincipal = auth != null ? auth.getName() : null;
+        vendorService.terminateVendorAccount(adminPrincipal, id, req.getViolationType(), req.getReason());
+        return ResponseEntity.ok(ApiResponse.ok("Đã xóa và vô hiệu hóa tài khoản người bán do vi phạm quy định cấm", null));
+    }
+
     private AdminVendorListItemDto toItemDto(Vendor v) {
         User u = v.getUser();
         Shop s = v.getShop();

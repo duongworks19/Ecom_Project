@@ -51,6 +51,19 @@
           Đơn mua
         </a>
       </div>
+
+      @if (authService.currentRoleSignal() === 'VENDOR' || authService.currentRoleSignal() === 'ROLE_VENDOR') {
+        <div class="account-sidebar__group">
+          <p class="account-sidebar__group-label">NGƯỜI BÁN</p>
+          <a
+            routerLink="/seller/dashboard"
+            class="account-sidebar__link"
+            style="color: #ff5722; font-weight: 600;"
+          >
+            🏪 Vào kênh người bán
+          </a>
+        </div>
+      }
     </nav>
   </aside>
 
