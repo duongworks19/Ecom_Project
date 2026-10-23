@@ -31,9 +31,104 @@ public class VendorService {
     private final UserRepository userRepository;
     private final VendorViolationRepository vendorViolationRepository;
 
+    public record ShopNameValidationResult(boolean isAvailable, String message) {}
+
+    private static final java.util.Set<String> RESERVED_BRANDS = new java.util.HashSet<>(java.util.Arrays.asList(
+            "vicmart", "vic mart", "vic_mart", "vic-mart", "admin", "administrator", "banquantri", "official",
+            "shopee", "lazada", "tiki", "sendo", "tiktokshop", "tongdai", "cskh", "hotro"
+    ));
+
+    private static final java.util.Set<String> PHRASE_BLACKLIST = new java.util.HashSet<>(java.util.Arrays.asList(
+            "tai xiu", "taixiu", "tài xỉu", "co bac", "cờ bạc", "danh bac", "đánh bạc", "lo de", "lô đề", "casino",
+            "lua dao", "lừa đảo", "scam", "scammer", "ma tuy", "ma túy", "can sa", "cần sa", "thuoc phien", "thuốc phiện",
+            "gai goi", "gái gọi", "khoa than", "khỏa thân", "khieu dam", "khiêu dâm", "dam dang", "dâm đãng",
+            "kich duc", "kích dục", "do choi nguoi lon", "đồ chơi người lớn", "sex toy", "sextoy", "massage 18", "18+",
+            "suc vat", "súc vật", "vu khi", "vũ khí", "sung dan", "súng đạn", "chat no", "chất nổ", "thuoc no", "thuốc nổ",
+            "du ma", "đụ má", "du me", "đụ mẹ", "dit me", "địt mẹ", "vai lon", "vãi lồn", "di cho", "đĩ chó", "con di", "con đĩ",
+            "ban dam", "bán dâm", "lam tinh", "làm tình", "thu dam", "thủ dâm", "gai bao", "gái bao"
+    ));
+
+    // Từ ngữ thô tục / nhạy cảm yêu cầu dấu chính xác hoặc từ tiếng Anh rõ ràng để tránh false positive tiếng Việt
+    private static final java.util.Set<String> ACCENTED_OR_EXACT_VULGAR = new java.util.HashSet<>(java.util.Arrays.asList(
+            "địt", "đụ", "đù", "lồn", "cặc", "buồi", "dâm", "đĩ",
+            "fuck", "fck", "fuk", "bitch", "dick", "pussy", "asshole", "cunt", "bastard", "nigger",
+            "porn", "xxx", "sex", "nude", "nudes"
+    ));
+
+    public ShopNameValidationResult validateShopName(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            return new ShopNameValidationResult(false, "Vui lòng nhập tên gian hàng.");
+        }
+        String trimmed = name.trim();
+        if (trimmed.length() < 3) {
+            return new ShopNameValidationResult(false, "Tên gian hàng phải từ 3 ký tự trở lên.");
+        }
+        if (trimmed.length() > 50) {
+            return new ShopNameValidationResult(false, "Tên gian hàng không được vượt quá 50 ký tự.");
+        }
+
+        // 1. Kiểm tra từ nhạy cảm / vi phạm chuẩn mực đạo đức / thương hiệu hệ thống
+        if (isSensitiveOrForbiddenShopName(trimmed)) {
+            return new ShopNameValidationResult(false,
+                    "Tên gian hàng chứa từ ngữ nhạy cảm, không đúng chuẩn mực hoặc vi phạm chính sách của sàn.");
+        }
+
+        // 2. Kiểm tra trùng tên với shop đã có trên hệ thống
+        if (shopRepository.existsByNameIgnoreCase(trimmed)) {
+            return new ShopNameValidationResult(false,
+                    "Tên gian hàng này đã có shop đăng ký trước đó. Vui lòng chọn tên khác.");
+        }
+
+        return new ShopNameValidationResult(true, "Tên gian hàng hợp lệ và khả dụng.");
+    }
+
     public boolean isShopNameAvailable(String name) {
-        if (name == null || name.trim().length() < 3) return false;
-        return !shopRepository.existsByNameIgnoreCase(name.trim());
+        return validateShopName(name).isAvailable();
+    }
+
+    private boolean isSensitiveOrForbiddenShopName(String name) {
+        if (name == null) return false;
+        String lower = name.toLowerCase(java.util.Locale.ROOT);
+        String unaccented = removeDiacritics(lower);
+        String compact = unaccented.replaceAll("[^a-z0-9]", "");
+
+        // 1. Kiểm tra reserved brands & system keywords
+        for (String brand : RESERVED_BRANDS) {
+            String brandCompact = removeDiacritics(brand).replaceAll("[^a-z0-9]", "");
+            if (compact.contains(brandCompact)) {
+                return true;
+            }
+        }
+
+        // 2. Kiểm tra cụm từ nhạy cảm
+        for (String phrase : PHRASE_BLACKLIST) {
+            String pUnacc = removeDiacritics(phrase.toLowerCase(java.util.Locale.ROOT));
+            if (lower.contains(phrase) || unaccented.contains(pUnacc)) {
+                return true;
+            }
+            String pCompact = pUnacc.replaceAll("[^a-z0-9]", "");
+            if (pCompact.length() >= 4 && compact.contains(pCompact)) {
+                return true;
+            }
+        }
+
+        // 3. Kiểm tra token thô tục độc lập
+        String[] tokens = lower.split("[\\s\\p{Punct}]+");
+        for (String tok : tokens) {
+            if (ACCENTED_OR_EXACT_VULGAR.contains(tok)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private String removeDiacritics(String str) {
+        if (str == null) return "";
+        String normalized = java.text.Normalizer.normalize(str, java.text.Normalizer.Form.NFD);
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
+        return pattern.matcher(normalized).replaceAll("")
+                .replace("đ", "d").replace("Đ", "d");
     }
 
     @Transactional(readOnly = true)
@@ -52,8 +147,9 @@ public class VendorService {
             throw new IllegalArgumentException("Tài khoản này đã có hồ sơ đăng ký người bán");
         }
 
-        if (shopRepository.existsByNameIgnoreCase(req.getShopName().trim())) {
-            throw new IllegalArgumentException("Tên gian hàng đã tồn tại trên hệ thống");
+        ShopNameValidationResult valResult = validateShopName(req.getShopName());
+        if (!valResult.isAvailable()) {
+            throw new IllegalArgumentException(valResult.message());
         }
 
         // 1. Tạo Vendor

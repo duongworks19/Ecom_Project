@@ -43,7 +43,7 @@ export class StepReviewComponent {
       case 'COMPANY':
         return 'Công ty / Doanh nghiệp';
       default:
-        return 'Cá nhân';
+        return 'Chưa chọn';
     }
   }
 

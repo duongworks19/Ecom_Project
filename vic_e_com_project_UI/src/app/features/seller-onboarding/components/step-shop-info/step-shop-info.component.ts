@@ -39,31 +39,70 @@ export class StepShopInfoComponent implements OnInit {
 
   ngOnInit(): void {
     this.nameCheckSubject.pipe(
-      debounceTime(400),
+      debounceTime(350),
       distinctUntilChanged()
     ).subscribe((name) => {
       this.performNameCheck(name);
     });
 
-    if (this.shopInfo.shopName) {
-      this.nameCheckStatus.set('AVAILABLE');
-      this.nameCheckMessage.set('Tên gian hàng hợp lệ');
-    }
-  }
-
-  onNameInput(value: string): void {
-    this.shopInfo.shopName = value;
-    this.emitChange();
-    if (value.trim().length >= 3) {
-      this.isCheckingName.set(true);
-      this.nameCheckSubject.next(value);
+    if (this.shopInfo.shopName && this.shopInfo.shopName.trim().length >= 3) {
+      this.performNameCheck(this.shopInfo.shopName.trim());
     } else {
       this.nameCheckStatus.set('NONE');
       this.nameCheckMessage.set('');
     }
   }
 
+  onNameInput(value: string): void {
+    this.shopInfo.shopName = value;
+    this.emitChange();
+    const trimmed = (value || '').trim();
+
+    if (!trimmed) {
+      this.isCheckingName.set(false);
+      this.nameCheckStatus.set('NONE');
+      this.nameCheckMessage.set('');
+      return;
+    }
+
+    if (trimmed.length < 3) {
+      this.isCheckingName.set(false);
+      this.nameCheckStatus.set('TAKEN');
+      this.nameCheckMessage.set('Tên gian hàng phải từ 3 ký tự trở lên');
+      return;
+    }
+
+    if (trimmed.length > 50) {
+      this.isCheckingName.set(false);
+      this.nameCheckStatus.set('TAKEN');
+      this.nameCheckMessage.set('Tên gian hàng không được vượt quá 50 ký tự');
+      return;
+    }
+
+    // Kiểm tra nhanh phía client từ nhạy cảm / cấm để hiển thị lỗi ngay lập tức
+    const clientCheck = this.onboardingService.validateSensitiveAndReservedLocal(trimmed);
+    if (!clientCheck.isAvailable) {
+      this.isCheckingName.set(false);
+      this.nameCheckStatus.set('TAKEN');
+      this.nameCheckMessage.set(clientCheck.message);
+      return;
+    }
+
+    // Nếu hợp lệ client -> gửi debounce gọi API kiểm tra trùng tên database
+    this.isCheckingName.set(true);
+    this.nameCheckSubject.next(trimmed);
+  }
+
   private performNameCheck(name: string): void {
+    const clientCheck = this.onboardingService.validateSensitiveAndReservedLocal(name);
+    if (!clientCheck.isAvailable) {
+      this.isCheckingName.set(false);
+      this.nameCheckStatus.set('TAKEN');
+      this.nameCheckMessage.set(clientCheck.message);
+      return;
+    }
+
+    this.isCheckingName.set(true);
     this.onboardingService.checkShopNameAvailable(name).subscribe({
       next: (res) => {
         this.isCheckingName.set(false);
@@ -102,12 +141,28 @@ export class StepShopInfoComponent implements OnInit {
     }
   }
 
+  removeLogo(): void {
+    if (this.readOnly) return;
+    this.shopInfo.logoUrl = '';
+    this.emitChange();
+  }
+
   emitChange(): void {
     this.shopInfoChange.emit({ ...this.shopInfo });
   }
 
+  isStepValid(): boolean {
+    return !!(
+      this.shopInfo.shopName?.trim() &&
+      this.nameCheckStatus() === 'AVAILABLE' &&
+      !this.isCheckingName() &&
+      this.shopInfo.businessType &&
+      this.shopInfo.primaryCategory
+    );
+  }
+
   onContinue(): void {
-    if (!this.shopInfo.shopName || this.nameCheckStatus() === 'TAKEN') {
+    if (!this.isStepValid()) {
       return;
     }
     this.next.emit();

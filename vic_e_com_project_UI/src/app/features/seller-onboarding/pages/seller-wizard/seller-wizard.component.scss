@@ -57,6 +57,33 @@
   }
 }
 
+.header-right-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.btn-reset-form {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: transparent;
+  color: #62625b;
+  border: 1px solid #dadad3;
+  padding: 5px 12px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #f6f6f3;
+    color: #cc001f;
+    border-color: #cc001f;
+  }
+}
+
 .save-indicator {
   font-size: 13px;
   font-weight: 500;
