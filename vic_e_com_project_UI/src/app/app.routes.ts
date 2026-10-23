@@ -3,6 +3,7 @@ import { LandingComponent } from './features/landing/landing.component';
 import { AuthComponent } from './features/auth/auth.component';
 import { passwordChangeGuard } from './core/guards/password-change.guard';
 import { adminGuard } from './core/guards/admin.guard';
+import { shipperGuard } from './core/guards/shipper.guard';
 import { customerAuthGuard } from './core/guards/customer-auth.guard';
 import { CustomerLayoutComponent } from './layouts/customer-layout/customer-layout.component';
 import { FORGOT_PASSWORD_ROUTES } from './features/auth/forgot-password/forgot-password.routes';
@@ -39,6 +40,11 @@ export const routes: Routes = [
     path: 'admin',
     canActivate: [passwordChangeGuard, adminGuard],
     loadChildren: () => import('./features/admin/admin.routes').then((m) => m.ADMIN_ROUTES),
+  },
+  {
+    path: 'shipper',
+    canActivate: [passwordChangeGuard, shipperGuard],
+    loadChildren: () => import('./features/shipper/shipper.routes').then((m) => m.SHIPPER_ROUTES),
   },
   {
     path: 'seller',

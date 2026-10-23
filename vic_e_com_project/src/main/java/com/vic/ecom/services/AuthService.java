@@ -51,6 +51,7 @@ public class AuthService {
         }
         validateNewPassword(req.newPassword(), user.getPasswordHash());
         user.setPasswordHash(passwordEncoder.encode(req.newPassword()));
+        user.setMustChangePassword(false);
         userRepository.save(user);
         CHANGE_PASSWORD_LIMITER.clear(account);
     }

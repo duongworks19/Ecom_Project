@@ -1,0 +1,245 @@
+<div class="dashboard-page">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div>
+      <span class="badge-subtitle">BẢNG ĐIỀU HÀNH SHIPPER</span>
+      <h1 class="page-title">Xin chào, Nguyễn Minh Anh!</h1>
+      <p class="page-desc">Danh sách đơn hàng cần bàn giao và các chỉ số vận hành trong ca làm việc hôm nay.</p>
+    </div>
+    <button type="button" class="btn-refresh" (click)="refreshKPI()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+      </svg>
+      <span>Làm mới dữ liệu</span>
+    </button>
+  </div>
+
+  <!-- 4 KPI Cards -->
+  <div class="kpi-grid">
+    <!-- Card 1: Chờ lấy -->
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <span class="kpi-label">Đơn chờ lấy hàng</span>
+        <div class="kpi-icon kpi-icon--pickup">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+          </svg>
+        </div>
+      </div>
+      <div class="kpi-body">
+        <span class="kpi-value">{{ kpi().readyToPickCount }}</span>
+        <span class="kpi-tag kpi-tag--pickup">Vendor đóng gói xong</span>
+      </div>
+      <p class="kpi-hint">Cần di chuyển tới Shop lấy kiện</p>
+    </div>
+
+    <!-- Card 2: Đang giao -->
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <span class="kpi-label">Đơn đang giao</span>
+        <div class="kpi-icon kpi-icon--delivering">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+        </div>
+      </div>
+      <div class="kpi-body">
+        <span class="kpi-value">{{ kpi().deliveringCount }}</span>
+        <span class="kpi-tag kpi-tag--delivering">Đang giữ trên xe</span>
+      </div>
+      <p class="kpi-hint">Cần hoàn tất trước 18:00</p>
+    </div>
+
+    <!-- Card 3: Giao thành công -->
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <span class="kpi-label">Đã giao thành công</span>
+        <div class="kpi-icon kpi-icon--delivered">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+      </div>
+      <div class="kpi-body">
+        <span class="kpi-value">{{ kpi().deliveredCount }}</span>
+        <span class="kpi-tag kpi-tag--delivered">Tỷ lệ: {{ kpi().successRate }}%</span>
+      </div>
+      <p class="kpi-hint">Đạt chỉ tiêu ca ban ngày</p>
+    </div>
+
+    <!-- Card 4: Tổng COD đã thu -->
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <span class="kpi-label">Tiền COD đã thu</span>
+        <div class="kpi-icon kpi-icon--cod">₫</div>
+      </div>
+      <div class="kpi-body">
+        <span class="kpi-value kpi-value--cod">{{ formatCurrency(kpi().totalCollectedCod) }}</span>
+      </div>
+      <p class="kpi-hint">Nộp về bưu cục trước 20:00</p>
+    </div>
+  </div>
+
+  <!-- Detailed Table Card (UC96, UC97, UC98, UC100, UC102) -->
+  <div class="data-table-card">
+    <div class="table-toolbar">
+      <div class="toolbar-title-box">
+        <h2 class="toolbar-title">Nhiệm vụ giao nhận trong ngày</h2>
+        <p class="toolbar-desc">Thực hiện tuần tự: Nhận kiện từ Shop → Giao khách → Thu tiền COD / Báo sự cố.</p>
+      </div>
+
+      <!-- Filter Pills -->
+      <div class="filter-pills">
+        <button
+          type="button"
+          class="pill-btn"
+          [class.active]="currentFilter() === 'ALL'"
+          (click)="setFilter('ALL')"
+        >
+          Tất cả ({{ shipments().length }})
+        </button>
+        <button
+          type="button"
+          class="pill-btn"
+          [class.active]="currentFilter() === 'READY_TO_PICK'"
+          (click)="setFilter('READY_TO_PICK')"
+        >
+          Chờ lấy ({{ kpi().readyToPickCount }})
+        </button>
+        <button
+          type="button"
+          class="pill-btn"
+          [class.active]="currentFilter() === 'DELIVERING'"
+          (click)="setFilter('DELIVERING')"
+        >
+          Đang giao ({{ kpi().deliveringCount }})
+        </button>
+        <button
+          type="button"
+          class="pill-btn"
+          [class.active]="currentFilter() === 'DELIVERED'"
+          (click)="setFilter('DELIVERED')"
+        >
+          Đã giao ({{ kpi().deliveredCount }})
+        </button>
+        <button
+          type="button"
+          class="pill-btn"
+          [class.active]="currentFilter() === 'FAILED'"
+          (click)="setFilter('FAILED')"
+        >
+          Thất bại ({{ kpi().failedCount }})
+        </button>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-responsive">
+      <table class="shipper-table">
+        <thead>
+          <tr>
+            <th>Mã Vận Đơn</th>
+            <th>Điểm Lấy Hàng (Vendor)</th>
+            <th>Điểm Giao Hàng (Khách Hàng)</th>
+            <th>Tiền COD</th>
+            <th>Trạng Thái</th>
+            <th class="text-right">Thao Tác Nghiệp Vụ</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of filteredShipments; track item.id) {
+            <tr class="table-row">
+              <td>
+                <button type="button" class="order-code-btn" (click)="openDetailModal(item)">
+                  <span>{{ item.code }}</span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                </button>
+                <span class="sub-order-id">Đơn gốc #{{ item.orderId }}</span>
+              </td>
+              <td>
+                <div class="vendor-name">{{ item.vendorName }}</div>
+                <div class="address-text">{{ item.vendorAddress }}</div>
+              </td>
+              <td>
+                <div class="customer-info">{{ item.customerName }} - {{ item.customerPhone }}</div>
+                <div class="address-text">{{ item.customerAddress }}</div>
+              </td>
+              <td class="cod-cell">
+                {{ formatCurrency(item.codAmount) }}
+              </td>
+              <td>
+                @switch (item.status) {
+                  @case ('READY_TO_PICK') {
+                    <span class="status-badge status-badge--pickup">Chờ lấy hàng</span>
+                  }
+                  @case ('DELIVERING') {
+                    <span class="status-badge status-badge--delivering">Đang giao</span>
+                  }
+                  @case ('DELIVERED') {
+                    <span class="status-badge status-badge--delivered">Giao thành công</span>
+                  }
+                  @case ('FAILED') {
+                    <span class="status-badge status-badge--failed">Giao thất bại</span>
+                  }
+                }
+              </td>
+              <td class="text-right">
+                @if (item.status === 'READY_TO_PICK') {
+                  <button type="button" class="btn-action-pickup" (click)="onConfirmPickup(item)">
+                    Đã lấy hàng
+                  </button>
+                } @else if (item.status === 'DELIVERING') {
+                  <div class="action-btn-group">
+                    <button type="button" class="btn-action-deliver" (click)="openDeliveryModal(item)">
+                      Giao thành công
+                    </button>
+                    <button type="button" class="btn-action-fail" (click)="openFailureModal(item)">
+                      Báo hỏng
+                    </button>
+                  </div>
+                } @else {
+                  <span class="text-archived">Hoàn tất lưu trữ</span>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (filteredShipments.length === 0) {
+      <div class="empty-state-box">
+        <div class="empty-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+          </svg>
+        </div>
+        <h3>Không tìm thấy đơn hàng nào</h3>
+        <p>Không có đơn nào phù hợp với bộ lọc hiện tại.</p>
+      </div>
+    }
+  </div>
+
+  <!-- Dialogs -->
+  <app-confirm-delivery-dialog
+    [open]="activeDeliveryShipment() !== null"
+    [shipment]="activeDeliveryShipment()"
+    (confirmed)="handleDeliveryConfirmed($event)"
+    (closed)="activeDeliveryShipment.set(null)"
+  />
+
+  <app-report-failure-dialog
+    [open]="activeFailureShipment() !== null"
+    [shipment]="activeFailureShipment()"
+    (reported)="handleFailureReported($event)"
+    (closed)="activeFailureShipment.set(null)"
+  />
+
+  <app-shipment-detail-dialog
+    [open]="activeDetailShipment() !== null"
+    [shipment]="activeDetailShipment()"
+    (closed)="activeDetailShipment.set(null)"
+  />
+</div>

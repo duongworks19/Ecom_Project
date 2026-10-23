@@ -137,3 +137,32 @@
 | UC91 | Review & Communication | Reply to Review | Vendor phản hồi đánh giá của Customer. |
 | UC92 | Review & Communication | Answer Product Question | Vendor trả lời câu hỏi của Customer về sản phẩm. |
 
+
+### **II.5 Shipper**
+
+| ID | Feature | Use Case | Use Case Description |
+| ----- | ----- | ----- | ----- |
+| UC93 | Account Management | View Profile | Shipper xem thông tin tài khoản: họ tên, email, số điện thoại, phương tiện, biển số, khu vực hoạt động và trạng thái làm việc. |
+| UC94 | Account Management | Update Work Status | Shipper bật hoặc tắt trạng thái nhận đơn (sẵn sàng, nghỉ). |
+| UC95 | Dashboard | View Dashboard | Shipper xem tổng quan: số đơn cần lấy hàng, đang giao, đã giao hôm nay, tiền COD đã thu hôm nay và hiệu suất giao hàng. |
+| UC96 | Delivery | View Assigned Orders | Shipper xem danh sách đơn được Admin phân công, lọc theo trạng thái. |
+| UC97 | Delivery | View Delivery Detail | Shipper xem chi tiết đơn cần giao: sản phẩm, địa chỉ lấy hàng, người nhận, số điện thoại, địa chỉ giao và số tiền COD cần thu. |
+| UC98 | Delivery | Confirm Pickup | Shipper xác nhận đã lấy hàng từ gian hàng. |
+| UC99 | Delivery | Start Delivery | Shipper bắt đầu giao đơn hàng. |
+| UC100 | Delivery | Confirm Delivered | Shipper xác nhận giao hàng thành công. |
+| UC101 | Payment | Confirm COD Collection | Shipper xác nhận đã thu đủ tiền COD khi giao thành công. |
+| UC102 | Delivery | Report Delivery Failure | Shipper báo giao thất bại kèm lý do; đơn chuyển cho Admin xử lý (giao lại, đổi Shipper hoặc hoàn hàng). |
+| UC103 | Delivery | View Delivery History | Shipper xem lịch sử các đơn đã giao thành công hoặc thất bại. |
+
+**2. Yêu cầu phi chức năng cho khu vực Shipper**
+
+| Nhóm |	Yêu cầu |
+| ----- | ----- |
+| Bảo mật	| Mọi API /api/shipper/** chỉ role SHIPPER; mỗi Shipper chỉ thấy đơn của chính mình (đơn người khác trả 404); tài khoản bị khóa mất quyền ngay; tài khoản còn cờ buộc đổi mật khẩu bị chặn các chức năng khác| 
+| Toàn vẹn dữ liệu | Chuyển trạng thái giao hàng theo đúng thứ tự cho phép, kiểm tra ở server (không tin giao diện), chống thao tác trùng bằng cập nhật có điều kiện; mỗi lần đổi trạng thái ghi vào shipment_events| 
+| Quyền riêng tư | Số điện thoại và địa chỉ khách chỉ hiển thị với đơn đang giao; lịch sử chỉ hiện mã đơn, trạng thái, thời gian; không ghi dữ liệu cá nhân vào log| 
+| Hiệu năng |	Dashboard và danh sách đơn tải trong vòng 2 giây với dữ liệu bình thường; danh sách có phân trang| 
+| Thao tác | quan trọng	Giao thành công và giao thất bại phải có hộp thoại xác nhận (không hoàn tác được)| 
+| Độ tin cậy |	Mạng yếu: hiển thị lỗi rõ ràng kèm nút "Thử lại", không gửi trùng khi bấm nhiều lần| 
+| Truy cập |	Độ tương phản đạt WCAG AA, dùng được bằng bàn phím, nhãn đầy đủ cho ô nhập
+Múi giờ	Mọi mốc "hôm nay" tính theo Asia/Ho_Chi_Minh| 

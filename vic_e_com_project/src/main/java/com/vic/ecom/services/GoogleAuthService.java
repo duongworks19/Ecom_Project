@@ -47,7 +47,7 @@ public class GoogleAuthService {
         }
 
         User user = userRepository.findByAuthProviderAndProviderSubject(GOOGLE_PROVIDER, providerSubject)
-                .orElseGet(() -> createGoogleUser(payload));
+                .orElseGet(() -> findOrLinkExistingUser(payload, providerSubject));
 
         if (user.getStatus() == UserStatus.LOCKED) {
             recordLogin(user, LoginStatus.FAILED);
@@ -62,7 +62,9 @@ public class GoogleAuthService {
         recordLogin(user, LoginStatus.SUCCESS);
         String subject = user.getEmail() != null ? user.getEmail() : email;
         String token = jwtUtil.generateToken(subject, user.getRole().name());
-        return new AuthResponse(token, user.getRole().name(), user.getId(), user.getFullName(), subject);
+        AuthResponse response = new AuthResponse(token, user.getRole().name(), user.getId(), user.getFullName(), subject);
+        response.setMustChangePassword(user.isMustChangePassword());
+        return response;
     }
 
     private GoogleIdToken.Payload verify(String idToken) {
@@ -86,22 +88,34 @@ public class GoogleAuthService {
         }
     }
 
-    private User createGoogleUser(GoogleIdToken.Payload payload) {
+    private User findOrLinkExistingUser(GoogleIdToken.Payload payload, String providerSubject) {
         String email = payload.getEmail();
         if (email == null || email.isBlank()) {
             throw new BadCredentialsException("Google account does not provide an email");
         }
 
-        User user = userRepository.findByEmail(email).orElseGet(User::new);
-        if (user.getId() != null && !GOOGLE_PROVIDER.equals(user.getAuthProvider())) {
-            throw new IllegalArgumentException("Email already registered with password login");
+        User user = userRepository.findByEmail(email).orElse(null);
+        if (user != null) {
+            if (user.getProviderSubject() != null && !providerSubject.equals(user.getProviderSubject())) {
+                throw new BadCredentialsException("Google account is not linked to this user");
+            }
+            // Link only the verified Google subject. Preserve LOCAL provider, role,
+            // password, shipper profile, and mustChangePassword state.
+            user.setProviderSubject(providerSubject);
+            return userRepository.save(user);
         }
 
+        return createGoogleUser(payload, providerSubject);
+    }
+
+    private User createGoogleUser(GoogleIdToken.Payload payload, String providerSubject) {
+        String email = payload.getEmail();
+        User user = new User();
         user.setEmail(email);
         user.setFullName((String) payload.get("name"));
         user.setAvatarUrl((String) payload.get("picture"));
         user.setAuthProvider(GOOGLE_PROVIDER);
-        user.setProviderSubject(payload.getSubject());
+        user.setProviderSubject(providerSubject);
         user.setRole(UserRole.CUSTOMER);
         user.setStatus(UserStatus.ACTIVE);
         return userRepository.save(user);
