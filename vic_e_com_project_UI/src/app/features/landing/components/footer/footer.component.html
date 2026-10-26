@@ -42,12 +42,19 @@
       <div class="footer-col">
         <h4 class="col-title">Hợp Tác Kinh Doanh</h4>
         <ul class="col-links">
-          <li><a routerLink="/seller/onboarding" id="link-footer-seller-register">Đăng ký bán hàng</a></li>
-          <li><a href="#">Quy chế hoạt động</a></li>
-          <li><a href="#">Tiếp thị liên kết</a></li>
-          <li><a routerLink="/seller/dashboard" id="link-footer-seller-center">Trang chủ Kênh người bán</a></li>
-          <li><a routerLink="/seller/shop" id="link-footer-shop-storefront">Trang chủ Gian hàng mẫu</a></li>
-          <li><a routerLink="/seller/status" id="link-footer-seller-status">Tra cứu hồ sơ mở Shop</a></li>
+          @if (authService.currentRoleSignal() === 'ADMIN' || authService.currentRoleSignal() === 'ROLE_ADMIN') {
+            <li><a routerLink="/admin" id="link-footer-admin-center">Trang Quản trị hệ thống</a></li>
+            <li><a href="#">Quy chế hoạt động</a></li>
+            <li><a href="#">Tiếp thị liên kết</a></li>
+            <li><a routerLink="/seller/shop" id="link-footer-shop-storefront">Trang chủ Gian hàng mẫu</a></li>
+          } @else {
+            <li><a routerLink="/seller/onboarding" id="link-footer-seller-register">Đăng ký bán hàng</a></li>
+            <li><a href="#">Quy chế hoạt động</a></li>
+            <li><a href="#">Tiếp thị liên kết</a></li>
+            <li><a routerLink="/seller/dashboard" id="link-footer-seller-center">Trang chủ Kênh người bán</a></li>
+            <li><a routerLink="/seller/shop" id="link-footer-shop-storefront">Trang chủ Gian hàng mẫu</a></li>
+            <li><a routerLink="/seller/status" id="link-footer-seller-status">Tra cứu hồ sơ mở Shop</a></li>
+          }
         </ul>
 
         <div class="payment-badge-group">

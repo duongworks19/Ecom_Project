@@ -126,10 +126,7 @@ export class AuthComponent implements OnInit, AfterViewInit {
             void this.router.navigateByUrl('/change-password');
             return;
           }
-<<<<<<< Updated upstream
           this.showToast('✨ Đăng nhập thành công!', false);
-=======
->>>>>>> Stashed changes
           const target = this.getTargetRoute(res.data?.role);
           setTimeout(() => void this.router.navigateByUrl(target), 800);
         },

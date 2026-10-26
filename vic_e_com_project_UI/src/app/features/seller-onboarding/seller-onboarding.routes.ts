@@ -3,7 +3,10 @@ import { SellerLandingComponent } from './pages/seller-landing/seller-landing.co
 import { SellerWizardComponent } from './pages/seller-wizard/seller-wizard.component';
 import { SellerStatusComponent } from './pages/seller-status/seller-status.component';
 
-import { sellerGatekeeperGuard } from './guards/seller-gatekeeper.guard';
+import {
+  sellerGatekeeperGuard,
+  requireLoginForOnboardingGuard,
+} from './guards/seller-gatekeeper.guard';
 
 export const SELLER_ONBOARDING_ROUTES: Routes = [
   {
@@ -18,11 +21,13 @@ export const SELLER_ONBOARDING_ROUTES: Routes = [
   },
   {
     path: 'register',
+    canActivate: [requireLoginForOnboardingGuard],
     component: SellerWizardComponent,
     title: 'Đăng ký gian hàng mới — VIC MART',
   },
   {
     path: 'status',
+    canActivate: [requireLoginForOnboardingGuard],
     component: SellerStatusComponent,
     title: 'Trạng thái hồ sơ người bán — VIC MART',
   },

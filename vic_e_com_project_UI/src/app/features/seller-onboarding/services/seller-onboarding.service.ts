@@ -115,7 +115,6 @@ export class SellerOnboardingService {
    * Kiểm tra trùng tên shop & từ nhạy cảm realtime
    */
   checkShopNameAvailable(name: string): Observable<CheckShopNameResponse> {
-<<<<<<< Updated upstream
     const raw = (name || '').trim();
     if (!raw || raw.length < 3) {
       return of({ isAvailable: false, message: 'Tên gian hàng phải từ 3 ký tự trở lên' });
@@ -142,27 +141,6 @@ export class SellerOnboardingService {
         return of({
           isAvailable: true,
           message: 'Tên gian hàng hợp lệ và khả dụng!',
-=======
-    const trimmed = (name || '').trim();
-    if (!trimmed) {
-      return of({ isAvailable: false, message: 'Vui lòng nhập tên gian hàng' });
-    }
-
-    return this.http.get<any>(`${this.API}/check-name?name=${encodeURIComponent(trimmed)}`).pipe(
-      map((res) => {
-        const data = res?.data || res;
-        return {
-          isAvailable: !!data.isAvailable,
-          message: data.message || (data.isAvailable ? 'Tên gian hàng hợp lệ và khả dụng' : 'Tên gian hàng đã tồn tại trên hệ thống'),
-        };
-      }),
-      catchError(() => {
-        // Fallback kiểm tra nếu backend tạm thời không kết nối được
-        const reserved = ['vicmart', 'admin', 'official', 'shopee', 'lazada', 'tiki'];
-        const isTaken = reserved.includes(trimmed.toLowerCase());
-        return of({
-          isAvailable: !isTaken,
-          message: isTaken ? 'Tên gian hàng đã được đăng ký hoặc nằm trong danh sách hạn chế' : 'Tên gian hàng hợp lệ và khả dụng',
         });
       })
     );
@@ -189,7 +167,6 @@ export class SellerOnboardingService {
         return of({
           isAvailable: true,
           message: 'Email hợp lệ',
->>>>>>> Stashed changes
         });
       })
     );

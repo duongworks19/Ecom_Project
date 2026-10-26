@@ -12,6 +12,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { SellerDashboardService } from '../../services/seller-dashboard.service';
 import { SellerProduct } from '../../models/seller-dashboard.model';
+import { AuthService } from '../../../../core/services/auth.service';
 
 export interface ShopData {
   id: number;
@@ -39,6 +40,7 @@ export class ShopStorefrontComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly http = inject(HttpClient);
   readonly dashboardService = inject(SellerDashboardService);
+  readonly authService = inject(AuthService);
 
   readonly currentShop = signal<ShopData | null>(null);
   readonly shopProducts = signal<SellerProduct[]>([]);

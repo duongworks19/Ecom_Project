@@ -3,15 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { ContactWarehouseInfo } from '../../models/seller-onboarding.model';
-<<<<<<< Updated upstream
 import {
   VIETNAM_34_PROVINCES,
   VIETNAM_DISTRICTS_MAP,
   VIETNAM_WARDS_MAP,
 } from '../../constants/vietnam-divisions.constant';
-=======
 import { SellerOnboardingService } from '../../services/seller-onboarding.service';
->>>>>>> Stashed changes
 
 @Component({
   selector: 'app-step-contact-warehouse',
@@ -29,35 +26,15 @@ export class StepContactWarehouseComponent implements OnInit {
   @Output() next = new EventEmitter<void>();
   @Output() back = new EventEmitter<void>();
 
-<<<<<<< Updated upstream
-  readonly provinces = VIETNAM_34_PROVINCES;
-  readonly districts = VIETNAM_DISTRICTS_MAP;
-  readonly wards = VIETNAM_WARDS_MAP;
-=======
   // Reactive email check
   readonly emailCheckSubject = new Subject<string>();
   readonly isCheckingEmail = signal<boolean>(false);
   readonly emailCheckStatus = signal<'NONE' | 'AVAILABLE' | 'TAKEN'>('NONE');
   readonly emailCheckMessage = signal<string>('');
 
-  readonly provinces = ['Hà Nội', 'TP. Hồ Chí Minh', 'Đà Nẵng', 'Hải Phòng', 'Cần Thơ', 'Bình Dương'];
-
-  readonly districts: Record<string, string[]> = {
-    'Hà Nội': ['Quận Cầu Giấy', 'Quận Đống Đa', 'Quận Ba Đình', 'Quận Hai Bà Trưng', 'Quận Nam Từ Liêm'],
-    'TP. Hồ Chí Minh': ['Quận 1', 'Quận 3', 'Quận 7', 'Quận Bình Thạnh', 'TP. Thủ Đức'],
-    'Đà Nẵng': ['Quận Hải Châu', 'Quận Thanh Khê', 'Quận Sơn Trà'],
-    'Hải Phòng': ['Quận Hồng Bàng', 'Quận Ngô Quyền', 'Quận Lê Chân'],
-    'Cần Thơ': ['Quận Ninh Kiều', 'Quận Cái Răng', 'Quận Bình Thủy'],
-    'Bình Dương': ['TP. Thủ Dầu Một', 'TP. Dĩ An', 'TP. Thuận An'],
-  };
-
-  readonly wards: Record<string, string[]> = {
-    'Quận Cầu Giấy': ['Phường Dịch Vọng Hậu', 'Phường Dịch Vọng', 'Phường Nghĩa Đô', 'Phường Mai Dịch'],
-    'Quận Đống Đa': ['Phường Láng Hạ', 'Phường Ô Chợ Dừa', 'Phường Kim Liên'],
-    'Quận 1': ['Phường Bến Nghé', 'Phường Bến Thành', 'Phường Tân Định'],
-    'TP. Thủ Đức': ['Phường Thảo Điền', 'Phường An Phú', 'Phường Hiệp Phú'],
-  };
->>>>>>> Stashed changes
+  readonly provinces = VIETNAM_34_PROVINCES;
+  readonly districts = VIETNAM_DISTRICTS_MAP;
+  readonly wards = VIETNAM_WARDS_MAP;
 
   ngOnInit(): void {
     this.emailCheckSubject.pipe(
@@ -178,14 +155,11 @@ export class StepContactWarehouseComponent implements OnInit {
       this.contactInfo.representativeName?.trim() &&
       this.contactInfo.phone?.trim() &&
       this.contactInfo.email?.trim() &&
-<<<<<<< Updated upstream
       this.contactInfo.province?.trim() &&
       this.contactInfo.district?.trim() &&
       this.contactInfo.ward?.trim() &&
-=======
       this.emailCheckStatus() !== 'TAKEN' &&
       !this.isCheckingEmail() &&
->>>>>>> Stashed changes
       this.contactInfo.detailedAddress?.trim()
     );
   }

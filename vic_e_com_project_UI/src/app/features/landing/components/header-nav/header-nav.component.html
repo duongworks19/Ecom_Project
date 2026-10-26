@@ -71,6 +71,8 @@
           <span class="seller-dot"></span>
           <span>Kênh người bán</span>
         </a>
+      } @else if (authService.currentRoleSignal() === 'ADMIN' || authService.currentRoleSignal() === 'ROLE_ADMIN') {
+        <!-- Tài khoản Admin không hiển thị Đăng ký bán hàng hoặc Kênh người bán -->
       } @else {
         <a routerLink="/seller/onboarding" class="nav-link seller-link" id="btn-nav-seller">
           <span class="seller-dot"></span>
@@ -79,7 +81,7 @@
       }
 
       @if (authService.isLoggedInSignal()) {
-        @if (authService.currentRoleSignal() === 'ADMIN') {
+        @if (authService.currentRoleSignal() === 'ADMIN' || authService.currentRoleSignal() === 'ROLE_ADMIN') {
           <a routerLink="/admin" class="btn-secondary" id="btn-nav-admin">
             Quản trị
           </a>
