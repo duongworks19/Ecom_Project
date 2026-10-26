@@ -10,5 +10,6 @@ import java.util.Optional;
 public interface ShopRepository extends JpaRepository<Shop, Long> {
     Optional<Shop> findByVendorId(Long vendorId);
     boolean existsByNameIgnoreCase(String name);
+    boolean existsByEmailIgnoreCase(String email);
     List<Shop> findByStatus(ShopStatus status);
 }

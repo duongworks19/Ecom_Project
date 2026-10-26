@@ -45,9 +45,25 @@ export class StepShopInfoComponent implements OnInit {
       this.performNameCheck(name);
     });
 
+<<<<<<< Updated upstream
     if (this.shopInfo.shopName && this.shopInfo.shopName.trim().length >= 3) {
       this.performNameCheck(this.shopInfo.shopName.trim());
+=======
+    if (this.shopInfo.shopName && this.shopInfo.shopName.trim()) {
+      this.performNameCheck(this.shopInfo.shopName.trim());
+    }
+  }
+
+  onNameInput(value: string): void {
+    this.shopInfo.shopName = value;
+    this.emitChange();
+    const trimmed = (value || '').trim();
+    if (trimmed.length > 0) {
+      this.isCheckingName.set(true);
+      this.nameCheckSubject.next(trimmed);
+>>>>>>> Stashed changes
     } else {
+      this.isCheckingName.set(false);
       this.nameCheckStatus.set('NONE');
       this.nameCheckMessage.set('');
     }
@@ -94,6 +110,7 @@ export class StepShopInfoComponent implements OnInit {
   }
 
   private performNameCheck(name: string): void {
+<<<<<<< Updated upstream
     const clientCheck = this.onboardingService.validateSensitiveAndReservedLocal(name);
     if (!clientCheck.isAvailable) {
       this.isCheckingName.set(false);
@@ -104,6 +121,17 @@ export class StepShopInfoComponent implements OnInit {
 
     this.isCheckingName.set(true);
     this.onboardingService.checkShopNameAvailable(name).subscribe({
+=======
+    const trimmed = (name || '').trim();
+    if (!trimmed) {
+      this.isCheckingName.set(false);
+      this.nameCheckStatus.set('NONE');
+      this.nameCheckMessage.set('');
+      return;
+    }
+    this.isCheckingName.set(true);
+    this.onboardingService.checkShopNameAvailable(trimmed).subscribe({
+>>>>>>> Stashed changes
       next: (res) => {
         this.isCheckingName.set(false);
         this.nameCheckStatus.set(res.isAvailable ? 'AVAILABLE' : 'TAKEN');
@@ -162,7 +190,11 @@ export class StepShopInfoComponent implements OnInit {
   }
 
   onContinue(): void {
+<<<<<<< Updated upstream
     if (!this.isStepValid()) {
+=======
+    if (!this.shopInfo.shopName || !this.shopInfo.shopName.trim() || this.nameCheckStatus() === 'TAKEN' || this.isCheckingName()) {
+>>>>>>> Stashed changes
       return;
     }
     this.next.emit();
