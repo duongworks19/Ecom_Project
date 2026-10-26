@@ -83,7 +83,6 @@ public class VendorService {
     }
 
     public boolean isShopNameAvailable(String name) {
-<<<<<<< Updated upstream
         return validateShopName(name).isAvailable();
     }
 
@@ -130,10 +129,6 @@ public class VendorService {
         java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
         return pattern.matcher(normalized).replaceAll("")
                 .replace("đ", "d").replace("Đ", "d");
-=======
-        if (name == null || name.trim().isEmpty()) return false;
-        return !shopRepository.existsByNameIgnoreCase(name.trim());
->>>>>>> Stashed changes
     }
 
     public boolean isEmailAvailable(String email, Long currentUserId) {

@@ -17,6 +17,11 @@ export class SellerLandingComponent {
   private readonly router = inject(Router);
 
   onStartRegistration(): void {
+    const role = this.authService.getRole()?.toUpperCase();
+    if (role === 'ADMIN' || role === 'ROLE_ADMIN') {
+      void this.router.navigate(['/admin']);
+      return;
+    }
     this.router.navigate(['/seller/register']);
   }
 }

@@ -102,6 +102,11 @@ export class SellerDashboardComponent implements OnInit {
   readonly currentShopId = signal<number | null>(null);
 
   ngOnInit(): void {
+    const role = this.authService.getRole()?.toUpperCase();
+    if (role === 'ADMIN' || role === 'ROLE_ADMIN') {
+      void this.router.navigateByUrl('/admin');
+      return;
+    }
     this.loadProducts();
     this.detectApprovedRole();
     this.loadCurrentShopInfo();

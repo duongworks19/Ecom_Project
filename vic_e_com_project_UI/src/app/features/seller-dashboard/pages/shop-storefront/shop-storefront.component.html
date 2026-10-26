@@ -26,8 +26,13 @@
 
     <div class="top-actions">
       <a routerLink="/" class="pill">← Trang chủ mua sắm</a>
-      <a routerLink="/seller/onboarding" class="pill">Đăng ký bán hàng</a>
-      <!-- <a routerLink="/seller/dashboard" class="pill red">Quản lý Shop (Kênh người bán)</a> -->
+      @if (authService.currentRoleSignal() === 'VENDOR' || authService.currentRoleSignal() === 'ROLE_VENDOR') {
+        <a routerLink="/seller/dashboard" class="pill red">Kênh người bán</a>
+      } @else if (authService.currentRoleSignal() === 'ADMIN' || authService.currentRoleSignal() === 'ROLE_ADMIN') {
+        <a routerLink="/admin" class="pill">Quản trị hệ thống</a>
+      } @else {
+        <a routerLink="/seller/onboarding" class="pill">Đăng ký bán hàng</a>
+      }
     </div>
   </header>
 
@@ -126,7 +131,11 @@
         <div class="empty-icon">📦</div>
         <h3>Gian hàng chưa có sản phẩm nào</h3>
         <p>Chủ shop đang chuẩn bị và cập nhật các sản phẩm mới. Vui lòng quay lại sau nhé!</p>
-        <a routerLink="/seller/dashboard" class="pill red">+ Đăng tải sản phẩm lên shop</a>
+        @if (authService.currentRoleSignal() === 'VENDOR' || authService.currentRoleSignal() === 'ROLE_VENDOR') {
+          <a routerLink="/seller/dashboard" class="pill red">+ Đăng tải sản phẩm lên shop</a>
+        } @else {
+          <a routerLink="/" class="pill red">Khám phá các sản phẩm khác</a>
+        }
       </div>
       }
     </section>

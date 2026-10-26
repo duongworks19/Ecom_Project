@@ -43,6 +43,18 @@
         Đơn mua
       </button>
 
+      @if (authService.currentRoleSignal() === 'ADMIN' || authService.currentRoleSignal() === 'ROLE_ADMIN') {
+        <button
+          #menuItem
+          type="button"
+          role="menuitem"
+          class="user-menu__item"
+          (click)="navigateToAdmin()"
+        >
+          🛡️ Trang Quản trị hệ thống
+        </button>
+      }
+
       @if (authService.currentRoleSignal() === 'VENDOR' || authService.currentRoleSignal() === 'ROLE_VENDOR') {
         <button
           #menuItem

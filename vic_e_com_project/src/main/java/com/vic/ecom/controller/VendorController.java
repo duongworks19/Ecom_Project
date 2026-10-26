@@ -27,12 +27,8 @@ public class VendorController {
     public ResponseEntity<ApiResponse<Map<String, Object>>> checkShopName(@RequestParam String name) {
         VendorService.ShopNameValidationResult result = vendorService.validateShopName(name);
         return ResponseEntity.ok(ApiResponse.ok("Kiểm tra tên gian hàng", Map.of(
-<<<<<<< Updated upstream
                 "isAvailable", result.isAvailable(),
                 "message", result.message()
-=======
-                "isAvailable", available,
-                "message", available ? "Tên gian hàng hợp lệ và khả dụng" : "Tên gian hàng đã tồn tại trên hệ thống"
         )));
     }
 
@@ -51,7 +47,6 @@ public class VendorController {
         return ResponseEntity.ok(ApiResponse.ok("Kiểm tra email", Map.of(
                 "isAvailable", available,
                 "message", available ? "Email hợp lệ và khả dụng" : "Email này đã được sử dụng trên hệ thống"
->>>>>>> Stashed changes
         )));
     }
 
