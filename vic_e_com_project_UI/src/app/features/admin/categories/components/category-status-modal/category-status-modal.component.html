@@ -1,0 +1,83 @@
+@if (isOpen && category) {
+  <div class="modal-backdrop" (click)="onClose()">
+    <div
+      class="modal-card"
+      (click)="$event.stopPropagation()"
+      role="dialog"
+      aria-modal="true"
+    >
+      <button
+        type="button"
+        class="btn-close-circle"
+        (click)="onClose()"
+        aria-label="Đóng"
+      >
+        ✕
+      </button>
+
+      @if (mode === 'HIDE') {
+        <h3 class="modal-title">Ẩn danh mục “{{ category.name }}”?</h3>
+
+        <div class="modal-body">
+          <p class="main-desc">
+            @if (descendants.length > 0) {
+              Danh mục <strong>{{ category.name }}</strong> và {{ descendants.length }} danh mục con ({{ descendantNamesText }}) sẽ không hiển thị với khách.
+            } @else {
+              Danh mục <strong>{{ category.name }}</strong> sẽ không hiển thị với khách.
+            }
+          </p>
+
+          <p class="secondary-desc">
+            Sản phẩm hiện có vẫn giữ danh mục và vẫn bán bình thường. Vendor không chọn được các danh mục này cho sản phẩm mới. Bạn có thể hiện lại bất cứ lúc nào.
+          </p>
+        </div>
+
+        <div class="modal-actions">
+          <button
+            type="button"
+            class="btn-cancel"
+            (click)="onClose()"
+            [disabled]="isSubmitting"
+          >
+            Hủy
+          </button>
+          <button
+            type="button"
+            class="btn-action-black"
+            (click)="onConfirm()"
+            [disabled]="isSubmitting"
+          >
+            {{ isSubmitting ? 'Đang cập nhật...' : 'Ẩn danh mục' }}
+          </button>
+        </div>
+      } @else {
+        <h3 class="modal-title">Hiển thị lại danh mục “{{ category.name }}”?</h3>
+
+        <div class="modal-body">
+          <p class="main-desc">
+            Danh mục <strong>{{ category.name }}</strong> sẽ được hiển thị công khai trở lại với khách hàng và Vendor.
+          </p>
+        </div>
+
+        <div class="modal-actions">
+          <button
+            type="button"
+            class="btn-cancel"
+            (click)="onClose()"
+            [disabled]="isSubmitting"
+          >
+            Hủy
+          </button>
+          <button
+            type="button"
+            class="btn-action-black"
+            (click)="onConfirm()"
+            [disabled]="isSubmitting"
+          >
+            {{ isSubmitting ? 'Đang cập nhật...' : 'Hiện danh mục' }}
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+}

@@ -1,0 +1,81 @@
+<div class="tree-panel-card">
+  <div class="tree-header">
+    <div class="header-left">
+      <h3 class="panel-title">Cây danh mục</h3>
+      <span class="depth-badge">Tối đa {{ maxDepth }} cấp</span>
+    </div>
+
+    <div class="header-actions">
+      <button
+        type="button"
+        class="btn-action-text"
+        [disabled]="isAllExpanded()"
+        (click)="expandAll()"
+        title="Mở rộng tất cả các nhánh"
+      >
+        <span class="icon">▾</span> Mở rộng tất cả
+      </button>
+
+      <button
+        type="button"
+        class="btn-action-text"
+        [disabled]="isAllCollapsed()"
+        (click)="collapseAll()"
+        title="Thu gọn tất cả các nhánh"
+      >
+        <span class="icon">▴</span> Thu gọn tất cả
+      </button>
+    </div>
+  </div>
+
+  <div class="tree-content" role="tree">
+    @for (node of visibleNodes(); track node.id) {
+      <div
+        class="tree-row"
+        [class.is-selected]="node.id === selectedId"
+        [style.padding-left.px]="(node.level - 1) * 24 + 12"
+        (click)="onSelectNode(node)"
+        role="treeitem"
+        [attr.aria-selected]="node.id === selectedId"
+        [attr.aria-expanded]="node.childCount > 0 ? node.expanded : null"
+      >
+        <div class="row-left">
+          @if (node.childCount > 0) {
+            <button
+              type="button"
+              class="chevron-toggle"
+              (click)="toggleNode(node, $event)"
+              [attr.aria-label]="node.expanded ? 'Thu gọn ' + node.name : 'Mở rộng ' + node.name"
+            >
+              {{ node.expanded ? '▾' : '▸' }}
+            </button>
+          } @else {
+            <span class="chevron-placeholder"></span>
+          }
+
+          <span class="node-name">{{ node.name }}</span>
+
+          @if (node.level === maxDepth) {
+            <span class="level-tag">Cấp {{ node.level }}</span>
+          }
+        </div>
+
+        <div class="row-right">
+          <span class="product-count">{{ node.totalProductCount }} sản phẩm</span>
+          <span
+            class="status-badge"
+            [class.status-badge--visible]="node.status === 'VISIBLE'"
+            [class.status-badge--hidden]="node.status === 'HIDDEN'"
+          >
+            <span class="dot"></span>
+            {{ node.status === 'VISIBLE' ? 'Hiển thị' : 'Đã ẩn' }}
+          </span>
+        </div>
+      </div>
+    } @empty {
+      <div class="tree-empty">
+        <p>Không tìm thấy danh mục nào phù hợp.</p>
+      </div>
+    }
+  </div>
+</div>

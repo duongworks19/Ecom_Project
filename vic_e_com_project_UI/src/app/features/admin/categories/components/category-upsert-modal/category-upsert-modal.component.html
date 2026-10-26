@@ -1,0 +1,151 @@
+@if (isOpen) {
+  <div class="modal-backdrop" (click)="onClose()">
+    <div
+      class="modal-card"
+      (click)="$event.stopPropagation()"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-label]="editingCategory ? 'Sửa danh mục' : 'Thêm danh mục'"
+    >
+      <button
+        type="button"
+        class="btn-close-circle"
+        (click)="onClose()"
+        aria-label="Đóng"
+      >
+        ✕
+      </button>
+
+      <h3 class="modal-title">
+        {{ editingCategory ? 'Sửa danh mục' : 'Thêm danh mục' }}
+      </h3>
+
+      <form class="modal-form" (ngSubmit)="onSubmit()">
+        <!-- Field 1: Tên danh mục -->
+        <div class="form-group">
+          <label class="form-label" for="categoryName">Tên danh mục</label>
+          <input
+            id="categoryName"
+            type="text"
+            class="form-input"
+            placeholder="Nhập tên danh mục (VD: Áo khoác nam)"
+            maxlength="100"
+            [ngModel]="name"
+            (ngModelChange)="onNameChange($event)"
+            name="name"
+            required
+            autocomplete="off"
+          />
+        </div>
+
+        <!-- Field 2: Danh mục cha -->
+        <div class="form-group">
+          <div class="form-label-row">
+            <label class="form-label" for="categoryParent">Danh mục cha</label>
+            <span class="target-level-hint">
+              Sẽ tạo ở: <strong>Cấp {{ computedTargetLevel }} / {{ maxDepth }}</strong>
+            </span>
+          </div>
+
+          <select
+            id="categoryParent"
+            class="form-select"
+            [(ngModel)]="parentId"
+            name="parentId"
+          >
+            <option [ngValue]="null">Không có (Danh mục gốc - Cấp 1)</option>
+            @for (opt of parentOptions; track opt.item ? opt.item.id : 'root') {
+              @if (opt.item) {
+                <option [ngValue]="opt.item.id" [disabled]="opt.disabled">
+                  {{ opt.label }}
+                </option>
+              }
+            }
+          </select>
+
+          <span class="field-hint">
+            Chọn 'Không có' nếu đây là danh mục gốc. Các danh mục Cấp {{ maxDepth }} bị khóa chọn để tránh vượt quá độ sâu tối đa.
+          </span>
+        </div>
+
+        <!-- Field 3: Slug -->
+        <div class="form-group">
+          <div class="form-label-row">
+            <label class="form-label" for="categorySlug">Slug</label>
+            <button
+              type="button"
+              class="btn-toggle-slug"
+              (click)="toggleManualSlug()"
+            >
+              @if (!isManualSlug()) {
+                <span>✏️ Tùy chỉnh thủ công</span>
+              } @else {
+                <span>🔄 Đặt lại tự động</span>
+              }
+            </button>
+          </div>
+
+          <div class="slug-input-wrapper" [class.is-manual]="isManualSlug()">
+            <input
+              #slugInput
+              id="categorySlug"
+              type="text"
+              class="form-input slug-input"
+              [class.has-error]="!isSlugAvailable() || slugError()"
+              [disabled]="!isManualSlug()"
+              [ngModel]="slug"
+              (ngModelChange)="onSlugInput($event)"
+              name="slug"
+              placeholder="Tự tạo từ tên danh mục"
+              autocomplete="off"
+            />
+
+            @if (!isManualSlug()) {
+              <span class="auto-badge">Tự động</span>
+            }
+          </div>
+
+          @if (isSlugChecking()) {
+            <span class="field-checking">Đang kiểm tra slug...</span>
+          } @else if (slugError()) {
+            <div class="slug-error-box">
+              <span class="error-text">{{ slugError() }}</span>
+              @if (suggestedSlug()) {
+                <button
+                  type="button"
+                  class="btn-suggested"
+                  (click)="applySuggestedSlug()"
+                >
+                  Dùng gợi ý: {{ suggestedSlug() }}
+                </button>
+              }
+            </div>
+          }
+
+          <span class="field-hint">
+            Đường dẫn được sinh tự động và không trùng với danh mục khác.
+          </span>
+        </div>
+
+        <!-- Modal Footer Actions -->
+        <div class="modal-actions">
+          <button
+            type="button"
+            class="btn-cancel"
+            (click)="onClose()"
+            [disabled]="isSubmitting"
+          >
+            Hủy
+          </button>
+          <button
+            type="submit"
+            class="btn-save"
+            [disabled]="!isFormValid || isSubmitting"
+          >
+            {{ isSubmitting ? 'Đang lưu...' : 'Lưu danh mục' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

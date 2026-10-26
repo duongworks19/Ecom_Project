@@ -1,0 +1,104 @@
+@if (category) {
+  <div class="detail-panel-card" role="region" aria-label="Chi tiết danh mục">
+    <div class="detail-header">
+      <div class="header-main">
+        <h2 class="category-name">{{ category.name }}</h2>
+        <span class="level-badge">Cấp {{ category.level }} / {{ maxDepth }}</span>
+      </div>
+
+      <div class="breadcrumb-text">
+        {{ breadcrumb }}
+      </div>
+
+      <div class="status-indicator-row">
+        <span
+          class="status-indicator"
+          [class.status-indicator--visible]="category.status === 'VISIBLE'"
+          [class.status-indicator--hidden]="category.status === 'HIDDEN'"
+        >
+          <span class="dot"></span>
+          {{ category.status === 'VISIBLE' ? 'Hiển thị' : 'Đã ẩn' }}
+        </span>
+      </div>
+    </div>
+
+    <div class="info-table">
+      <div class="info-row">
+        <span class="info-label">Danh mục cha</span>
+        <span class="info-value">{{ parentName || 'Không có (Danh mục gốc)' }}</span>
+      </div>
+
+      <div class="info-row">
+        <span class="info-label">Cấp độ cây</span>
+        <span class="info-value">Cấp {{ category.level }} / {{ maxDepth }}</span>
+      </div>
+
+      <div class="info-row">
+        <span class="info-label">Slug</span>
+        <span class="info-value slug-text">{{ category.slug }}</span>
+      </div>
+
+      <div class="info-row">
+        <span class="info-label">Số sản phẩm</span>
+        <span class="info-value">{{ category.totalProductCount }}</span>
+      </div>
+
+      <div class="info-row">
+        <span class="info-label">Danh mục con</span>
+        <span class="info-value">{{ category.childCount }}</span>
+      </div>
+    </div>
+
+    <div class="action-buttons-group">
+      <button
+        type="button"
+        class="btn-action-black"
+        [disabled]="isMaxDepth"
+        (click)="onAddChild()"
+        [attr.title]="isMaxDepth ? 'Đã đạt tối đa cấp độ cây danh mục' : 'Thêm danh mục con vào ' + category.name"
+      >
+        Thêm danh mục con
+      </button>
+
+      <button type="button" class="btn-action-secondary" (click)="onEdit()">
+        Sửa
+      </button>
+
+      <button type="button" class="btn-action-secondary" (click)="onToggleStatus()">
+        {{ category.status === 'VISIBLE' ? 'Ẩn danh mục' : 'Hiện danh mục' }}
+      </button>
+
+      <button
+        type="button"
+        class="btn-action-secondary"
+        [disabled]="!canDelete"
+        (click)="onDelete()"
+        [attr.title]="canDelete ? 'Xóa danh mục trống này' : 'Chỉ có thể xóa khi không còn sản phẩm và danh mục con'"
+      >
+        Xóa
+      </button>
+    </div>
+
+    @if (isMaxDepth) {
+      <div class="max-depth-notice" role="alert">
+        <p>
+          Danh mục '<strong>{{ category.name }}</strong>' đang ở Cấp {{ category.level }} ({{ breadcrumb }}).
+          Để đảm bảo trải nghiệm duyệt web và hiển thị Breadcrumb không bị vỡ, hệ thống giới hạn cây danh mục tối đa {{ maxDepth }} cấp.
+        </p>
+      </div>
+    }
+
+    @if (!canDelete) {
+      <div class="cannot-delete-notice">
+        <p>
+          Chưa thể xóa: danh mục còn {{ category.totalProductCount }} sản phẩm và {{ category.childCount }} danh mục con.
+          Chỉ xóa được danh mục trống; nếu không muốn hiển thị, hãy ẩn danh mục.
+        </p>
+      </div>
+    }
+  </div>
+} @else {
+  <div class="detail-panel-card empty-panel">
+    <p>Chọn một danh mục trên cây để xem chi tiết.</p>
+  </div>
+}

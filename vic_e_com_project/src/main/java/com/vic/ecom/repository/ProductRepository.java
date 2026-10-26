@@ -8,9 +8,16 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
+
+    long countByCategoryId(Long categoryId);
+    long countByCategoryIdAndStatusNot(Long categoryId, String status);
+
+    List<Product> findAllByStatusNot(String status);
 
     List<Product> findByShopIdOrderByIdDesc(Long shopId);
 

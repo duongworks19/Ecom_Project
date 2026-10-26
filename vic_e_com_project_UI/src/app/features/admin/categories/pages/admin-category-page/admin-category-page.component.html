@@ -1,0 +1,124 @@
+<div class="category-page">
+  <!-- Header Page -->
+  <header class="page-header">
+    <div class="header-text">
+      <h1 class="page-title">Danh mục</h1>
+      <p class="page-subtitle">
+        Quản lý cây danh mục sản phẩm của cả sàn. Vendor chỉ chọn danh mục khi đăng sản phẩm.
+      </p>
+    </div>
+
+    <button type="button" class="btn-create-category" (click)="openAddModal()">
+      + Thêm danh mục
+    </button>
+  </header>
+
+  @if (toastMessage(); as toast) {
+    <div class="toast-banner" role="status">{{ toast }}</div>
+  }
+
+  @if (pageError(); as error) {
+    <div class="error-banner" role="alert">{{ error }}</div>
+  }
+
+  <!-- 3 Thẻ thống kê KPI -->
+  <section class="kpi-section" aria-label="Thống kê danh mục">
+    <div class="kpi-card kpi-card--dark">
+      <span class="kpi-label">Tổng danh mục</span>
+      <span class="kpi-value">{{ summary().totalCategories }}</span>
+      <span class="kpi-sub kpi-sub--light">
+        Gồm cả danh mục con (Tối đa {{ maxDepth() }} cấp)
+      </span>
+    </div>
+
+    <div class="kpi-card kpi-card--light">
+      <span class="kpi-label">Đang hiển thị</span>
+      <span class="kpi-value">{{ summary().visibleCategories }}</span>
+      <span class="kpi-sub">Khách nhìn thấy</span>
+    </div>
+
+    <div class="kpi-card kpi-card--light">
+      <span class="kpi-label">Đã ẩn</span>
+      <span class="kpi-value">{{ summary().hiddenCategories }}</span>
+      <span class="kpi-sub">Không hiển thị với khách</span>
+    </div>
+  </section>
+
+  <!-- Thanh Tìm kiếm & Bộ lọc -->
+  <section class="filters-section" aria-label="Bộ lọc danh mục">
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input
+        type="text"
+        class="search-input"
+        placeholder="Tìm danh mục theo tên hoặc slug..."
+        [ngModel]="searchKeyword()"
+        (ngModelChange)="onSearchInput($event)"
+      />
+    </div>
+
+    <div class="status-filter-box">
+      <select
+        class="status-select"
+        [ngModel]="selectedStatus()"
+        (ngModelChange)="onStatusFilterChange($event)"
+      >
+        <option value="ALL">Trạng thái: Tất cả</option>
+        <option value="VISIBLE">Đang hiển thị</option>
+        <option value="HIDDEN">Đã ẩn</option>
+      </select>
+    </div>
+  </section>
+
+  <!-- Nội dung chính: Cây bên trái & Chi tiết bên phải -->
+  @if (isLoading()) {
+    <div class="loading-state" aria-live="polite">
+      Đang tải dữ liệu danh mục...
+    </div>
+  } @else {
+    <main class="content-grid">
+      <div class="col-tree">
+        <vic-category-tree-panel
+          [items]="allCategories()"
+          [selectedId]="selectedCategory()?.id ?? null"
+          [maxDepth]="maxDepth()"
+          (selectCategory)="onSelectCategory($event)"
+        ></vic-category-tree-panel>
+      </div>
+
+      <div class="col-detail">
+        <vic-category-detail-panel
+          [category]="selectedCategory()"
+          [parentName]="parentNameOfSelected()"
+          [maxDepth]="maxDepth()"
+          (addChild)="openAddModal($event.id)"
+          (edit)="openEditModal($event)"
+          (toggleStatus)="openStatusModal($event)"
+          (delete)="onDeleteCategory($event)"
+        ></vic-category-detail-panel>
+      </div>
+    </main>
+  }
+
+  <!-- Modals -->
+  <vic-category-upsert-modal
+    [isOpen]="isUpsertModalOpen()"
+    [editingCategory]="editingCategory()"
+    [initialParentId]="initialParentId()"
+    [allCategories]="allCategories()"
+    [maxDepth]="maxDepth()"
+    [isSubmitting]="isUpsertSubmitting()"
+    (close)="isUpsertModalOpen.set(false)"
+    (save)="onSaveCategory($event)"
+  ></vic-category-upsert-modal>
+
+  <vic-category-status-modal
+    [isOpen]="isStatusModalOpen()"
+    [category]="statusTargetCategory()"
+    [descendants]="statusDescendants()"
+    [mode]="statusModalMode()"
+    [isSubmitting]="isStatusSubmitting()"
+    (close)="isStatusModalOpen.set(false)"
+    (confirm)="onConfirmStatusChange($event)"
+  ></vic-category-status-modal>
+</div>

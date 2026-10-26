@@ -38,6 +38,14 @@ export const ADMIN_ROUTES: Routes = [
         title: 'Quản lý người dùng — VIC MART Admin',
       },
       {
+        path: 'categories',
+        loadComponent: () =>
+          import('./categories/pages/admin-category-page/admin-category-page.component').then(
+            (m) => m.AdminCategoryPageComponent
+          ),
+        title: 'Quản lý danh mục — VIC MART Admin',
+      },
+      {
         path: 'shippers',
         loadComponent: () =>
           import('./pages/admin-shippers/admin-shippers.component').then(
