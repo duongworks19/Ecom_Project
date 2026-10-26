@@ -273,6 +273,11 @@ export class SellerDashboardComponent implements OnInit {
 
   // Tên tài khoản người dùng yêu cầu duyệt đơn (User Account)
   readonly userAccountName = computed(() => {
+    const authenticatedName = this.authService.currentUserNameSignal()?.trim();
+    if (authenticatedName && authenticatedName !== 'Thành viên') {
+      return authenticatedName;
+    }
+
     const draftRaw = localStorage.getItem('vic_seller_onboarding_draft');
     if (draftRaw) {
       try {
