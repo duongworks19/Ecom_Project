@@ -1,0 +1,114 @@
+.list-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.items-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Skeletons */
+.skeleton-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.skeleton-card {
+  height: 94px;
+  background-color: var(--color-surface-soft);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--rounded-md);
+  position: relative;
+  overflow: hidden;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.6),
+      transparent
+    );
+    animation: skeleton-shimmer 1.5s infinite;
+  }
+}
+
+@keyframes skeleton-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Error State */
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 36px 20px;
+  background-color: #fff8f8;
+  border: 1px dashed var(--color-error);
+  border-radius: var(--rounded-md);
+  text-align: center;
+  gap: 12px;
+
+  &__message {
+    color: var(--color-error);
+    font-weight: 500;
+    font-size: 14px;
+  }
+
+  &__retry-btn {
+    height: 38px;
+    padding: 0 20px;
+    background-color: var(--color-primary);
+    color: var(--color-on-primary);
+    border-radius: var(--rounded-full);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color var(--transition-fast);
+
+    &:hover {
+      background-color: var(--color-primary-pressed);
+    }
+  }
+}
+
+/* Empty State */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  background-color: var(--color-canvas);
+  border: 1px dashed var(--color-hairline);
+  border-radius: var(--rounded-md);
+  text-align: center;
+
+  &__icon {
+    font-size: 36px;
+    margin-bottom: 12px;
+  }
+
+  &__title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-ink);
+    margin-bottom: 6px;
+  }
+
+  &__desc {
+    font-size: 13px;
+    color: var(--color-mute);
+    max-width: 320px;
+  }
+}

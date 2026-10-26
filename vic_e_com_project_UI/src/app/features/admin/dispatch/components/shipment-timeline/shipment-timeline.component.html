@@ -1,0 +1,40 @@
+<div class="timeline-container">
+  <h4 class="timeline-title">Hành trình vận đơn</h4>
+
+  <div class="timeline-list">
+    @for (event of events(); track $index) {
+      <div
+        class="timeline-item"
+        [class.timeline-item--failed]="event.status === 'FAILED'"
+      >
+        <div class="timeline-item__header">
+          <div class="timeline-item__status-line">
+            <span class="timeline-item__status-title">
+              {{ getEventTitle(event.status) }}
+            </span>
+            <span class="timeline-item__enum">{{ event.status }}</span>
+          </div>
+          <span class="timeline-item__time">
+            {{ event.createdAt | date: 'HH:mm' }}
+          </span>
+        </div>
+        @if (event.note) {
+          <div class="timeline-item__note">
+            {{ event.note }}
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Dotted card at the end depending on status -->
+    @if (displayStatus() === 'WAITING') {
+      <div class="timeline-pending-card">
+        Chờ hệ thống tự động gán shipper...
+      </div>
+    } @else if (displayStatus() === 'FAILED') {
+      <div class="timeline-pending-card timeline-pending-card--failed">
+        Chờ Admin chọn cách xử lý...
+      </div>
+    }
+  </div>
+</div>

@@ -1,0 +1,31 @@
+<section class="roster-section" aria-label="Đội ngũ shipper">
+  <div class="roster-header">
+    <div class="roster-header__title">Đội ngũ shipper</div>
+  </div>
+
+  <div class="roster-chips" role="list">
+    @for (s of availableShippers(); track s.id) {
+      <div
+        class="shipper-chip"
+        [class.shipper-chip--busy]="isBusy(s)"
+        [class.shipper-chip--available]="!isBusy(s)"
+        role="listitem"
+      >
+        <span class="shipper-chip__name">{{ s.fullName }}</span>
+        @if (isBusy(s)) {
+          <span class="shipper-chip__badge shipper-chip__badge--busy">
+            BUSY · {{ s.activeOrders }}/{{ s.maxActiveOrders }}
+          </span>
+        } @else {
+          <span class="shipper-chip__badge shipper-chip__badge--available">
+            AVAILABLE · {{ s.activeOrders }}/{{ s.maxActiveOrders }}
+          </span>
+        }
+      </div>
+    } @empty {
+      <div class="roster-empty">
+        Không có shipper nào đang ở trạng thái AVAILABLE (Sẵn sàng nhận đơn).
+      </div>
+    }
+  </div>
+</section>

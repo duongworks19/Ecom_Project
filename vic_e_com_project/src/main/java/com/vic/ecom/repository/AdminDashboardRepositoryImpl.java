@@ -31,8 +31,8 @@ public class AdminDashboardRepositoryImpl implements AdminDashboardRepository {
                            WHERE s.order_id = o.id
                              AND s.status IN ('ASSIGNED', 'PICKED_UP', 'DELIVERING')
                        )) AS orders_awaiting_shipper,
-                    (SELECT COUNT(*) FROM delivery_failures WHERE next_action IS NULL) AS failed_deliveries,
-                    (SELECT COUNT(*) FROM return_requests WHERE status = 'PENDING') AS pending_returns
+                    (SELECT COUNT(*) FROM delivered_failures WHERE next_action IS NULL) AS failed_deliveries,
+                    0 AS pending_returns
                 """;
         return jdbcClient.sql(sql)
                 .query((rs, rowNum) -> new PendingTasks(
@@ -77,7 +77,7 @@ public class AdminDashboardRepositoryImpl implements AdminDashboardRepository {
         String sql = """
                 SELECT
                     d.day::date AS rev_date,
-                    COALESCE(SUM(o.total_amount), 0.00) AS amount
+                    COALESCE(SUM(o.total), 0.00) AS amount
                 FROM generate_series(CAST(:startDate AS date), CAST(:endDate AS date), INTERVAL '1 day') AS d(day)
                 LEFT JOIN orders o
                     ON o.status = 'DELIVERED'
@@ -139,7 +139,7 @@ public class AdminDashboardRepositoryImpl implements AdminDashboardRepository {
                             'Shipper báo giao thất bại, chờ quyết định' AS title,
                             df.id AS reference_id,
                             df.created_at AS occurred_at
-                     FROM delivery_failures df
+                     FROM delivered_failures df
                      WHERE df.next_action IS NULL
                      ORDER BY df.created_at DESC
                      LIMIT :limit)
@@ -148,7 +148,7 @@ public class AdminDashboardRepositoryImpl implements AdminDashboardRepository {
                             'Khách gửi yêu cầu đổi trả sản phẩm' AS title,
                             rr.id AS reference_id,
                             rr.created_at AS occurred_at
-                     FROM return_requests rr
+                     FROM (SELECT NULL::bigint AS id, NULL::timestamp AS created_at, NULL::varchar AS status) rr
                      WHERE rr.status = 'PENDING'
                      ORDER BY rr.created_at DESC
                      LIMIT :limit)

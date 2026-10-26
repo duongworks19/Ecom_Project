@@ -1,0 +1,116 @@
+<section class="failure-card" aria-label="Sự cố giao thất bại">
+  <div class="failure-card__header">
+    <div class="failure-card__title">
+      Sự cố giao thất bại · Lần {{ detail().item.attemptNo }}/3
+    </div>
+    @if (latestFailureTime()) {
+      <div class="failure-card__time">
+        {{ latestFailureTime() | date: 'dd/MM/yyyy HH:mm' }}
+      </div>
+    }
+  </div>
+
+  <div class="failure-card__reason-box">
+    <span class="failure-card__reason-label">Lý do shipper báo:</span>
+    <blockquote class="failure-card__quote">
+      "{{ failureReason() }}"
+    </blockquote>
+  </div>
+
+  @if (availability().disabledReason) {
+    <div class="failure-card__warning" role="alert">
+      {{ availability().disabledReason }}
+    </div>
+  }
+
+  <div class="failure-card__actions-label">Chọn cách xử lý tiếp theo</div>
+
+  <div class="failure-card__actions-stack">
+    <!-- Action 1: Đổi shipper khác (REASSIGN) -->
+    <button
+      type="button"
+      class="action-btn action-btn--primary"
+      [disabled]="!availability().canReassign || loading()"
+      (click)="onAction('REASSIGN')"
+    >
+      <div class="action-btn__text">
+        <span class="action-btn__title">Đổi shipper khác</span>
+        <span class="action-btn__subtitle">
+          Hệ thống tự chọn người khác tuyến {{ detail().route }}
+        </span>
+      </div>
+      <span class="action-btn__code">REASSIGN</span>
+    </button>
+
+    <!-- Action 2: Giao lại (RETRY) -->
+    <button
+      type="button"
+      class="action-btn action-btn--secondary"
+      [disabled]="!availability().canRetry || loading()"
+      (click)="onAction('RETRY')"
+    >
+      <div class="action-btn__text">
+        <span class="action-btn__title">Giao lại</span>
+        <span class="action-btn__subtitle">
+          Cùng shipper, giao lần {{ detail().item.attemptNo + 1 }}
+        </span>
+      </div>
+      <span class="action-btn__code">RETRY</span>
+    </button>
+
+    <!-- Action 3: Hoàn hàng về Shop (RETURN) -->
+    <button
+      type="button"
+      class="action-btn action-btn--danger-outline"
+      [disabled]="!availability().canReturn || loading()"
+      (click)="onAction('RETURN')"
+    >
+      <div class="action-btn__text">
+        <span class="action-btn__title">Hoàn hàng về Shop</span>
+        <span class="action-btn__subtitle">Hủy đơn, hoàn kho · cần xác nhận</span>
+      </div>
+      <span class="action-btn__code">RETURN</span>
+    </button>
+  </div>
+</section>
+
+<!-- Native Dialog: Confirm RETURN -->
+<dialog #returnDialog class="vic-dialog">
+  <div class="vic-dialog__content">
+    <div class="vic-dialog__header">
+      <h3 class="vic-dialog__title">Xác nhận hoàn hàng về Shop</h3>
+      <button type="button" class="vic-dialog__close" (click)="closeReturnDialog()" aria-label="Đóng">
+        ✕
+      </button>
+    </div>
+
+    <div class="vic-dialog__body">
+      <p class="vic-dialog__warning">
+        ⚠️ Thao tác này sẽ chuyển trạng thái đơn sang <strong>ĐÃ HỦY</strong>, hoàn lại số lượng tồn kho và thông báo kết thúc vận đơn. Bạn có chắc chắn muốn hoàn hàng?
+      </p>
+
+      <label class="vic-dialog__field-label" for="returnNote">Ghi chú xử lý (tùy chọn):</label>
+      <textarea
+        id="returnNote"
+        class="vic-dialog__textarea"
+        rows="3"
+        [(ngModel)]="returnNote"
+        placeholder="Nhập lý do hoàn hàng cho Shop và bộ phận kho..."
+      ></textarea>
+    </div>
+
+    <div class="vic-dialog__footer">
+      <button type="button" class="vic-btn vic-btn--secondary" (click)="closeReturnDialog()">
+        Hủy bỏ
+      </button>
+      <button
+        type="button"
+        class="vic-btn vic-btn--danger"
+        [disabled]="loading()"
+        (click)="confirmReturn()"
+      >
+        {{ loading() ? 'Đang xử lý...' : 'Xác nhận hoàn hàng' }}
+      </button>
+    </div>
+  </div>
+</dialog>

@@ -1,0 +1,130 @@
+.item-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 20px;
+  background-color: var(--color-canvas);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--rounded-md);
+  cursor: pointer;
+  outline: none;
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+
+  &:hover {
+    background-color: var(--color-surface-soft);
+  }
+
+  &--selected {
+    border: 2px solid var(--color-ink) !important;
+    background-color: var(--color-surface-soft);
+  }
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+
+  &__identity {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  &__code {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--color-ink);
+  }
+
+  &__district-chip {
+    padding: 2px 8px;
+    background-color: var(--color-secondary-bg);
+    border-radius: var(--rounded-full);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-body);
+  }
+
+  &__dot {
+    color: var(--color-ash);
+  }
+
+  &__shop {
+    font-size: 13px;
+    color: var(--color-mute);
+  }
+
+  &__body {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    color: var(--color-body);
+    gap: 8px;
+  }
+
+  &__receiver strong {
+    color: var(--color-ink);
+  }
+
+  &__cod strong {
+    color: var(--color-ink);
+  }
+
+  &__footer {
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  &__waiting-note {
+    color: var(--color-accent-purple);
+    font-weight: 500;
+  }
+
+  &__shipper-info {
+    color: var(--color-mute);
+
+    &--failed {
+      color: var(--color-error);
+      font-weight: 500;
+    }
+  }
+}
+
+.item-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: var(--rounded-full);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+
+  &.badge--waiting {
+    background-color: #f3e8ff;
+    color: var(--color-accent-purple);
+  }
+
+  &.badge--delivering {
+    background-color: #e0e7ff;
+    color: #3730a3;
+  }
+
+  &.badge--failed {
+    background-color: #fee2e2;
+    color: var(--color-error);
+  }
+
+  &.badge--delivered {
+    background-color: var(--color-success-pale);
+    color: var(--color-success-deep);
+  }
+
+  &.badge--default {
+    background-color: var(--color-secondary-bg);
+    color: var(--color-mute);
+  }
+}

@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.Lock;
+import jakarta.persistence.LockModeType;
 
 import java.util.Collection;
 import java.util.List;
@@ -27,4 +29,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     List<Order> findByShopIdOrderByCreatedAtDescIdDesc(Long shopId);
 
     Optional<Order> findByOrderCode(String orderCode);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select o from Order o where o.status = :status and not exists (select s.id from Shipment s where s.order = o) order by o.createdAt asc, o.id asc")
+    List<Order> findReadyWithoutShipment(@Param("status") OrderStatus status);
 }

@@ -1,0 +1,37 @@
+<section class="waiting-card" aria-label="Đơn chờ điều phối">
+  <div class="waiting-card__header">
+    <h4 class="waiting-card__title">Hệ thống đang tìm shipper</h4>
+    <p class="waiting-card__desc">
+      {{ detail().item.waitingNote || 'Chưa có shipper AVAILABLE nào ở tuyến phù hợp. Hệ thống sẽ tự động thử lại.' }}
+    </p>
+  </div>
+
+  @if (filteredAvailableShippers().length > 0) {
+    <div class="waiting-card__shippers-label">
+      Shipper sẵn sàng hiện tại ({{ filteredAvailableShippers().length }}):
+    </div>
+    <div class="waiting-card__shipper-list">
+      @for (s of filteredAvailableShippers(); track s.id) {
+        <div class="candidate-row">
+          <div class="candidate-row__info">
+            <span class="candidate-row__name">{{ s.fullName }}</span>
+            <span class="candidate-row__status">
+              {{ s.workStatus }} · Đang nhận {{ s.activeOrders }}/{{ s.maxActiveOrders }} đơn
+            </span>
+          </div>
+          <span class="candidate-row__tag">Khả dụng</span>
+        </div>
+      }
+    </div>
+  }
+
+  <div class="waiting-card__actions">
+    <button
+      type="button"
+      class="manual-assign-btn"
+      (click)="onManualAssign()"
+    >
+      Gán thủ công
+    </button>
+  </div>
+</section>

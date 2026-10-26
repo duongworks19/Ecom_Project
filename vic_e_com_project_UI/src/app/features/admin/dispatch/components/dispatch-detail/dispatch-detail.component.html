@@ -1,0 +1,61 @@
+@if (detail(); as d) {
+  <aside class="detail-panel" aria-label="Chi tiết vận đơn">
+    <!-- Header -->
+    <div class="detail-panel__header">
+      <div class="detail-panel__title-row">
+        <h3 class="detail-panel__order-code">{{ d.orderCode }}</h3>
+        @if (badgeInfo(); as badge) {
+          <span class="item-badge" [class]="badge.cssModifier">
+            {{ badge.label }}
+          </span>
+        }
+      </div>
+      <div class="detail-panel__subtitle">
+        @if (d.trackingCode) {
+          Mã vận đơn <strong>{{ d.trackingCode }}</strong> ·
+        }
+        Tuyến {{ d.route }}
+      </div>
+    </div>
+
+    <!-- Conditional Action Panels -->
+    @if (d.displayStatus === 'WAITING') {
+      <vic-waiting-panel
+        [detail]="d"
+        [availableShippers]="shippers()"
+        (openManualAssign)="onOpenAssignDialog()"
+      />
+    } @else if (d.displayStatus === 'FAILED') {
+      <vic-failure-panel
+        [detail]="d"
+        [loading]="actionLoading()"
+        (resolve)="onResolve($event)"
+      />
+    }
+
+    <!-- Info Rows -->
+    <vic-info-rows [detail]="d" />
+
+    <!-- Timeline -->
+    <vic-shipment-timeline
+      [events]="d.events"
+      [displayStatus]="d.displayStatus"
+    />
+
+    <!-- Manual Assign Dialog -->
+    <vic-manual-assign-dialog
+      #assignDialog
+      [detail]="d"
+      [shippers]="shippers()"
+      [loading]="actionLoading()"
+      (assign)="onConfirmAssign($event)"
+    />
+  </aside>
+} @else {
+  <aside class="detail-panel detail-panel--placeholder">
+    <div class="placeholder-content">
+      <div class="placeholder-icon">📋</div>
+      <p>Chọn một đơn hàng từ danh sách bên trái để xem chi tiết điều phối</p>
+    </div>
+  </aside>
+}

@@ -37,7 +37,7 @@ export class ShipperLayoutComponent implements OnInit {
     });
 
     this.shipperService.shipments$.subscribe((list) => {
-      const pickup = list.filter((s) => s.status === 'READY_TO_PICK').length;
+      const pickup = list.filter((s) => s.status === 'ASSIGNED').length;
       const delivering = list.filter((s) => s.status === 'DELIVERING').length;
       const cod = list
         .filter((s) => s.status === 'DELIVERED')

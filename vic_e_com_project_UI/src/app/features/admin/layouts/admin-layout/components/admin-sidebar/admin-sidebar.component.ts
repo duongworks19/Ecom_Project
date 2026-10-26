@@ -46,7 +46,7 @@ export class AdminSidebarComponent {
       groupTitle: 'ĐƠN HÀNG & GIAO HÀNG',
       items: [
         { label: 'Đơn hàng', route: '/admin/orders' },
-        { label: 'Gán shipper & vận đơn', route: '/admin/shipments' },
+        { label: 'Gán shipper & vận đơn', route: '/admin/dispatch' },
       ],
     },
   ];

@@ -31,7 +31,9 @@ export class ShipperDeliveringComponent implements OnInit {
 
   ngOnInit(): void {
     this.shipperService.shipments$.subscribe((list) => {
-      this.deliveringShipments.set(list.filter((s) => s.status === 'DELIVERING'));
+      this.deliveringShipments.set(
+        list.filter((s) => s.status === 'PICKED_UP' || s.status === 'DELIVERING')
+      );
     });
   }
 

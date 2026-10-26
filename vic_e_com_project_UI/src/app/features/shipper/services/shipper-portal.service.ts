@@ -44,15 +44,29 @@ export class ShipperPortalService {
   }
 
   confirmPickup(id: number): Observable<Shipment> { 
-    return this.http.post<ApiResponse<Shipment>>(`${this.baseUrl}/shipments/${id}/pickup`, {}).pipe(map(r => r.data)); 
+    return this.http.post<ApiResponse<Shipment>>(`${this.baseUrl}/shipments/${id}/pickup`, {}).pipe(
+      map(r => r.data),
+      tap(() => this.refreshAfterMutation())
+    ); 
   }
   
   confirmDelivered(id: number, collectedCod: number): Observable<Shipment> { 
-    return this.http.post<ApiResponse<Shipment>>(`${this.baseUrl}/shipments/${id}/confirm-delivered`, { collectedCod }).pipe(map(r => r.data)); 
+    return this.http.post<ApiResponse<Shipment>>(`${this.baseUrl}/shipments/${id}/confirm-delivered`, { collectedCod }).pipe(
+      map(r => r.data),
+      tap(() => this.refreshAfterMutation())
+    ); 
   }
   
   reportDeliveryFailure(id: number, reason: FailureReason, notes: string): Observable<Shipment> { 
-    return this.http.post<ApiResponse<Shipment>>(`${this.baseUrl}/shipments/${id}/report-failure`, { reason, notes }).pipe(map(r => r.data)); 
+    return this.http.post<ApiResponse<Shipment>>(`${this.baseUrl}/shipments/${id}/report-failure`, { reason, notes }).pipe(
+      map(r => r.data),
+      tap(() => this.refreshAfterMutation())
+    ); 
+  }
+
+  private refreshAfterMutation(): void {
+    this.getShipments().subscribe();
+    this.getProfile().subscribe();
   }
   
   getHistory(): Observable<Shipment[]> { 

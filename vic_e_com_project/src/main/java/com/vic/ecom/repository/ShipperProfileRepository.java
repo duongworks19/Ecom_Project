@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
+import java.util.List;
 
 public interface ShipperProfileRepository extends JpaRepository<ShipperProfile, Long> {
     Optional<ShipperProfile> findByUserId(Long userId);
@@ -26,4 +27,7 @@ public interface ShipperProfileRepository extends JpaRepository<ShipperProfile, 
 
     long countByUser_StatusAndWorkStatus(UserStatus status, ShipperWorkStatus workStatus);
     long countByUser_Status(UserStatus status);
+
+    List<ShipperProfile> findByUser_StatusAndWorkStatus(UserStatus status, ShipperWorkStatus workStatus);
+    List<ShipperProfile> findByUser_Status(UserStatus status);
 }

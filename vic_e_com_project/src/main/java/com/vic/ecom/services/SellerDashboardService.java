@@ -11,6 +11,8 @@ import com.vic.ecom.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -41,6 +43,7 @@ public class SellerDashboardService {
     private final ShopVoucherRepository shopVoucherRepository;
     private final ShopPromotionRepository shopPromotionRepository;
     private final ShopReviewRepository shopReviewRepository;
+    private final DispatchService dispatchService;
 
     @Transactional
     public Shop getOrCreateInitializedShop(Long userId) {
@@ -426,7 +429,15 @@ public class SellerDashboardService {
         } else if ("MARK_PACKED".equalsIgnoreCase(action)) {
             order.setStatus(OrderStatus.PACKED);
         } else if ("START_SHIPPING".equalsIgnoreCase(action)) {
-            order.setStatus(OrderStatus.SHIPPING);
+            order.setStatus(OrderStatus.READY_TO_SHIP);
+            if (TransactionSynchronizationManager.isSynchronizationActive()) {
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        dispatchService.dispatchPendingOrders();
+                    }
+                });
+            }
         } else if ("APPROVE_REFUND".equalsIgnoreCase(action) || "CANCEL".equalsIgnoreCase(action)) {
             order.setStatus(OrderStatus.CANCELLED);
         }
