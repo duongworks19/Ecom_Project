@@ -26,15 +26,39 @@ export class StepContactWarehouseComponent implements OnInit {
   @Output() next = new EventEmitter<void>();
   @Output() back = new EventEmitter<void>();
 
+  readonly provinces = VIETNAM_34_PROVINCES;
+  readonly districts = VIETNAM_DISTRICTS_MAP;
+  readonly wards = VIETNAM_WARDS_MAP;
+
+  readonly emailCheckSubject = new Subject<string>();
+  readonly isCheckingEmail = signal<boolean>(false);
+  readonly emailCheckStatus = signal<'NONE' | 'AVAILABLE' | 'TAKEN'>('NONE');
+  readonly emailCheckMessage = signal<string>('');
+/*
   // Reactive email check
   readonly emailCheckSubject = new Subject<string>();
   readonly isCheckingEmail = signal<boolean>(false);
   readonly emailCheckStatus = signal<'NONE' | 'AVAILABLE' | 'TAKEN'>('NONE');
   readonly emailCheckMessage = signal<string>('');
 
-  readonly provinces = VIETNAM_34_PROVINCES;
-  readonly districts = VIETNAM_DISTRICTS_MAP;
-  readonly wards = VIETNAM_WARDS_MAP;
+  readonly provinces = ['Hà Nội', 'TP. Hồ Chí Minh', 'Đà Nẵng', 'Hải Phòng', 'Cần Thơ', 'Bình Dương'];
+
+  readonly districts: Record<string, string[]> = {
+    'Hà Nội': ['Quận Cầu Giấy', 'Quận Đống Đa', 'Quận Ba Đình', 'Quận Hai Bà Trưng', 'Quận Nam Từ Liêm'],
+    'TP. Hồ Chí Minh': ['Quận 1', 'Quận 3', 'Quận 7', 'Quận Bình Thạnh', 'TP. Thủ Đức'],
+    'Đà Nẵng': ['Quận Hải Châu', 'Quận Thanh Khê', 'Quận Sơn Trà'],
+    'Hải Phòng': ['Quận Hồng Bàng', 'Quận Ngô Quyền', 'Quận Lê Chân'],
+    'Cần Thơ': ['Quận Ninh Kiều', 'Quận Cái Răng', 'Quận Bình Thủy'],
+    'Bình Dương': ['TP. Thủ Dầu Một', 'TP. Dĩ An', 'TP. Thuận An'],
+  };
+
+  readonly wards: Record<string, string[]> = {
+    'Quận Cầu Giấy': ['Phường Dịch Vọng Hậu', 'Phường Dịch Vọng', 'Phường Nghĩa Đô', 'Phường Mai Dịch'],
+    'Quận Đống Đa': ['Phường Láng Hạ', 'Phường Ô Chợ Dừa', 'Phường Kim Liên'],
+    'Quận 1': ['Phường Bến Nghé', 'Phường Bến Thành', 'Phường Tân Định'],
+    'TP. Thủ Đức': ['Phường Thảo Điền', 'Phường An Phú', 'Phường Hiệp Phú'],
+  };
+*/
 
   ngOnInit(): void {
     this.emailCheckSubject.pipe(

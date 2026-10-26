@@ -8,6 +8,7 @@ public record CustomerListItemResponse(
         String email,
         String avatarUrl,
         String status,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        String role
 ) {
 }

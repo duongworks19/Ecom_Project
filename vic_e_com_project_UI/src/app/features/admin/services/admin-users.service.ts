@@ -15,6 +15,7 @@ import {
   CustomerStatusApiResponse,
   CustomerStatusChangePayload,
   CustomerSummaryApiResponse,
+  UserRole,
 } from '../models/admin-users.model';
 
 @Injectable({
@@ -131,11 +132,23 @@ export class AdminUsersService {
     );
   }
 
+  lockUser(id: number, reason: string): Observable<CustomerStatusApiResponse> {
+    return this.http.post<CustomerStatusApiResponse>(`${this.baseUrl}/${id}/lock-all`, { reason });
+  }
+
+  unlockUser(id: number): Observable<CustomerStatusApiResponse> {
+    return this.http.post<CustomerStatusApiResponse>(`${this.baseUrl}/${id}/unlock-all`, {});
+  }
+
+  permanentlyDeleteUser(id: number, reason: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${id}/permanent`, { params: { reason } });
+  }
+
   private mapSummaryToKpis(summary: CustomerSummaryApiResponse): CustomerKpiCard[] {
     return [
       {
         id: 'total',
-        title: 'Tổng Customer',
+        title: 'Tổng người dùng',
         value: summary?.total ?? 0,
         subtext: `+${summary?.newLast7Days ?? 0} trong 7 ngày`,
         isDark: true,
@@ -157,7 +170,7 @@ export class AdminUsersService {
   }
 
   private mapListItem(item: CustomerListItemApiResponse): AdminCustomer {
-    const fullName = item.fullName || 'Khách hàng';
+    const fullName = item.fullName || 'Người dùng';
     return {
       id: item.id,
       code: `CUS-${String(item.id).padStart(3, '0')}`,
@@ -167,6 +180,7 @@ export class AdminUsersService {
       email: item.email ?? '—',
       phone: item.phone ?? '—',
       status: item.status,
+      role: item.role,
       createdAt: this.formatDate(item.createdAt),
       addresses: [],
       purchaseStats: {

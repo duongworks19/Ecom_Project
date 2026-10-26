@@ -1,0 +1,170 @@
+@if (user) {
+  <div class="modal-backdrop" (click)="onBackdropClick()">
+    <div class="modal-box" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+
+      <!-- BƯỚC 1: Kiểm tra an toàn, Cảnh báo & Lý do xóa -->
+      @if (step() === 1) {
+        <div class="modal-header">
+          <div class="danger-icon-badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <div>
+            <span class="step-indicator">Bước 1 / 2: Kiểm tra điều kiện & Nhập lý do</span>
+            <h3 class="modal-title">Xóa vĩnh viễn tài khoản người dùng</h3>
+          </div>
+        </div>
+
+        <p class="target-user-desc">
+          Bạn đang chọn xóa tài khoản của <strong>{{ user.fullName }}</strong> ({{ user.email }}) —
+          Vai trò: <strong>{{ getRoleLabel(user.role) }}</strong>.
+        </p>
+
+        @if (user.role === 'ADMIN') {
+          <div class="condition-alert condition-alert--danger" role="alert">
+            <div class="alert-icon">⛔</div>
+            <div class="alert-content">
+              <strong>Tài khoản Quản trị viên</strong>
+              <p>Tài khoản Quản trị viên (ADMIN) được bảo vệ, không thể bị xóa khỏi hệ thống.</p>
+            </div>
+          </div>
+        }
+
+        @if (user.status !== 'LOCKED') {
+          <div class="condition-alert condition-alert--warning" role="alert">
+            <div class="alert-icon">⚠️</div>
+            <div class="alert-content">
+              <strong>Tài khoản chưa bị khóa</strong>
+              <p>Quy tắc an toàn yêu cầu người dùng phải ở trạng thái <strong>Đã khóa (LOCKED)</strong> trước khi xóa vĩnh viễn.</p>
+              <button type="button" class="btn-lock-now" (click)="onLockFirst()">
+                Khóa tài khoản này ngay
+              </button>
+            </div>
+          </div>
+        }
+
+        @if (user.status === 'LOCKED' && user.role !== 'ADMIN') {
+          <div class="warning-box">
+            <h4 class="warning-box-title">Dữ liệu sẽ bị xóa hoàn toàn trong một transaction:</h4>
+            <ul class="data-purge-list">
+              <li>
+                <span class="bullet">✕</span>
+                <span><strong>Hồ sơ tài khoản:</strong> <code>user_account</code>, <code>vendor_profile</code>, <code>shipper_profile</code>.</span>
+              </li>
+              <li>
+                <span class="bullet">✕</span>
+                <span><strong>Dữ liệu phụ thuộc:</strong> <code>addresses</code>, <code>carts</code>, <code>voucher_usages</code>, <code>reviews</code>, <code>review_replies</code>.</span>
+              </li>
+              <li>
+                <span class="bullet">✕</span>
+                <span><strong>Bảo mật & Nhật ký:</strong> <code>login_history</code>, <code>password_reset_tokens</code>, <code>account_lock_logs</code>.</span>
+              </li>
+              <li>
+                <span class="bullet-check">✓</span>
+                <span><strong>Giữ lại:</strong> Dữ liệu đơn hàng (<code>orders</code>) để đảm bảo đối soát kế toán.</span>
+              </li>
+            </ul>
+            <p class="mail-notice">
+              ✉️ Hệ thống sẽ tự động gửi email thông báo xóa tài khoản kèm vai trò và lý do cho người dùng.
+            </p>
+          </div>
+
+          <div class="reason-group">
+            <label class="reason-label" for="delReasonInput">
+              Lý do xóa vĩnh viễn (bắt buộc, gửi trong email) *
+            </label>
+            <textarea
+              id="delReasonInput"
+              class="reason-textarea"
+              rows="3"
+              maxlength="500"
+              [(ngModel)]="reason"
+              placeholder="Nhập lý do xóa tài khoản (tối đa 500 ký tự)..."
+            ></textarea>
+            <span class="char-count">{{ reason.length }}/500</span>
+          </div>
+        }
+
+        @if (errorMessage) {
+          <div class="error-banner" role="alert">{{ errorMessage }}</div>
+        }
+
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" (click)="onClose()">Hủy bỏ</button>
+          <button
+            type="button"
+            class="btn-proceed"
+            [disabled]="!canProceedStep1()"
+            (click)="step.set(2)"
+          >
+            Tôi hiểu rủi ro, Tiếp tục (1/2) →
+          </button>
+        </div>
+      }
+
+      <!-- BƯỚC 2: Xác nhận lần cuối gõ chữ XÓA hoặc Email -->
+      @if (step() === 2) {
+        <div class="modal-header">
+          <div class="danger-icon-badge danger-icon-badge--solid">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </div>
+          <div>
+            <span class="step-indicator">Bước 2 / 2: Xác thực xóa vĩnh viễn</span>
+            <h3 class="modal-title modal-title--danger">Xác nhận lần cuối</h3>
+          </div>
+        </div>
+
+        <div class="final-confirm-card">
+          <p class="final-warning-text">
+            Bạn đang thực hiện xóa vĩnh viễn tài khoản <strong>{{ user.fullName }}</strong> ({{ user.email }}).
+          </p>
+          <p class="verify-instruction">
+            Để tránh thao tác nhầm lẫn, vui lòng nhập chữ <strong>XÓA</strong> hoặc nhập chính xác email <strong>{{ user.email }}</strong> vào ô bên dưới:
+          </p>
+
+          <input
+            type="text"
+            class="confirm-input"
+            [placeholder]="'Nhập XÓA hoặc ' + user.email"
+            [(ngModel)]="confirmText"
+            (keyup.enter)="onConfirmFinal()"
+            autocomplete="off"
+          />
+
+          @if (confirmText.trim() && !isMatch()) {
+            <span class="input-mismatch-hint">Chưa trùng khớp từ khóa xác nhận.</span>
+          } @else if (isMatch()) {
+            <span class="input-match-hint">✓ Từ khóa xác nhận chính xác. Nút xóa đã được kích hoạt.</span>
+          }
+        </div>
+
+        @if (errorMessage) {
+          <div class="error-banner" role="alert">{{ errorMessage }}</div>
+        }
+
+        <div class="modal-actions">
+          <button
+            type="button"
+            class="btn-back"
+            [disabled]="isSubmitting"
+            (click)="step.set(1)"
+          >
+            ← Quay lại Bước 1
+          </button>
+          <button
+            type="button"
+            class="btn-confirm-delete"
+            [disabled]="!isMatch() || isSubmitting"
+            (click)="onConfirmFinal()"
+          >
+            {{ isSubmitting ? 'Đang xóa dữ liệu & gửi email...' : 'Xác nhận xóa vĩnh viễn' }}
+          </button>
+        </div>
+      }
+
+    </div>
+  </div>
+}

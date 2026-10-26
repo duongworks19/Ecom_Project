@@ -65,18 +65,18 @@ export class SellerOnboardingService {
   }
 
   /**
-   * Tải dữ liệu ban đầu từ LocalStorage hoặc server
+   * Táº£i dá»¯ liá»‡u ban Ä‘áº§u tá»« LocalStorage hoáº·c server
    */
   loadInitialData(): void {
     const savedDraft = localStorage.getItem(DRAFT_STORAGE_KEY);
     if (savedDraft) {
       try {
         const parsed = JSON.parse(savedDraft) as VendorApplicationData;
-        // Kiểm tra loại bỏ dữ liệu test/mock cũ nếu có (ví dụ 'VIC MART' hoặc 'Hà Nội' hardcode)
+        // Kiá»ƒm tra loáº¡i bá» dá»¯ liá»‡u test/mock cÅ© náº¿u cÃ³ (vÃ­ dá»¥ 'VIC MART' hoáº·c 'HÃ  Ná»™i' hardcode)
         const isLegacyMock =
           !parsed ||
           parsed.shopInfo?.shopName?.trim().toLowerCase() === 'vic mart' ||
-          (parsed.shopInfo?.businessType === 'INDIVIDUAL' && parsed.contactInfo?.province === 'Hà Nội' && parsed.contactInfo?.ward === 'Phường Dịch Vọng Hậu');
+          (parsed.shopInfo?.businessType === 'INDIVIDUAL' && parsed.contactInfo?.province === 'HÃ  Ná»™i' && parsed.contactInfo?.ward === 'PhÆ°á»ng Dá»‹ch Vá»ng Háº­u');
 
         if (isLegacyMock) {
           localStorage.removeItem(DRAFT_STORAGE_KEY);
@@ -92,7 +92,7 @@ export class SellerOnboardingService {
       }
     }
 
-    // Nếu đã đăng nhập, thử load từ server
+    // Náº¿u Ä‘Ã£ Ä‘Äƒng nháº­p, thá»­ load tá»« server
     if (this.authService.isLoggedIn()) {
       this.http.get<any>(`${this.API}/me`).pipe(
         catchError(() => of(null))
@@ -112,18 +112,18 @@ export class SellerOnboardingService {
   }
 
   /**
-   * Kiểm tra trùng tên shop & từ nhạy cảm realtime
+   * Kiá»ƒm tra trÃ¹ng tÃªn shop & tá»« nháº¡y cáº£m realtime
    */
   checkShopNameAvailable(name: string): Observable<CheckShopNameResponse> {
     const raw = (name || '').trim();
     if (!raw || raw.length < 3) {
-      return of({ isAvailable: false, message: 'Tên gian hàng phải từ 3 ký tự trở lên' });
+      return of({ isAvailable: false, message: 'TÃªn gian hÃ ng pháº£i tá»« 3 kÃ½ tá»± trá»Ÿ lÃªn' });
     }
     if (raw.length > 50) {
-      return of({ isAvailable: false, message: 'Tên gian hàng không được vượt quá 50 ký tự' });
+      return of({ isAvailable: false, message: 'TÃªn gian hÃ ng khÃ´ng Ä‘Æ°á»£c vÆ°á»£t quÃ¡ 50 kÃ½ tá»±' });
     }
 
-    // Kiểm tra nhanh phía client các từ ngữ cấm / nhạy cảm / tên sàn
+    // Kiá»ƒm tra nhanh phÃ­a client cÃ¡c tá»« ngá»¯ cáº¥m / nháº¡y cáº£m / tÃªn sÃ n
     const clientCheck = this.validateSensitiveAndReservedLocal(raw);
     if (!clientCheck.isAvailable) {
       return of(clientCheck);
@@ -134,41 +134,26 @@ export class SellerOnboardingService {
         const data = res?.data || res;
         return {
           isAvailable: data?.isAvailable ?? false,
-          message: data?.message || (data?.isAvailable ? 'Tên gian hàng hợp lệ và khả dụng' : 'Tên gian hàng đã tồn tại trên hệ thống'),
+          message: data?.message || (data?.isAvailable ? 'TÃªn gian hÃ ng há»£p lá»‡ vÃ  kháº£ dá»¥ng' : 'TÃªn gian hÃ ng Ä‘Ã£ tá»“n táº¡i trÃªn há»‡ thá»‘ng'),
         };
       }),
       catchError(() => {
         return of({
           isAvailable: true,
-          message: 'Tên gian hàng hợp lệ và khả dụng!',
-        });
+          message: 'TÃªn gian hÃ ng há»£p lá»‡ vÃ  kháº£ dá»¥ng!',
+    });
       })
     );
   }
-
-  /**
-   * Kiểm tra trùng email người phụ trách / shop realtime
-   */
   checkEmailAvailable(email: string): Observable<{ isAvailable: boolean; message: string }> {
     const trimmed = (email || '').trim().toLowerCase();
-    if (!trimmed) {
-      return of({ isAvailable: false, message: 'Vui lòng nhập email' });
-    }
-
+    if (!trimmed) return of({ isAvailable: false, message: 'Vui lòng nhập email' });
     return this.http.get<any>(`${this.API}/check-email?email=${encodeURIComponent(trimmed)}`).pipe(
-      map((res) => {
+      map((res: any) => {
         const data = res?.data || res;
-        return {
-          isAvailable: !!data.isAvailable,
-          message: data.message || (data.isAvailable ? 'Email hợp lệ và khả dụng' : 'Email này đã được sử dụng trên hệ thống'),
-        };
+        return { isAvailable: !!data?.isAvailable, message: data?.message || 'Email hợp lệ' };
       }),
-      catchError(() => {
-        return of({
-          isAvailable: true,
-          message: 'Email hợp lệ',
-        });
-      })
+      catchError(() => of({ isAvailable: true, message: 'Email hợp lệ' }))
     );
   }
 
@@ -187,19 +172,19 @@ export class SellerOnboardingService {
       if (compact.includes(rCompact)) {
         return {
           isAvailable: false,
-          message: 'Tên gian hàng chứa từ khóa nhạy cảm hoặc trùng với tên sàn khác, vui lòng chọn tên khác',
+          message: 'TÃªn gian hÃ ng chá»©a tá»« khÃ³a nháº¡y cáº£m hoáº·c trÃ¹ng vá»›i tÃªn sÃ n khÃ¡c, vui lÃ²ng chá»n tÃªn khÃ¡c',
         };
       }
     }
 
     const phrases = [
-      'tai xiu', 'taixiu', 'tài xỉu', 'co bac', 'cờ bạc', 'danh bac', 'đánh bạc', 'lo de', 'lô đề', 'casino',
-      'lua dao', 'lừa đảo', 'scam', 'scammer', 'ma tuy', 'ma túy', 'can sa', 'cần sa', 'thuoc phien', 'thuốc phiện',
-      'gai goi', 'gái gọi', 'khoa than', 'khỏa thân', 'khieu dam', 'khiêu dâm', 'dam dang', 'dâm đãng',
-      'kich duc', 'kích dục', 'do choi nguoi lon', 'đồ chơi người lớn', 'sex toy', 'sextoy', 'massage 18', '18+',
-      'suc vat', 'súc vật', 'vu khi', 'vũ khí', 'sung dan', 'súng đạn', 'chat no', 'chất nổ',
-      'du ma', 'đụ má', 'du me', 'đụ mẹ', 'dit me', 'địt mẹ', 'vai lon', 'vãi lồn', 'di cho', 'đĩ chó',
-      'con di', 'con đĩ', 'ban dam', 'bán dâm', 'lam tinh', 'làm tình', 'thu dam', 'thủ dâm'
+      'tai xiu', 'taixiu', 'tÃ i xá»‰u', 'co bac', 'cá» báº¡c', 'danh bac', 'Ä‘Ã¡nh báº¡c', 'lo de', 'lÃ´ Ä‘á»', 'casino',
+      'lua dao', 'lá»«a Ä‘áº£o', 'scam', 'scammer', 'ma tuy', 'ma tÃºy', 'can sa', 'cáº§n sa', 'thuoc phien', 'thuá»‘c phiá»‡n',
+      'gai goi', 'gÃ¡i gá»i', 'khoa than', 'khá»a thÃ¢n', 'khieu dam', 'khiÃªu dÃ¢m', 'dam dang', 'dÃ¢m Ä‘Ã£ng',
+      'kich duc', 'kÃ­ch dá»¥c', 'do choi nguoi lon', 'Ä‘á»“ chÆ¡i ngÆ°á»i lá»›n', 'sex toy', 'sextoy', 'massage 18', '18+',
+      'suc vat', 'sÃºc váº­t', 'vu khi', 'vÅ© khÃ­', 'sung dan', 'sÃºng Ä‘áº¡n', 'chat no', 'cháº¥t ná»•',
+      'du ma', 'Ä‘á»¥ mÃ¡', 'du me', 'Ä‘á»¥ máº¹', 'dit me', 'Ä‘á»‹t máº¹', 'vai lon', 'vÃ£i lá»“n', 'di cho', 'Ä‘Ä© chÃ³',
+      'con di', 'con Ä‘Ä©', 'ban dam', 'bÃ¡n dÃ¢m', 'lam tinh', 'lÃ m tÃ¬nh', 'thu dam', 'thá»§ dÃ¢m'
     ];
 
     for (const p of phrases) {
@@ -207,13 +192,13 @@ export class SellerOnboardingService {
       if (lower.includes(p) || unaccented.includes(pUnacc)) {
         return {
           isAvailable: false,
-          message: 'Tên gian hàng chứa từ ngữ nhạy cảm, vi phạm chuẩn mực của sàn',
+          message: 'TÃªn gian hÃ ng chá»©a tá»« ngá»¯ nháº¡y cáº£m, vi pháº¡m chuáº©n má»±c cá»§a sÃ n',
         };
       }
     }
 
     const exactTokens = new Set([
-      'địt', 'đụ', 'đù', 'lồn', 'cặc', 'buồi', 'dâm', 'đĩ',
+      'Ä‘á»‹t', 'Ä‘á»¥', 'Ä‘Ã¹', 'lá»“n', 'cáº·c', 'buá»“i', 'dÃ¢m', 'Ä‘Ä©',
       'fuck', 'fck', 'fuk', 'bitch', 'dick', 'pussy', 'asshole', 'cunt', 'bastard', 'nigger',
       'porn', 'xxx', 'sex', 'nude'
     ]);
@@ -223,24 +208,24 @@ export class SellerOnboardingService {
       if (exactTokens.has(tok)) {
         return {
           isAvailable: false,
-          message: 'Tên gian hàng chứa từ ngữ thô tục, nhạy cảm không đúng chuẩn mực',
+          message: 'TÃªn gian hÃ ng chá»©a tá»« ngá»¯ thÃ´ tá»¥c, nháº¡y cáº£m khÃ´ng Ä‘Ãºng chuáº©n má»±c',
         };
       }
     }
 
-    return { isAvailable: true, message: 'Tên gian hàng hợp lệ và khả dụng!' };
+    return { isAvailable: true, message: 'TÃªn gian hÃ ng há»£p lá»‡ vÃ  kháº£ dá»¥ng!' };
   }
 
   private removeVietnameseDiacritics(str: string): string {
     return str
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
-      .replace(/đ/g, 'd')
-      .replace(/Đ/g, 'd');
+      .replace(/Ä‘/g, 'd')
+      .replace(/Ä/g, 'd');
   }
 
   /**
-   * Cập nhật thông tin từng bước & tự động lưu nháp
+   * Cáº­p nháº­t thÃ´ng tin tá»«ng bÆ°á»›c & tá»± Ä‘á»™ng lÆ°u nhÃ¡p
    */
   updateShopInfo(info: ShopInfo): void {
     const curr = this.application();
@@ -273,7 +258,7 @@ export class SellerOnboardingService {
   }
 
   /**
-   * Lưu nháp vào LocalStorage và đồng bộ ngầm lên server
+   * LÆ°u nhÃ¡p vÃ o LocalStorage vÃ  Ä‘á»“ng bá»™ ngáº§m lÃªn server
    */
   saveDraftLocally(data: VendorApplicationData): void {
     this.isSavingDraft.set(true);
@@ -288,7 +273,7 @@ export class SellerOnboardingService {
   }
 
   /**
-   * Nộp hồ sơ chính thức lên sàn (Chuyển sang trạng thái PENDING)
+   * Ná»™p há»“ sÆ¡ chÃ­nh thá»©c lÃªn sÃ n (Chuyá»ƒn sang tráº¡ng thÃ¡i PENDING)
    */
   submitApplication(): Observable<boolean> {
     this.isSubmitting.set(true);
@@ -312,7 +297,7 @@ export class SellerOnboardingService {
     };
 
     return this.http.post<any>(`${this.API}/register`, registerReq).pipe(
-      delay(800), // Tạo hiệu ứng mượt mà
+      delay(800), // Táº¡o hiá»‡u á»©ng mÆ°á»£t mÃ 
       tap(() => {
         this.application.set(payload);
         this.currentStatus.set('PENDING');
@@ -333,16 +318,18 @@ export class SellerOnboardingService {
   }
 
   /**
-   * Đặt trạng thái thử nghiệm cho demo/kiểm thử (DRAFT, PENDING, REVISION_NEEDED, APPROVED, REJECTED)
+   * Äáº·t tráº¡ng thÃ¡i thá»­ nghiá»‡m cho demo/kiá»ƒm thá»­ (DRAFT, PENDING, REVISION_NEEDED, APPROVED, REJECTED)
    */
   setDemoStatus(status: ApplicationStatus, feedback?: string): void {
     const updated: VendorApplicationData = {
       ...this.application(),
       status,
-      adminFeedback: feedback || (status === 'REVISION_NEEDED' ? 'Ảnh mặt sau CCCD bị lóa ánh sáng, vui lòng tải lại ảnh rõ nét.' : ''),
+      adminFeedback: feedback || (status === 'REVISION_NEEDED' ? 'áº¢nh máº·t sau CCCD bá»‹ lÃ³a Ã¡nh sÃ¡ng, vui lÃ²ng táº£i láº¡i áº£nh rÃµ nÃ©t.' : ''),
     };
     this.application.set(updated);
     this.currentStatus.set(status);
     localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(updated));
   }
 }
+
+

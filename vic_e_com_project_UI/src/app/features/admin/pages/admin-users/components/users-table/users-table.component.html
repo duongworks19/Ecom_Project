@@ -1,6 +1,7 @@
 <div class="table-card">
   <div class="table-header">
-    <span class="col-customer">CUSTOMER</span>
+    <span class="col-customer">NGƯỜI DÙNG</span>
+    <span class="col-role">VAI TRÒ</span>
     <span class="col-status">TRẠNG THÁI</span>
     <span class="col-date">NGÀY ĐĂNG KÝ</span>
   </div>
@@ -21,6 +22,12 @@
           </div>
         </div>
 
+        <div class="col-role">
+          <span class="role-pill" [ngClass]="getRoleBadgeClass(customer.role)">
+            {{ getRoleLabel(customer.role) }}
+          </span>
+        </div>
+
         <div class="col-status">
           <span
             class="status-badge"
@@ -37,13 +44,13 @@
         </div>
       </button>
     } @empty {
-      <div class="empty-state">Không tìm thấy Customer phù hợp.</div>
+      <div class="empty-state">Không tìm thấy người dùng phù hợp.</div>
     }
   </div>
 
   <div class="table-footer">
     <span class="footer-info">
-      Hiển thị {{ startItem }} đến {{ endItem }} trên {{ totalCount }} Customer
+      Hiển thị {{ startItem }} đến {{ endItem }} trên {{ totalCount }} người dùng
     </span>
     <div class="pagination-btns">
       <button

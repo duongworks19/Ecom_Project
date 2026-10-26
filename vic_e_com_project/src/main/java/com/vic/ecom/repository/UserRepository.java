@@ -23,4 +23,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Modifying
     @Query("UPDATE User u SET u.status = :to WHERE u.id = :id AND u.status = :from")
     int updateStatusIf(@Param("id") Long id, @Param("from") UserStatus from, @Param("to") UserStatus to);
+
+    @Modifying
+    @Query("UPDATE User u SET u.status = :to, u.tokenVersion = COALESCE(u.tokenVersion, 1) + 1 WHERE u.id = :id AND u.status = :from")
+    int updateStatusAndInvalidateToken(@Param("id") Long id, @Param("from") UserStatus from, @Param("to") UserStatus to);
 }

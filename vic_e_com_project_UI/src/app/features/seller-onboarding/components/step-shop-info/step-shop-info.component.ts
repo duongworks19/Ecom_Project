@@ -45,7 +45,7 @@ export class StepShopInfoComponent implements OnInit {
       this.performNameCheck(name);
     });
 
-    if (this.shopInfo.shopName && this.shopInfo.shopName.trim().length >= 3) {
+    if (this.shopInfo.shopName && this.shopInfo.shopName.trim()) {
       this.performNameCheck(this.shopInfo.shopName.trim());
     } else {
       this.isCheckingName.set(false);

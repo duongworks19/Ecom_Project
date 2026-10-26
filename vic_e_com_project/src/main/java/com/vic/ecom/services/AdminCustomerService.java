@@ -14,6 +14,7 @@ import com.vic.ecom.enums.UserStatus;
 import com.vic.ecom.repository.AccountLockLogRepository;
 import com.vic.ecom.repository.AdminCustomerRepository;
 import com.vic.ecom.repository.UserRepository;
+import com.vic.ecom.repository.UserPurgeRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.springframework.http.HttpStatus;
@@ -35,6 +36,8 @@ public class AdminCustomerService {
     private final AdminCustomerRepository adminCustomerRepository;
     private final AccountLockLogRepository accountLockLogRepository;
     private final UserRepository userRepository;
+    private final UserPurgeRepository userPurgeRepository;
+    private final MailService mailService;
 
     @Setter
     private Clock clock = Clock.system(VN_ZONE);
@@ -135,6 +138,40 @@ public class AdminCustomerService {
                 adminPrincipal,
                 "Customer is not locked"
         );
+    }
+
+    @Transactional
+    public void permanentlyDelete(Long userId, String reason) {
+        if (reason == null || reason.isBlank() || reason.trim().length() > 500) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Deletion reason is required and must not exceed 500 characters");
+        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        if (user.getStatus() != UserStatus.LOCKED) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Only locked accounts can be permanently deleted");
+        }
+        String email = user.getEmail();
+        String fullName = user.getFullName();
+        String role = user.getRole().name();
+        userPurgeRepository.deletePersonalData(userId);
+        if (email != null && !email.isBlank()) {
+            mailService.sendAccountDeleted(email, fullName, role, reason.trim());
+        }
+    }
+
+    @Transactional
+    public CustomerStatusResponse lockUser(Long userId, String reason, String adminPrincipal) {
+        if (reason != null && reason.trim().length() > 500) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Reason must not exceed 500 characters");
+        User target = userRepository.findById(userId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        if (target.getRole().name().equals("ADMIN")) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Admin accounts cannot be locked here");
+        if (userRepository.updateStatusAndInvalidateToken(userId, UserStatus.ACTIVE, UserStatus.LOCKED) == 0) throw new ResponseStatusException(HttpStatus.CONFLICT, "User is not active");
+        return new CustomerStatusResponse(userId, UserStatus.LOCKED.name());
+    }
+
+    @Transactional
+    public CustomerStatusResponse unlockUser(Long userId) {
+        if (userRepository.updateStatusAndInvalidateToken(userId, UserStatus.LOCKED, UserStatus.ACTIVE) == 0) throw new ResponseStatusException(HttpStatus.CONFLICT, "User is not locked");
+        return new CustomerStatusResponse(userId, UserStatus.ACTIVE.name());
     }
 
     private CustomerStatusResponse changeCustomerStatus(
