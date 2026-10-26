@@ -83,6 +83,7 @@ public class VendorService {
     }
 
     public boolean isShopNameAvailable(String name) {
+<<<<<<< Updated upstream
         return validateShopName(name).isAvailable();
     }
 
@@ -129,6 +130,22 @@ public class VendorService {
         java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
         return pattern.matcher(normalized).replaceAll("")
                 .replace("đ", "d").replace("Đ", "d");
+=======
+        if (name == null || name.trim().isEmpty()) return false;
+        return !shopRepository.existsByNameIgnoreCase(name.trim());
+>>>>>>> Stashed changes
+    }
+
+    public boolean isEmailAvailable(String email, Long currentUserId) {
+        if (email == null || email.trim().isEmpty()) return false;
+        String normalized = email.trim().toLowerCase();
+        
+        boolean emailExistsInUsers = (currentUserId != null)
+                ? userRepository.existsByEmailAndIdNot(normalized, currentUserId)
+                : userRepository.existsByEmail(normalized);
+        if (emailExistsInUsers) return false;
+
+        return !shopRepository.existsByEmailIgnoreCase(normalized);
     }
 
     @Transactional(readOnly = true)
@@ -152,6 +169,13 @@ public class VendorService {
             throw new IllegalArgumentException(valResult.message());
         }
 
+        if (req.getEmail() != null && !req.getEmail().trim().isEmpty()) {
+            String email = req.getEmail().trim().toLowerCase();
+            if (!isEmailAvailable(email, userId)) {
+                throw new IllegalArgumentException("Email nhận thông báo đã được sử dụng trên hệ thống");
+            }
+        }
+
         // 1. Tạo Vendor
         Vendor vendor = new Vendor();
         vendor.setUser(user);
@@ -167,6 +191,8 @@ public class VendorService {
         shop.setBanner(req.getBanner());
         shop.setDescription(req.getDescription());
         shop.setPickupAddress(req.getPickupAddress());
+        shop.setPhone(req.getPhone());
+        shop.setEmail(req.getEmail() != null ? req.getEmail().trim().toLowerCase() : null);
         shop.setStatus(ShopStatus.INACTIVE); // Chờ duyệt
         shop.setRatingAvg(BigDecimal.ZERO);
 

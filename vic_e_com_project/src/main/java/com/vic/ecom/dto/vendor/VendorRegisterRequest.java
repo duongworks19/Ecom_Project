@@ -24,4 +24,7 @@ public class VendorRegisterRequest {
 
     @NotBlank(message = "Địa chỉ lấy hàng không được để trống")
     private String pickupAddress;
+
+    private String phone;
+    private String email;
 }

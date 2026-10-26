@@ -47,17 +47,33 @@
 
     <div class="form-group">
       <label class="form-label required" for="rep-email">Email nhận thông báo đơn hàng</label>
-      <input
-        id="rep-email"
-        type="email"
-        class="form-control"
-        placeholder="shop.contact@gmail.com"
-        [(ngModel)]="contactInfo.email"
-        (ngModelChange)="emitChange()"
-        name="email"
-        [disabled]="readOnly"
-        required
-      />
+      <div class="input-with-feedback" [class.valid]="emailCheckStatus() === 'AVAILABLE'" [class.invalid]="emailCheckStatus() === 'TAKEN'">
+        <input
+          id="rep-email"
+          type="email"
+          class="form-control"
+          placeholder="shop.contact@gmail.com"
+          [ngModel]="contactInfo.email"
+          (ngModelChange)="onEmailInput($event)"
+          name="email"
+          [disabled]="readOnly"
+          required
+        />
+        <div class="feedback-indicator">
+          @if (isCheckingEmail()) {
+            <span class="spinner-small" aria-label="Đang kiểm tra..."></span>
+          } @else if (emailCheckStatus() === 'AVAILABLE') {
+            <span class="icon-success" title="Email khả dụng">✓</span>
+          } @else if (emailCheckStatus() === 'TAKEN') {
+            <span class="icon-error" title="Email đã tồn tại">✕</span>
+          }
+        </div>
+      </div>
+      @if (emailCheckMessage()) {
+        <p class="feedback-msg" [class.success]="emailCheckStatus() === 'AVAILABLE'" [class.error]="emailCheckStatus() === 'TAKEN'">
+          {{ emailCheckMessage() }}
+        </p>
+      }
     </div>
 
     <!-- 2. Địa chỉ kho lấy hàng -->
