@@ -14,7 +14,7 @@ import java.util.List;
 @Table(
         name = "orders",
         indexes = {
-                @Index(name = "idx_orders_customer_created_at", columnList = "customer_id, created_at"),
+                @Index(name = "idx_orders_customer_create_at", columnList = "customer_id, create_at"),
                 @Index(name = "idx_orders_shop_id", columnList = "shop_id"),
                 @Index(name = "idx_orders_code", columnList = "order_code")
         }
@@ -40,13 +40,13 @@ public class Order {
     @Column(name = "checkout_group_id")
     private Long checkoutGroupId;
 
-    @Column(name = "receiver_name", length = 150)
+    @Column(name = "recipient_name", length = 100)
     private String receiverName;
 
-    @Column(name = "receiver_phone", length = 30)
+    @Column(name = "recipient_phone", length = 15)
     private String receiverPhone;
 
-    @Column(name = "shipping_address", length = 500)
+    @Column(name = "recipient_address", length = 500)
     private String shippingAddress;
 
     @Column(name = "product_summary", length = 255)
@@ -59,10 +59,10 @@ public class Order {
     @Column(length = 20, nullable = false)
     private OrderStatus status = OrderStatus.PENDING;
 
-    @Column(name = "total_amount", precision = 12, scale = 2, nullable = false)
+    @Column(name = "total", precision = 12, scale = 2, nullable = false)
     private BigDecimal totalAmount = BigDecimal.ZERO;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(name = "create_at", nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @Column(name = "delivered_at")

@@ -1,6 +1,6 @@
 // Based on ERD: users, shipper_profiles, orders, shipments, shipment_events, delivered_failures
 
-export type ShipmentStatus = 'READY_TO_PICK' | 'DELIVERING' | 'DELIVERED' | 'FAILED';
+export type ShipmentStatus = 'ASSIGNED' | 'PICKED_UP' | 'DELIVERING' | 'DELIVERED' | 'FAILED';
 
 export type FailureReason =
   | 'CUSTOMER_UNREACHABLE'
@@ -60,7 +60,7 @@ export interface ShipperProfile {
   partnerCompany: string;
   joinedDate: string;
   rating: number;
-  workStatus: 'AVAILABLE' | 'OFFLINE';
+  workStatus: 'AVAILABLE' | 'BUSY' | 'OFFLINE';
 }
 
 export interface ShipperKPI {

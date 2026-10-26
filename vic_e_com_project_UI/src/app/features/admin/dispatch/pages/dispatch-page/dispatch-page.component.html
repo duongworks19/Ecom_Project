@@ -1,0 +1,61 @@
+<div class="dispatch-page">
+  <!-- Header section -->
+  <header class="dispatch-header">
+    <div class="dispatch-header__left">
+      <h1 class="dispatch-header__title">Gán shipper & vận đơn</h1>
+      <p class="dispatch-header__desc">
+        Hệ thống tự động gán đơn sẵn sàng giao cho shipper phù hợp tuyến. Admin chỉ theo dõi và xử lý các trường hợp ngoại lệ.
+      </p>
+    </div>
+    <div class="dispatch-header__right">
+      <vic-dispatch-status-bar
+        [running]="isRunning()"
+        [lastScanAt]="lastScanAt()"
+      />
+    </div>
+  </header>
+
+  <!-- KPI Cards -->
+  <vic-dispatch-kpi-cards
+    [counts]="counts()"
+    [currentFilter]="statusFilter()"
+    (filterSelected)="onSelectStatus($event)"
+  />
+
+  <!-- Shipper Roster -->
+  <vic-shipper-roster [shippers]="availableShippers()" />
+
+  <!-- Two-column Main Workspace -->
+  <div class="dispatch-workspace">
+    <!-- Left column: Filter & Orders List -->
+    <section class="dispatch-workspace__left" aria-label="Danh sách đơn điều phối">
+      <vic-dispatch-filter-bar
+        [counts]="counts()"
+        [currentStatus]="statusFilter()"
+        [currentQuery]="searchQuery()"
+        (searchChange)="onSearch($event)"
+        (statusChange)="onSelectStatus($event)"
+      />
+
+      <vic-dispatch-list
+        [items]="filteredItems()"
+        [selectedOrderId]="selectedOrderId()"
+        [loading]="loading()"
+        [error]="error()"
+        (itemSelected)="onSelectItem($event)"
+        (retry)="onRetry()"
+      />
+    </section>
+
+    <!-- Right column: Sticky Detail Panel (440px) -->
+    <section class="dispatch-workspace__right" aria-label="Chi tiết điều phối">
+      <vic-dispatch-detail
+        [detail]="selectedDetail()"
+        [shippers]="availableShippers()"
+        [actionLoading]="actionLoading()"
+        (resolveFailure)="onResolveFailure($event)"
+        (manualAssign)="onManualAssign($event)"
+      />
+    </section>
+  </div>
+</div>

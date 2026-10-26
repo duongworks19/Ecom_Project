@@ -1,0 +1,64 @@
+<dialog #dialogRef class="vic-dialog">
+  <div class="vic-dialog__content">
+    <div class="vic-dialog__header">
+      <div>
+        <h3 class="vic-dialog__title">Gán shipper thủ công</h3>
+        @if (detail(); as d) {
+          <p class="vic-dialog__subtitle">
+            Đơn {{ d.orderCode }} · Tuyến: {{ d.route }}
+          </p>
+        }
+      </div>
+      <button type="button" class="vic-dialog__close" (click)="close()" aria-label="Đóng">
+        ✕
+      </button>
+    </div>
+
+    <div class="vic-dialog__body">
+      <div class="shippers-list-label">
+        Chọn shipper đang khả dụng ({{ availableShippers().length }}):
+      </div>
+
+      <div class="shippers-selection" role="radiogroup">
+        @for (s of availableShippers(); track s.id) {
+          <div
+            class="shipper-radio-card"
+            [class.shipper-radio-card--selected]="selectedShipperId() === s.id"
+            (click)="selectShipper(s.id)"
+            role="radio"
+            [attr.aria-checked]="selectedShipperId() === s.id"
+            tabindex="0"
+            (keydown.enter)="selectShipper(s.id)"
+            (keydown.space)="selectShipper(s.id)"
+          >
+            <div class="shipper-radio-card__left">
+              <span class="shipper-radio-card__name">{{ s.fullName }}</span>
+              <span class="shipper-radio-card__status">
+                Đang giao: {{ s.activeOrders }}/{{ s.maxActiveOrders }} đơn
+              </span>
+            </div>
+            <div class="shipper-radio-card__radio-indicator"></div>
+          </div>
+        } @empty {
+          <div class="empty-shippers">
+            Hiện không có shipper nào ở trạng thái AVAILABLE và chưa đầy tải đơn.
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="vic-dialog__footer">
+      <button type="button" class="vic-btn vic-btn--secondary" (click)="close()">
+        Hủy bỏ
+      </button>
+      <button
+        type="button"
+        class="vic-btn vic-btn--primary"
+        [disabled]="!selectedShipperId() || loading()"
+        (click)="confirm()"
+      >
+        {{ loading() ? 'Đang gán...' : 'Xác nhận gán shipper' }}
+      </button>
+    </div>
+  </div>
+</dialog>

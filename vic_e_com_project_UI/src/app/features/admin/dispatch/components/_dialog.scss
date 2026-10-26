@@ -1,0 +1,115 @@
+.vic-dialog {
+  border: none;
+  border-radius: var(--rounded-lg);
+  padding: 0;
+  max-width: 500px;
+  width: 90vw;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
+
+  &::backdrop {
+    background-color: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(2px);
+  }
+
+  &__content {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  &__title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--color-ink);
+  }
+
+  &__subtitle {
+    font-size: 13px;
+    color: var(--color-mute);
+    margin-top: 4px;
+  }
+
+  &__close {
+    font-size: 18px;
+    color: var(--color-mute);
+    padding: 4px 8px;
+    border-radius: var(--rounded-full);
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  &__warning {
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--color-error);
+    background-color: #fef2f2;
+    padding: 12px;
+    border-radius: var(--rounded-sm);
+  }
+
+  &__field-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-ink);
+  }
+
+  &__textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--rounded-sm);
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+    &:focus { border-color: var(--color-ink); }
+  }
+
+  &__footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 8px;
+  }
+}
+
+.vic-btn {
+  height: 40px;
+  padding: 0 18px;
+  border-radius: var(--rounded-full);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+
+  &--secondary {
+    background-color: var(--color-secondary-bg);
+    color: var(--color-ink);
+  }
+
+  &--primary {
+    background-color: var(--color-primary);
+    color: var(--color-on-primary);
+    &:hover:not(:disabled) { background-color: var(--color-primary-pressed); }
+  }
+
+  &--danger {
+    background-color: var(--color-primary);
+    color: var(--color-on-primary);
+    &:hover:not(:disabled) { background-color: var(--color-primary-pressed); }
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}

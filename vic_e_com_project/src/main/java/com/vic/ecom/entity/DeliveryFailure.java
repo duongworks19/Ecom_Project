@@ -7,7 +7,7 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "delivery_failures", indexes = @Index(name = "idx_delivery_failures_next_action", columnList = "next_action"))
+@Table(name = "delivered_failures", indexes = @Index(name = "idx_delivered_failures_next_action", columnList = "next_action"))
 @Getter
 @Setter
 public class DeliveryFailure {

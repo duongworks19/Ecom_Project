@@ -22,7 +22,7 @@ export class ShipperPickupComponent implements OnInit {
 
   ngOnInit(): void {
     this.shipperService.shipments$.subscribe((list) => {
-      this.pickupShipments.set(list.filter((s) => s.status === 'READY_TO_PICK'));
+      this.pickupShipments.set(list.filter((s) => s.status === 'ASSIGNED'));
     });
   }
 

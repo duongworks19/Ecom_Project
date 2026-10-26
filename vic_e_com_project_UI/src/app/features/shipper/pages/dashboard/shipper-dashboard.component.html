@@ -171,7 +171,7 @@
               </td>
               <td>
                 @switch (item.status) {
-                  @case ('READY_TO_PICK') {
+                  @case ('ASSIGNED') {
                     <span class="status-badge status-badge--pickup">Chờ lấy hàng</span>
                   }
                   @case ('DELIVERING') {
@@ -186,7 +186,7 @@
                 }
               </td>
               <td class="text-right">
-                @if (item.status === 'READY_TO_PICK') {
+                @if (item.status === 'ASSIGNED') {
                   <button type="button" class="btn-action-pickup" (click)="onConfirmPickup(item)">
                     Đã lấy hàng
                   </button>

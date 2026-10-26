@@ -1,0 +1,36 @@
+<div class="list-container">
+  @if (loading() && items().length === 0) {
+    <!-- Skeletons on initial load -->
+    <div class="skeleton-list" aria-busy="true" aria-label="Đang tải dữ liệu">
+      <div class="skeleton-card"></div>
+      <div class="skeleton-card"></div>
+      <div class="skeleton-card"></div>
+    </div>
+  } @else if (error()) {
+    <!-- Error state -->
+    <div class="error-state" role="alert">
+      <p class="error-state__message">{{ error() }}</p>
+      <button type="button" class="error-state__retry-btn" (click)="onRetry()">
+        Thử lại
+      </button>
+    </div>
+  } @else if (items().length === 0) {
+    <!-- Empty state -->
+    <div class="empty-state">
+      <div class="empty-state__icon">📦</div>
+      <h3 class="empty-state__title">Không có đơn hàng nào</h3>
+      <p class="empty-state__desc">Hiện không tìm thấy vận đơn nào phù hợp với bộ lọc đã chọn.</p>
+    </div>
+  } @else {
+    <!-- Actual list of items -->
+    <div class="items-stack">
+      @for (item of items(); track item.orderId) {
+        <vic-dispatch-list-item
+          [item]="item"
+          [isSelected]="selectedOrderId() === item.orderId"
+          (selected)="onSelect($event)"
+        />
+      }
+    </div>
+  }
+</div>

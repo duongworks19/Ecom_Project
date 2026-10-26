@@ -1,0 +1,49 @@
+<section class="kpi-grid" aria-label="Thống kê điều phối">
+  <!-- Card 1: Chờ điều phối (Dark background) -->
+  <button
+    type="button"
+    class="kpi-card kpi-card--dark"
+    [class.kpi-card--active]="currentFilter() === 'WAITING'"
+    (click)="onSelect('WAITING')"
+  >
+    <div class="kpi-card__title">Chờ điều phối</div>
+    <div class="kpi-card__value">{{ counts().waiting }}</div>
+    <div class="kpi-card__subtext">Chờ shipper phù hợp, hệ thống tự thử lại</div>
+  </button>
+
+  <!-- Card 2: Đang giao -->
+  <button
+    type="button"
+    class="kpi-card kpi-card--neutral"
+    [class.kpi-card--active]="currentFilter() === 'DELIVERING'"
+    (click)="onSelect('DELIVERING')"
+  >
+    <div class="kpi-card__title">Đang giao</div>
+    <div class="kpi-card__value">{{ counts().delivering }}</div>
+    <div class="kpi-card__subtext">Đã gán, đã lấy hàng hoặc đang giao</div>
+  </button>
+
+  <!-- Card 3: Giao thất bại cần xử lý (Red border and accent) -->
+  <button
+    type="button"
+    class="kpi-card kpi-card--failed"
+    [class.kpi-card--active]="currentFilter() === 'FAILED'"
+    (click)="onSelect('FAILED')"
+  >
+    <div class="kpi-card__title">Giao thất bại cần xử lý</div>
+    <div class="kpi-card__value">{{ counts().failed }}</div>
+    <div class="kpi-card__subtext">Chọn giao lại, đổi shipper hoặc hoàn hàng</div>
+  </button>
+
+  <!-- Card 4: Đã giao -->
+  <button
+    type="button"
+    class="kpi-card kpi-card--neutral"
+    [class.kpi-card--active]="currentFilter() === 'DELIVERED'"
+    (click)="onSelect('DELIVERED')"
+  >
+    <div class="kpi-card__title">Đã giao</div>
+    <div class="kpi-card__value">{{ counts().delivered }}</div>
+    <div class="kpi-card__subtext">Đã thu đủ COD, thanh toán PAID</div>
+  </button>
+</section>

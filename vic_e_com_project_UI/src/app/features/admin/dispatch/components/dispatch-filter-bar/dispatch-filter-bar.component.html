@@ -1,0 +1,75 @@
+<div class="filter-bar">
+  <!-- Search input -->
+  <div class="search-box">
+    <svg class="search-box__icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="11" cy="11" r="8"></circle>
+      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+    </svg>
+    <input
+      type="search"
+      class="search-box__input"
+      placeholder="Tìm mã đơn, khách, SĐT, shop, khu vực"
+      [value]="currentQuery()"
+      (input)="onInput($event)"
+      aria-label="Tìm kiếm đơn điều phối"
+    />
+  </div>
+
+  <!-- Filter chips -->
+  <div class="filter-chips" role="tablist">
+    <button
+      type="button"
+      class="filter-chip"
+      [class.filter-chip--active]="currentStatus() === 'ALL'"
+      (click)="selectStatus('ALL')"
+      role="tab"
+      [attr.aria-selected]="currentStatus() === 'ALL'"
+    >
+      Tất cả {{ totalCount() }}
+    </button>
+
+    <button
+      type="button"
+      class="filter-chip"
+      [class.filter-chip--active]="currentStatus() === 'WAITING'"
+      (click)="selectStatus('WAITING')"
+      role="tab"
+      [attr.aria-selected]="currentStatus() === 'WAITING'"
+    >
+      Chờ {{ counts().waiting }}
+    </button>
+
+    <button
+      type="button"
+      class="filter-chip"
+      [class.filter-chip--active]="currentStatus() === 'DELIVERING'"
+      (click)="selectStatus('DELIVERING')"
+      role="tab"
+      [attr.aria-selected]="currentStatus() === 'DELIVERING'"
+    >
+      Đang giao {{ counts().delivering }}
+    </button>
+
+    <button
+      type="button"
+      class="filter-chip"
+      [class.filter-chip--active]="currentStatus() === 'FAILED'"
+      (click)="selectStatus('FAILED')"
+      role="tab"
+      [attr.aria-selected]="currentStatus() === 'FAILED'"
+    >
+      Thất bại {{ counts().failed }}
+    </button>
+
+    <button
+      type="button"
+      class="filter-chip"
+      [class.filter-chip--active]="currentStatus() === 'DELIVERED'"
+      (click)="selectStatus('DELIVERED')"
+      role="tab"
+      [attr.aria-selected]="currentStatus() === 'DELIVERED'"
+    >
+      Đã giao {{ counts().delivered }}
+    </button>
+  </div>
+</div>

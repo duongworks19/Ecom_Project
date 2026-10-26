@@ -1,0 +1,58 @@
+<div class="info-table">
+  <!-- Điểm lấy hàng -->
+  <div class="info-row">
+    <div class="info-row__label">Điểm lấy hàng</div>
+    <div class="info-row__value">
+      <div class="info-row__primary">
+        {{ detail().item.shopName || 'Trung tâm điều phối VICMART' }}
+      </div>
+      <div class="info-row__secondary">
+        Kho tổng VIC · Tuyến {{ detail().route || 'Nội thành' }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Người nhận -->
+  <div class="info-row">
+    <div class="info-row__label">Người nhận</div>
+    <div class="info-row__value">
+      <div class="info-row__primary">
+        {{ detail().item.receiverName }} · {{ detail().item.receiverPhone }}
+      </div>
+      <div class="info-row__secondary">
+        {{ detail().route }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Tiền thu hộ (COD) -->
+  <div class="info-row">
+    <div class="info-row__label">Tiền thu hộ (COD)</div>
+    <div class="info-row__value">
+      <div class="info-row__primary info-row__cod-amount">
+        {{ detail().item.codAmount | vndCurrency }}
+        <span
+          class="info-row__cod-badge"
+          [class.info-row__cod-badge--collected]="isCodCollected()"
+        >
+          {{ isCodCollected() ? 'Đã thu' : 'Chưa thu' }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Shipper phụ trách -->
+  @if (detail().item.shipperName) {
+    <div class="info-row">
+      <div class="info-row__label">Shipper phụ trách</div>
+      <div class="info-row__value">
+        <div class="info-row__primary">
+          {{ detail().item.shipperName }}
+        </div>
+        <div class="info-row__secondary">
+          Tuyến điều phối: {{ detail().route }}
+        </div>
+      </div>
+    </div>
+  }
+</div>

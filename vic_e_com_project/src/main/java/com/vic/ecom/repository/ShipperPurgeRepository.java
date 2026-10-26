@@ -10,7 +10,7 @@ public class ShipperPurgeRepository {
     private final EntityManager entityManager;
 
     public void deleteAllOwnedData(Long shipperId, Long userId) {
-        entityManager.createNativeQuery("delete from delivery_failures where shipment_id in (select id from shipments where shipper_id = :id)")
+        entityManager.createNativeQuery("delete from delivered_failures where shipment_id in (select id from shipments where shipper_id = :id)")
                 .setParameter("id", shipperId).executeUpdate();
         entityManager.createNativeQuery("delete from shipment_events where shipment_id in (select id from shipments where shipper_id = :id)")
                 .setParameter("id", shipperId).executeUpdate();

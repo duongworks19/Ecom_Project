@@ -1,0 +1,16 @@
+<div
+  class="status-pill"
+  [class.status-pill--running]="running()"
+  [class.status-pill--stopped]="!running()"
+  role="status"
+  aria-live="polite"
+>
+  <span class="status-pill__dot" aria-hidden="true"></span>
+  <span class="status-pill__text">
+    @if (running()) {
+      Điều phối tự động đang chạy · quét gần nhất {{ scanText() }}
+    } @else {
+      Điều phối tự động tạm dừng
+    }
+  </span>
+</div>

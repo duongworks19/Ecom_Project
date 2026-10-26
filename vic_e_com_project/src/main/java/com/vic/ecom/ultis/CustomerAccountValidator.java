@@ -111,7 +111,7 @@ public final class CustomerAccountValidator {
         }
         return switch (dbStatus) {
             case PENDING -> "PENDING";
-            case CONFIRMED, PREPARING, PACKED -> "CONFIRMED";
+            case CONFIRMED, PREPARING, PACKED, READY_TO_SHIP -> "CONFIRMED";
             case SHIPPING -> "SHIPPING";
             case DELIVERED -> "COMPLETED";
             case CANCELLED, REJECTED -> "CANCELLED";

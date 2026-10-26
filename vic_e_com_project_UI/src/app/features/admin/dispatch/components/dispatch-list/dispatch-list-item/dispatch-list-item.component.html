@@ -1,0 +1,55 @@
+<article
+  class="item-card"
+  [class.item-card--selected]="isSelected()"
+  (click)="onClick()"
+  tabindex="0"
+  (keydown.enter)="onClick()"
+  (keydown.space)="onClick()"
+  role="button"
+  [attr.aria-pressed]="isSelected()"
+>
+  <!-- Row 1: Code, District, Shop, Badge -->
+  <div class="item-card__header">
+    <div class="item-card__identity">
+      <span class="item-card__code">{{ item().orderCode }}</span>
+      <span class="item-card__district-chip">{{ getDistrictText() }}</span>
+      @if (item().shopName) {
+        <span class="item-card__dot">·</span>
+        <span class="item-card__shop">{{ item().shopName }}</span>
+      }
+    </div>
+    <span class="item-badge" [class]="badgeInfo().cssModifier">
+      {{ badgeInfo().label }}
+    </span>
+  </div>
+
+  <!-- Row 2: Receiver & COD -->
+  <div class="item-card__body">
+    <div class="item-card__receiver">
+      Nhận: <strong>{{ item().receiverName }}</strong>
+      @if (item().receiverPhone) {
+        ({{ item().receiverPhone }})
+      }
+    </div>
+    <div class="item-card__cod">
+      COD <strong>{{ item().codAmount | vndCurrency }}</strong>
+    </div>
+  </div>
+
+  <!-- Row 3: Status Details (Waiting message, Shipper or Failure) -->
+  <div class="item-card__footer">
+    @if (item().displayStatus === 'WAITING') {
+      <div class="item-card__waiting-note">
+        {{ item().waitingNote || 'Đang chờ hệ thống tự động gán shipper...' }}
+      </div>
+    } @else if (item().displayStatus === 'FAILED') {
+      <div class="item-card__shipper-info item-card__shipper-info--failed">
+        Shipper: {{ item().shipperName || 'Chưa gán' }} · Lần giao {{ item().attemptNo }}/3
+      </div>
+    } @else {
+      <div class="item-card__shipper-info">
+        Shipper: {{ item().shipperName || 'Chưa gán' }}
+      </div>
+    }
+  </div>
+</article>

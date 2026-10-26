@@ -34,7 +34,7 @@ export class ShipperDashboardComponent implements OnInit {
   });
 
   readonly shipments = signal<Shipment[]>([]);
-  readonly currentFilter = signal<ShipmentStatus | 'ALL'>('ALL');
+  readonly currentFilter = signal<ShipmentStatus | 'READY_TO_PICK' | 'ALL'>('ALL');
 
   // Dialog States
   readonly activeDetailShipment = signal<Shipment | null>(null);
@@ -56,7 +56,7 @@ export class ShipperDashboardComponent implements OnInit {
     });
   }
 
-  setFilter(filter: ShipmentStatus | 'ALL'): void {
+  setFilter(filter: ShipmentStatus | 'READY_TO_PICK' | 'ALL'): void {
     this.currentFilter.set(filter);
   }
 
@@ -64,7 +64,7 @@ export class ShipperDashboardComponent implements OnInit {
     const list = this.shipments();
     const filter = this.currentFilter();
     if (filter === 'ALL') return list;
-    return list.filter((s) => s.status === filter);
+    return list.filter((s) => (filter === 'READY_TO_PICK' ? s.status === 'ASSIGNED' : s.status === filter));
   }
 
   onConfirmPickup(item: Shipment): void {
