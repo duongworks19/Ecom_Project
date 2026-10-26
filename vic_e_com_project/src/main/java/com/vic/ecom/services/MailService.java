@@ -77,4 +77,21 @@ public class MailService {
             log.error("Failed to send shipper lock mail to {}", to, e);
         }
     }
+
+    @Async
+    public void sendAccountDeleted(String to, String fullName, String role, String reason) {
+        try {
+            SimpleMailMessage msg = new SimpleMailMessage();
+            msg.setFrom(from);
+            msg.setTo(to);
+            msg.setSubject("Tài khoản VICMART đã bị xóa vĩnh viễn");
+            msg.setText("Xin chào " + (fullName == null ? "bạn" : fullName) + ",\n\n"
+                    + "Tài khoản VICMART của bạn (vai trò: " + role + ") đã bị xóa vĩnh viễn.\n"
+                    + "Lý do: " + reason.trim() + "\n\n"
+                    + "Nếu bạn cho rằng đây là nhầm lẫn, vui lòng liên hệ quản trị viên.");
+            mailSender.send(msg);
+        } catch (Exception e) {
+            log.error("Failed to send account-deleted mail to {}", to, e);
+        }
+    }
 }

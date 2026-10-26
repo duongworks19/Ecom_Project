@@ -19,6 +19,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -97,6 +98,22 @@ public class AdminCustomerController {
         String reason = request != null ? request.reason() : null;
         String adminPrincipal = authentication != null ? authentication.getName() : null;
         return ResponseEntity.ok(adminCustomerService.unlockCustomer(id, reason, adminPrincipal));
+    }
+
+    @PostMapping("/{id}/lock-all")
+    public ResponseEntity<CustomerStatusResponse> lockAll(@PathVariable Long id, @RequestBody(required = false) CustomerLockRequest request, Authentication authentication) {
+        return ResponseEntity.ok(adminCustomerService.lockUser(id, request == null ? null : request.reason(), authentication == null ? null : authentication.getName()));
+    }
+
+    @PostMapping("/{id}/unlock-all")
+    public ResponseEntity<CustomerStatusResponse> unlockAll(@PathVariable Long id) {
+        return ResponseEntity.ok(adminCustomerService.unlockUser(id));
+    }
+
+    @DeleteMapping("/{id}/permanent")
+    public ResponseEntity<Void> permanentlyDelete(@PathVariable("id") Long id, @RequestParam String reason) {
+        adminCustomerService.permanentlyDelete(id, reason);
+        return ResponseEntity.noContent().build();
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

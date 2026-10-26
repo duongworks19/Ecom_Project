@@ -25,7 +25,7 @@ public class Vendor {
     @Column(name = "business_name", nullable = false, length = 255)
     private String businessName;
 
-    @Column(name = "kyc_document_url", length = 500)
+    @Column(name = "kyc_document_url", columnDefinition = "TEXT")
     private String kycDocumentUrl;
 
     @Enumerated(EnumType.STRING)

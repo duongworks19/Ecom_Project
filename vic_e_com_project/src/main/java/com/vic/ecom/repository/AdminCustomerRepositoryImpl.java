@@ -36,14 +36,14 @@ public class AdminCustomerRepositoryImpl implements AdminCustomerRepository {
             String sortColumn,
             String sortDirection
     ) {
-        StringBuilder where = new StringBuilder(" WHERE u.role = 'CUSTOMER' ");
+        StringBuilder where = new StringBuilder(" WHERE 1 = 1 ");
         Map<String, Object> params = new HashMap<>();
 
         if (statusFilter != null) {
             where.append(" AND u.status = :status ");
             params.put("status", statusFilter.name());
         } else {
-            where.append(" AND u.status IN ('ACTIVE', 'LOCKED') ");
+            where.append(" AND u.status IN ('ACTIVE', 'LOCKED', 'PENDING') ");
         }
 
         if (keyword != null && !keyword.isBlank()) {
@@ -77,7 +77,7 @@ public class AdminCustomerRepositoryImpl implements AdminCustomerRepository {
                 : "u.created_at " + sortDirection + ", u.id DESC";
 
         String selectSql = """
-                SELECT u.id, u.name AS full_name, u.email, u.avatar_url, u.status, u.created_at
+                SELECT u.id, u.name AS full_name, u.email, u.avatar_url, u.status, u.created_at, u.role
                 FROM users u
                 """ + where + " ORDER BY " + orderBy + " LIMIT :limit OFFSET :offset";
 
@@ -92,7 +92,8 @@ public class AdminCustomerRepositoryImpl implements AdminCustomerRepository {
                         rs.getString("email"),
                         rs.getString("avatar_url"),
                         rs.getString("status"),
-                        rs.getTimestamp("created_at") != null ? rs.getTimestamp("created_at").toLocalDateTime() : null
+                        rs.getTimestamp("created_at") != null ? rs.getTimestamp("created_at").toLocalDateTime() : null,
+                        rs.getString("role")
                 ))
                 .list();
 
@@ -109,7 +110,7 @@ public class AdminCustomerRepositoryImpl implements AdminCustomerRepository {
                     COUNT(*) FILTER (WHERE status = 'LOCKED') AS locked,
                     COUNT(*) FILTER (WHERE status IN ('ACTIVE', 'LOCKED') AND created_at >= :threshold) AS new_last_7_days
                 FROM users
-                WHERE role = 'CUSTOMER'
+                WHERE role IS NOT NULL
                 """;
         return jdbcClient.sql(sql)
                 .param("threshold", Timestamp.valueOf(sevenDaysAgoThreshold))

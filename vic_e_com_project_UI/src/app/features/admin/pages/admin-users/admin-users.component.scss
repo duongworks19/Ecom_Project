@@ -24,6 +24,26 @@
   margin: 0;
 }
 
+.toast-banner {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background-color: var(--color-surface-dark, #262622);
+  color: #ffffff;
+  padding: 12px 20px;
+  border-radius: var(--rounded-full, 9999px);
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  z-index: 1100;
+  animation: toastFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes toastFadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .section-content-grid {
   display: grid;
   grid-template-columns: 1.85fr 1fr;

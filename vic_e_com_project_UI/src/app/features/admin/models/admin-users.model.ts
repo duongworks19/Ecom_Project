@@ -1,4 +1,5 @@
-export type CustomerStatus = 'ACTIVE' | 'LOCKED';
+export type CustomerStatus = 'ACTIVE' | 'LOCKED' | 'PENDING';
+export type UserRole = 'ADMIN' | 'CUSTOMER' | 'VENDOR' | 'SHIPPER';
 
 export interface CustomerKpiCard {
   id: string;
@@ -32,6 +33,7 @@ export interface AdminCustomer {
   email: string;
   phone: string;
   status: CustomerStatus;
+  role: UserRole;
   createdAt: string;
   addresses: CustomerAddress[];
   purchaseStats: CustomerPurchaseStats;
@@ -68,6 +70,7 @@ export interface CustomerListItemApiResponse {
   avatarUrl: string | null;
   status: CustomerStatus;
   createdAt: string;
+  role: UserRole;
 }
 
 export interface CustomerSummaryApiResponse {

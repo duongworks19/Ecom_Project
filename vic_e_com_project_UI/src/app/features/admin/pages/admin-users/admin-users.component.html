@@ -3,9 +3,13 @@
     <header class="page-header">
       <h1 class="page-title">Quản lý người dùng</h1>
       <p class="page-subtitle">
-        Danh sách Customer: xem thông tin, tìm kiếm, khóa hoặc mở khóa tài khoản.
+        Danh sách người dùng: xem thông tin, vai trò, tìm kiếm, khóa hoặc mở khóa tài khoản.
       </p>
     </header>
+
+    @if (toastMessage(); as toast) {
+      <div class="toast-banner" role="status">{{ toast }}</div>
+    }
 
     <section class="section-kpis">
       <vic-users-kpi [kpis]="data.kpis"></vic-users-kpi>
@@ -35,6 +39,7 @@
         <vic-user-detail-panel
           [customer]="selectedCustomer()"
           (requestStatusToggle)="modalTargetCustomer.set($event)"
+          (requestDelete)="onOpenDeleteModal($event)"
           (viewOrders)="onViewOrders($event)"
           (viewReviews)="onViewReviews($event)"
         ></vic-user-detail-panel>
@@ -46,6 +51,15 @@
       (close)="modalTargetCustomer.set(null)"
       (confirm)="onConfirmStatusChange($event)"
     ></vic-user-status-modal>
+
+    <vic-user-delete-modal
+      [user]="deleteModalUser()"
+      [errorMessage]="deleteModalError()"
+      [isSubmitting]="isDeleteSubmitting()"
+      (close)="deleteModalUser.set(null)"
+      (confirmPermanentDelete)="onConfirmPermanentDelete($event)"
+      (requestLockFirst)="onRequestLockFromDeleteModal($event)"
+    ></vic-user-delete-modal>
 
     @if (ordersModalData(); as ordersPage) {
       <div
@@ -77,7 +91,7 @@
                 </div>
               </div>
             } @empty {
-              <p class="submodal-empty">Khách hàng chưa có đơn hàng nào.</p>
+              <p class="submodal-empty">Người dùng chưa có đơn hàng nào.</p>
             }
           </div>
         </div>
@@ -114,7 +128,7 @@
                 }
               </div>
             } @empty {
-              <p class="submodal-empty">Khách hàng chưa có đánh giá nào.</p>
+              <p class="submodal-empty">Người dùng chưa có đánh giá nào.</p>
             }
           </div>
         </div>
