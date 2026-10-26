@@ -39,8 +39,7 @@ export class AdminSidebarComponent {
     {
       groupTitle: 'DANH MỤC & SẢN PHẨM',
       items: [
-        { label: 'Danh mục & thương hiệu', route: '/admin/categories' },
-        { label: 'Sản phẩm toàn sàn', route: '/admin/products' },
+        { label: 'Danh mục', route: '/admin/categories' },
       ],
     },
     {
@@ -48,13 +47,6 @@ export class AdminSidebarComponent {
       items: [
         { label: 'Đơn hàng', route: '/admin/orders' },
         { label: 'Gán shipper & vận đơn', route: '/admin/shipments' },
-      ],
-    },
-    {
-      groupTitle: 'KHUYẾN MÃI & HỖ TRỢ',
-      items: [
-        { label: 'Voucher toàn sàn', route: '/admin/vouchers' },
-        { label: 'Đổi trả & khiếu nại', route: '/admin/returns' },
       ],
     },
   ];

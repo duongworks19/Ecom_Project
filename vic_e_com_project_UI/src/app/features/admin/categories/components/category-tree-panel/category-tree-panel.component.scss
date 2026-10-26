@@ -1,0 +1,214 @@
+.tree-panel-card {
+  background-color: var(--color-surface-card, #f6f6f3);
+  border-radius: var(--rounded-md, 16px);
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 520px;
+}
+
+.tree-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--color-hairline-soft, #e5e5e0);
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    .panel-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--color-ink, #000000);
+      margin: 0;
+      letter-spacing: -0.3px;
+    }
+
+    .depth-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 8px;
+      background-color: var(--color-secondary-bg, #e5e5e0);
+      color: var(--color-mute, #62625b);
+      font-size: 11px;
+      font-weight: 600;
+      border-radius: var(--rounded-full, 9999px);
+    }
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .btn-action-text {
+      background: transparent;
+      border: none;
+      font-family: inherit;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--color-body, #33332e);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 6px;
+      border-radius: var(--rounded-full, 9999px);
+      transition: var(--transition-fast, 0.15s ease);
+
+      .icon {
+        font-size: 11px;
+      }
+
+      &:hover:not(:disabled) {
+        background-color: rgba(0, 0, 0, 0.05);
+        color: var(--color-ink, #000000);
+      }
+
+      &:disabled {
+        color: var(--color-ash, #91918c);
+        cursor: not-allowed;
+      }
+    }
+  }
+}
+
+.tree-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tree-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+  padding: 6px 16px 6px 8px;
+  border-radius: var(--rounded-md, 16px);
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  transition: var(--transition-fast, 0.15s ease);
+  user-select: none;
+
+  &:hover:not(.is-selected) {
+    background-color: rgba(0, 0, 0, 0.03);
+  }
+
+  &.is-selected {
+    background-color: var(--color-canvas, #ffffff);
+    border-color: var(--color-ink, #000000);
+  }
+
+  .row-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 0;
+
+    .chevron-toggle {
+      width: 22px;
+      height: 22px;
+      border: none;
+      background: transparent;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      color: var(--color-mute, #62625b);
+      cursor: pointer;
+      border-radius: 4px;
+      transition: var(--transition-fast, 0.15s ease);
+
+      &:hover {
+        background-color: rgba(0, 0, 0, 0.08);
+        color: var(--color-ink, #000000);
+      }
+    }
+
+    .chevron-placeholder {
+      width: 22px;
+      height: 22px;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+
+    .node-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--color-ink, #000000);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .level-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 1px 6px;
+      background-color: var(--color-secondary-bg, #e5e5e0);
+      color: var(--color-mute, #62625b);
+      font-size: 10.5px;
+      font-weight: 600;
+      border-radius: var(--rounded-full, 9999px);
+      flex-shrink: 0;
+    }
+  }
+
+  .row-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-shrink: 0;
+
+    .product-count {
+      font-size: 12.5px;
+      color: var(--color-mute, #62625b);
+      white-space: nowrap;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      white-space: nowrap;
+
+      .dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+      }
+
+      &--visible {
+        color: var(--color-success-deep, #103c25);
+        font-weight: 700;
+
+        .dot {
+          background-color: var(--color-success-deep, #103c25);
+        }
+      }
+
+      &--hidden {
+        color: var(--color-mute, #62625b);
+        font-weight: 500;
+
+        .dot {
+          background-color: var(--color-ash, #91918c);
+        }
+      }
+    }
+  }
+}
+
+.tree-empty {
+  padding: 32px 16px;
+  text-align: center;
+  color: var(--color-mute, #62625b);
+  font-size: 13.5px;
+}

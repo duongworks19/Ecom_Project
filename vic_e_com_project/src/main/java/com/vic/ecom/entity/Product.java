@@ -34,6 +34,13 @@ public class Product {
     @Column(length = 100)
     private String category;
 
+    @Column(name = "category_id")
+    private Long categoryId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id", insertable = false, updatable = false, foreignKey = @ForeignKey(name = "fk_products_category"))
+    private Category categoryEntity;
+
     @Column(name = "image_url", columnDefinition = "TEXT")
     private String imageUrl;
 
