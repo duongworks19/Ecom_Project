@@ -61,7 +61,10 @@ public class VoucherController {
             @Valid @RequestBody VoucherDtos.StatusRequest request
     ) {
         VoucherDtos.Response response = voucherService.updateStatus(id, request);
-        return ResponseEntity.ok(ApiResponse.ok("Cập nhật trạng thái voucher thành công", response));
+        String msg = request.status() == com.vic.ecom.enums.VoucherStatus.PAUSED
+                ? "Đã tạm dừng voucher thành công (đã ẩn khỏi gian hàng khách)"
+                : "Đã kích hoạt lại voucher thành công (đã hiển thị cho khách)";
+        return ResponseEntity.ok(ApiResponse.ok(msg, response));
     }
 
     @DeleteMapping("/{id}")
@@ -69,6 +72,6 @@ public class VoucherController {
             @PathVariable Long id
     ) {
         voucherService.deleteVoucher(id);
-        return ResponseEntity.ok(ApiResponse.ok("Xóa voucher thành công", null));
+        return ResponseEntity.ok(ApiResponse.ok("Đã xóa voucher vĩnh viễn khỏi hệ thống thành công", null));
     }
 }

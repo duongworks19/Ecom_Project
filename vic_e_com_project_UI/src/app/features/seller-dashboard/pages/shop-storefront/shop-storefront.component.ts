@@ -11,7 +11,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { SellerDashboardService } from '../../services/seller-dashboard.service';
-import { SellerProduct } from '../../models/seller-dashboard.model';
+import { SellerProduct, SellerVoucher } from '../../models/seller-dashboard.model';
 import { AuthService } from '../../../../core/services/auth.service';
 
 export interface ShopData {
@@ -53,7 +53,13 @@ export class ShopStorefrontComponent implements OnInit {
   readonly selectedProduct = signal<SellerProduct | null>(null);
   readonly toastMessage = signal<string | null>(null);
 
-  readonly vouchers = this.dashboardService.vouchers;
+  readonly shopVouchers = signal<SellerVoucher[]>([]);
+  readonly vouchers = computed(() => {
+    // Chỉ hiển thị các voucher đang ACTIVE, RUNNING và chưa hết hạn. Khi tạm dừng, voucher biến mất khỏi giao diện khách.
+    return this.shopVouchers().filter(
+      (v) => v.active && v.status === 'ACTIVE' && v.displayStatus !== 'PAUSED' && v.displayStatus !== 'EXPIRED'
+    );
+  });
   readonly reviews = this.dashboardService.reviews;
 
   ngOnInit(): void {
@@ -74,6 +80,7 @@ export class ShopStorefrontComponent implements OnInit {
         const shop = res?.data || res;
         this.currentShop.set(shop);
         this.loadProductsForShop(id);
+        this.loadVouchersForShop(id);
       },
       error: () => {
         this.loadCurrentShop();
@@ -89,6 +96,7 @@ export class ShopStorefrontComponent implements OnInit {
         if (shop && shop.id) {
           this.currentShop.set(shop);
           this.loadProductsForShop(shop.id);
+          this.loadVouchersForShop(shop.id);
         } else {
           this.loadFallbackFromStorage();
         }
@@ -100,6 +108,7 @@ export class ShopStorefrontComponent implements OnInit {
             if (Array.isArray(list) && list.length > 0) {
               this.currentShop.set(list[0]);
               this.loadProductsForShop(list[0].id);
+              this.loadVouchersForShop(list[0].id);
             } else {
               this.loadFallbackFromStorage();
             }
@@ -128,10 +137,57 @@ export class ShopStorefrontComponent implements OnInit {
     });
   }
 
+  loadVouchersForShop(shopId: number): void {
+    this.http.get<any>(`http://localhost:9090/api/shops/${shopId}/vouchers`).subscribe({
+      next: (res) => {
+        const list = res?.data || [];
+        if (Array.isArray(list) && list.length > 0) {
+          const mapped: SellerVoucher[] = list.map((item: any) => ({
+            id: item.id,
+            code: item.code,
+            title: 'Voucher gian hàng',
+            discountText: item.discountType === 'PERCENT'
+              ? `Giảm ${item.value}%`
+              : `Giảm ${Number(item.value).toLocaleString('vi-VN')}₫`,
+            discountType: (item.discountType === 'FIXED' ? 'FIXED' : 'PERCENT') as 'PERCENT' | 'FIXED',
+            value: Number(item.value) || 0,
+            maxDiscount: item.maxDiscount != null ? Number(item.maxDiscount) : undefined,
+            minOrderAmount: Number(item.minOrderAmount) || 0,
+            usedCount: item.usedCount || 0,
+            totalQuota: item.usageLimit || 100,
+            usageLimit: item.usageLimit || 100,
+            expiryDate: item.endAt ? item.endAt.split('T')[0] : '',
+            startAt: item.startAt,
+            endAt: item.endAt,
+            status: item.status,
+            displayStatus: item.displayStatus,
+            active: item.status === 'ACTIVE' && item.displayStatus === 'RUNNING',
+          }));
+          this.shopVouchers.set(mapped);
+        } else {
+          const fallback = this.dashboardService.vouchers().filter(
+            (v) => v.active && v.status === 'ACTIVE' && v.displayStatus !== 'PAUSED' && v.displayStatus !== 'EXPIRED'
+          );
+          this.shopVouchers.set(fallback);
+        }
+      },
+      error: () => {
+        const fallback = this.dashboardService.vouchers().filter(
+          (v) => v.active && v.status === 'ACTIVE' && v.displayStatus !== 'PAUSED' && v.displayStatus !== 'EXPIRED'
+        );
+        this.shopVouchers.set(fallback);
+      },
+    });
+  }
+
   private loadFallbackFromStorage(): void {
     this.isLoading.set(false);
     this.dashboardService.loadShopProductsFromStorage();
     this.shopProducts.set(this.dashboardService.products());
+    const fallback = this.dashboardService.vouchers().filter(
+      (v) => v.active && v.status === 'ACTIVE' && v.displayStatus !== 'PAUSED' && v.displayStatus !== 'EXPIRED'
+    );
+    this.shopVouchers.set(fallback);
   }
 
   readonly shopName = computed(() => {

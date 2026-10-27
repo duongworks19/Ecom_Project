@@ -11,6 +11,7 @@ import com.vic.ecom.repository.ShopRepository;
 import com.vic.ecom.repository.UserRepository;
 import com.vic.ecom.repository.VendorRepository;
 import com.vic.ecom.repository.VoucherRepository;
+import com.vic.ecom.repository.VoucherUsageRepository;
 import com.vic.ecom.ultis.CustomerAccountException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
@@ -28,6 +29,7 @@ import java.util.stream.Collectors;
 public class VoucherService {
 
     private final VoucherRepository voucherRepository;
+    private final VoucherUsageRepository voucherUsageRepository;
     private final UserRepository userRepository;
     private final VendorRepository vendorRepository;
     private final ShopRepository shopRepository;
@@ -249,11 +251,11 @@ public class VoucherService {
     @Transactional
     public void deleteVoucher(Long id) {
         Shop shop = resolveCurrentShop();
-        Voucher voucher = voucherRepository.findByIdAndShopIdAndStatusNot(id, shop.getId(), VoucherStatus.DELETED)
+        Voucher voucher = voucherRepository.findByIdAndShopId(id, shop.getId())
                 .orElseThrow(() -> CustomerAccountException.notFound("VOUCHER_NOT_FOUND", "Không tìm thấy voucher"));
 
-        voucher.setStatus(VoucherStatus.DELETED);
-        voucherRepository.save(voucher);
+        voucherUsageRepository.deleteByVoucherId(voucher.getId());
+        voucherRepository.delete(voucher);
     }
 
     private String normalizeAndValidateCode(String rawCode) {

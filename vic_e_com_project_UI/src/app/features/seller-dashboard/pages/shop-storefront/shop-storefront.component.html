@@ -75,7 +75,7 @@
       </div>
       <div class="voucher-row">
         @for (v of vouchers(); track v.id) {
-        <div class="voucher-ticket" [class.disabled]="!v.active">
+        <div class="voucher-ticket">
           <div class="v-left">
             <span class="v-code">{{ v.code }}</span>
             <strong>{{ v.discountText }}</strong>

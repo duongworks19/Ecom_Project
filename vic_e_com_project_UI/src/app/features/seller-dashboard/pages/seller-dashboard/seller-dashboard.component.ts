@@ -150,7 +150,7 @@ export class SellerDashboardComponent implements OnInit {
             used: item.usedCount || 0,
             from: item.startAt ? item.startAt.split('T')[0] : '',
             to: item.endAt ? item.endAt.split('T')[0] : '',
-            st: (item.status === 'DELETED' ? 'DELETED' : (item.displayStatus === 'EXPIRED' ? 'EXPIRED' : (item.status || 'ACTIVE'))) as any,
+            st: (item.status === 'DELETED' ? 'DELETED' : (item.status === 'PAUSED' || item.displayStatus === 'PAUSED' ? 'PAUSED' : (item.displayStatus === 'EXPIRED' ? 'EXPIRED' : (item.status || 'ACTIVE')))) as any,
           }));
           this.vouchers.set(mapped);
         }
@@ -935,7 +935,14 @@ export class SellerDashboardComponent implements OnInit {
           this.vouchers.update((list) =>
             list.map((v) => (v.code === code ? { ...v, st: newStatus } : v))
           );
-          this.showToast(`Đã chuyển voucher ${code} sang ${newStatus === 'ACTIVE' ? 'Đang chạy' : 'Tạm dừng'}.`);
+          this.dashboardService.vouchers.update((list) =>
+            list.map((v) => (v.id === target.id || v.code === code ? { ...v, status: newStatus, active: newStatus === 'ACTIVE', displayStatus: newStatus } : v))
+          );
+          if (newStatus === 'PAUSED') {
+            this.showToast(`⏸️ Đã tạm dừng voucher ${code} (mã đã được ẩn khỏi gian hàng khách).`);
+          } else {
+            this.showToast(`▶️ Đã kích hoạt lại voucher ${code} (mã đang hiển thị cho khách).`);
+          }
         },
         error: (err) => {
           this.showToast(err?.error?.message || 'Không thể cập nhật trạng thái voucher.');
@@ -945,19 +952,27 @@ export class SellerDashboardComponent implements OnInit {
       this.vouchers.update((list) =>
         list.map((v) => (v.code === code ? { ...v, st: newStatus } : v))
       );
-      this.showToast(`Đã chuyển voucher ${code} sang ${newStatus === 'ACTIVE' ? 'Đang chạy' : 'Tạm dừng'}.`);
+      this.dashboardService.vouchers.update((list) =>
+        list.map((v) => (v.code === code ? { ...v, status: newStatus, active: newStatus === 'ACTIVE', displayStatus: newStatus } : v))
+      );
+      if (newStatus === 'PAUSED') {
+        this.showToast(`⏸️ Đã tạm dừng voucher ${code} (mã đã được ẩn khỏi gian hàng khách).`);
+      } else {
+        this.showToast(`▶️ Đã kích hoạt lại voucher ${code} (mã đang hiển thị cho khách).`);
+      }
     }
   }
 
   deleteVoucher(code: string): void {
     const target = this.vouchers().find((v) => v.code === code);
     if (!target) return;
-    if (!confirm(`Bạn có chắc chắn muốn xóa voucher "${code}" không?`)) return;
+    if (!confirm(`Bạn có chắc chắn muốn xóa voucher "${code}" không?\nThao tác này sẽ xóa vĩnh viễn voucher khỏi hệ thống.`)) return;
     if (target.id) {
       this.http.delete<any>(`http://localhost:9090/api/seller/vouchers/${target.id}`).subscribe({
         next: () => {
           this.vouchers.update((list) => list.filter((v) => v.code !== code));
-          this.showToast(`Đã xóa voucher ${code}.`);
+          this.dashboardService.vouchers.update((list) => list.filter((v) => v.id !== target.id && v.code !== code));
+          this.showToast(`🗑️ Đã xóa voucher ${code} thành công.`);
         },
         error: (err) => {
           this.showToast(err?.error?.message || 'Không thể xóa voucher.');
@@ -965,7 +980,8 @@ export class SellerDashboardComponent implements OnInit {
       });
     } else {
       this.vouchers.update((list) => list.filter((v) => v.code !== code));
-      this.showToast(`Đã xóa voucher ${code}.`);
+      this.dashboardService.vouchers.update((list) => list.filter((v) => v.code !== code));
+      this.showToast(`🗑️ Đã xóa voucher ${code} thành công.`);
     }
   }
 

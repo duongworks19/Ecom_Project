@@ -290,12 +290,14 @@ class SellerVoucherIntegrationTest {
                         .content(jsonCodeA))
                 .andExpect(status().isCreated());
 
-        // Xóa mềm voucher ở shop 1
+        // Xóa voucher ở shop 1 (hard delete)
         mockMvc.perform(delete("/api/seller/vouchers/{id}", voucherId)
                         .header("Authorization", "Bearer " + vendor1Token))
                 .andExpect(status().isOk());
 
-        // Sau khi xóa mềm, shop 1 tạo lại cùng mã VOUCHERABC -> được phép (201)
+        assertThat(voucherRepository.findById(voucherId)).isEmpty();
+
+        // Sau khi xóa, shop 1 tạo lại cùng mã VOUCHERABC -> được phép (201)
         mockMvc.perform(post("/api/seller/vouchers")
                         .header("Authorization", "Bearer " + vendor1Token)
                         .contentType(MediaType.APPLICATION_JSON)

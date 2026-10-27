@@ -544,16 +544,49 @@ export class SellerDashboardService {
     const nextStatus = target?.active ? 'PAUSED' : 'ACTIVE';
 
     this.vouchers.update((list) =>
-      list.map((v) => (v.id === voucherId ? { ...v, active: !v.active } : v))
+      list.map((v) =>
+        v.id === voucherId
+          ? {
+              ...v,
+              active: nextStatus === 'ACTIVE',
+              status: nextStatus,
+              displayStatus: nextStatus,
+            }
+          : v
+      )
     );
     this.http
       .patch(`${this.VOUCHERS_API_URL}/${voucherId}/status`, { status: nextStatus })
-      .pipe(catchError((err) => {
-        this.showToast(err?.error?.message || 'Lỗi cập nhật trạng thái');
-        return of(null);
-      }))
+      .pipe(
+        catchError((err) => {
+          this.showToast(err?.error?.message || 'Lỗi cập nhật trạng thái');
+          return of(null);
+        })
+      )
       .subscribe(() => {
-        this.showToast('Đã cập nhật trạng thái voucher!');
+        const code = target?.code ? ` ${target.code}` : '';
+        this.showToast(
+          nextStatus === 'ACTIVE'
+            ? `▶️ Đã kích hoạt lại voucher${code} (mã đang hiển thị cho khách).`
+            : `⏸️ Đã tạm dừng voucher${code} (mã đã được ẩn khỏi gian hàng khách).`
+        );
+      });
+  }
+
+  deleteVoucher(voucherId: number): void {
+    const target = this.vouchers().find((v) => v.id === voucherId);
+    const code = target?.code ? ` ${target.code}` : '';
+    this.http
+      .delete(`${this.VOUCHERS_API_URL}/${voucherId}`)
+      .pipe(
+        catchError((err) => {
+          this.showToast(err?.error?.message || 'Lỗi khi xóa voucher');
+          return of(null);
+        })
+      )
+      .subscribe(() => {
+        this.vouchers.update((list) => list.filter((v) => v.id !== voucherId));
+        this.showToast(`🗑️ Đã xóa voucher${code} thành công.`);
       });
   }
 
