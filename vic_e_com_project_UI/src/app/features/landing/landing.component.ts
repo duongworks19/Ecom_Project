@@ -1,27 +1,21 @@
 import { Component, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { ProductService } from '../../core/services/product.service';
 import { HeaderNavComponent } from './components/header-nav/header-nav.component';
 import { HeroBannerComponent } from './components/hero-banner/hero-banner.component';
-import { ValuePropsComponent } from './components/value-props/value-props.component';
+import { ProductFilterBarComponent } from './components/product-filter-bar/product-filter-bar.component';
 import { FlashSaleComponent } from './components/flash-sale/flash-sale.component';
 import { ProductMasonryComponent } from './components/product-masonry/product-masonry.component';
-import { EditorialMagazineComponent } from './components/editorial-magazine/editorial-magazine.component';
-import { CtaBannerComponent } from './components/cta-banner/cta-banner.component';
 import { FooterComponent } from './components/footer/footer.component';
 
 @Component({
   selector: 'app-landing',
   standalone: true,
   imports: [
-    CommonModule,
     HeaderNavComponent,
     HeroBannerComponent,
-    ValuePropsComponent,
+    ProductFilterBarComponent,
     FlashSaleComponent,
     ProductMasonryComponent,
-    EditorialMagazineComponent,
-    CtaBannerComponent,
     FooterComponent,
   ],
   templateUrl: './landing.component.html',
@@ -30,7 +24,6 @@ import { FooterComponent } from './components/footer/footer.component';
 export class LandingComponent {
   private readonly productService = inject(ProductService);
 
-  // Expose signals to template
   readonly categories = this.productService.categories;
   readonly activeCategoryId = this.productService.activeCategoryId;
   readonly currentCategory = this.productService.currentCategory;
@@ -39,31 +32,26 @@ export class LandingComponent {
 
   readonly toastMessage = signal<string | null>(null);
 
-  /**
-   * Chọn danh mục và tự động cuộn mượt xuống lưới sản phẩm
-   */
-  onCategorySelected(categoryId: string) {
+  onCategorySelected(categoryId: string): void {
     this.productService.setCategory(categoryId, true);
   }
 
-  onResetCategory() {
+  onResetCategory(): void {
     this.productService.setCategory('all', true);
   }
 
-  onSearchQueryChanged(query: string) {
+  onSearchQueryChanged(query: string): void {
     this.productService.setSearchQuery(query);
   }
 
-  onSaveToggled(productId: string) {
-    this.showToast('❤️ Đã cập nhật trạng thái lưu ghim sản phẩm!');
+  onSaveToggled(_productId: string): void {
+    this.showToast('❤️ Đã cập nhật danh sách yêu thích!');
   }
 
-  showToast(msg: string) {
+  private showToast(msg: string): void {
     this.toastMessage.set(msg);
     setTimeout(() => {
-      if (this.toastMessage() === msg) {
-        this.toastMessage.set(null);
-      }
+      if (this.toastMessage() === msg) this.toastMessage.set(null);
     }, 3200);
   }
 }

@@ -1,0 +1,152 @@
+.product-filter-bar-container {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 16px var(--spacing-xl);
+}
+
+.filter-bar-card {
+  background-color: var(--color-surface-card);
+  border: 1px solid var(--color-hairline-soft);
+  border-radius: var(--rounded-md);
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.filter-controls-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  flex-wrap: wrap;
+  min-width: 280px;
+}
+
+.filter-field {
+  flex: 1;
+  min-width: 170px;
+}
+
+/* ── Select chuẩn {component.text-input} ── */
+.filter-select {
+  width: 100%;
+  height: 44px;
+  padding: 11px 15px;
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+  border: 1px solid var(--color-ash);
+  border-radius: var(--rounded-md);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  outline: none;
+  cursor: pointer;
+  appearance: auto;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+
+  &:hover {
+    border-color: var(--color-ink);
+  }
+
+  /* Signature Double-Ring Focus (DESIGN.md) */
+  &:focus {
+    border-color: #000000;
+    box-shadow: 0 0 0 2px #000000, 0 0 0 5px var(--color-focus-outer);
+  }
+}
+
+/* ── Cụm nút hành động ── */
+.filter-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* {component.button-secondary} */
+.btn-clear {
+  height: 40px;
+  padding: 6px 16px;
+  background-color: var(--color-secondary-bg);
+  color: var(--color-on-secondary);
+  font-size: 14px;
+  font-weight: 700;
+  border-radius: var(--rounded-md);
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color var(--transition-fast);
+
+  &:hover, &:active {
+    background-color: var(--color-secondary-pressed);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px #000000, 0 0 0 5px var(--color-focus-outer);
+  }
+}
+
+/* {component.button-primary} */
+.btn-submit {
+  height: 40px;
+  padding: 6px 18px;
+  background-color: var(--color-primary);
+  color: var(--color-on-primary);
+  font-size: 14px;
+  font-weight: 700;
+  border-radius: var(--rounded-md);
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color var(--transition-fast);
+
+  &:hover, &:active {
+    background-color: var(--color-primary-pressed);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px #000000, 0 0 0 5px var(--color-focus-outer);
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 900px) {
+  .filter-bar-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-controls-group {
+    width: 100%;
+  }
+
+  .filter-field {
+    min-width: 100%;
+  }
+
+  .filter-actions-group {
+    width: 100%;
+    justify-content: flex-end;
+
+    .btn-clear, .btn-submit {
+      flex: 1;
+    }
+  }
+}

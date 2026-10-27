@@ -1,0 +1,95 @@
+<section class="product-filter-bar-container" aria-label="Thanh lọc sản phẩm">
+  <div class="filter-bar-card">
+    <div class="filter-controls-group">
+      <!-- 1. Danh mục -->
+      <div class="filter-field">
+        <label for="select-filter-category" class="sr-only">Danh mục</label>
+        <select
+          id="select-filter-category"
+          class="filter-select"
+          [ngModel]="selectedCategory()"
+          (ngModelChange)="selectedCategory.set($event)"
+          aria-label="Chọn danh mục"
+        >
+          <option value="all">Tất cả danh mục</option>
+          @for (cat of categories; track cat.id) {
+            <option [value]="cat.slug">{{ cat.name }}</option>
+          }
+        </select>
+      </div>
+
+      <!-- 2. Khoảng giá -->
+      <div class="filter-field">
+        <label for="select-filter-price" class="sr-only">Khoảng giá</label>
+        <select
+          id="select-filter-price"
+          class="filter-select"
+          [ngModel]="selectedPriceRange()"
+          (ngModelChange)="selectedPriceRange.set($event)"
+          aria-label="Chọn khoảng giá"
+        >
+          <option value="all">Tất cả mức giá</option>
+          <option value="under-500k">Dưới 500.000₫</option>
+          <option value="500k-2m">500.000₫ – 2.000.000₫</option>
+          <option value="2m-5m">2.000.000₫ – 5.000.000₫</option>
+          <option value="above-5m">Trên 5.000.000₫</option>
+        </select>
+      </div>
+
+      <!-- 3. Đánh giá -->
+      <div class="filter-field">
+        <label for="select-filter-rating" class="sr-only">Đánh giá</label>
+        <select
+          id="select-filter-rating"
+          class="filter-select"
+          [ngModel]="selectedRating()"
+          (ngModelChange)="selectedRating.set($event)"
+          aria-label="Chọn đánh giá tối thiểu"
+        >
+          <option value="all">Tất cả đánh giá</option>
+          <option value="4">⭐ Từ 4.0 sao trở lên</option>
+          <option value="4.5">⭐ Từ 4.5 sao trở lên</option>
+          <option value="5">⭐ 5.0 sao tuyệt đối</option>
+        </select>
+      </div>
+
+      <!-- 4. Sắp xếp -->
+      <div class="filter-field">
+        <label for="select-filter-sort" class="sr-only">Sắp xếp</label>
+        <select
+          id="select-filter-sort"
+          class="filter-select"
+          [ngModel]="selectedSort()"
+          (ngModelChange)="selectedSort.set($event)"
+          aria-label="Sắp xếp sản phẩm"
+        >
+          <option value="default">Sắp xếp: Mặc định</option>
+          <option value="popular">Bán chạy nhất</option>
+          <option value="price-asc">Giá: Thấp đến Cao</option>
+          <option value="price-desc">Giá: Cao đến Thấp</option>
+          <option value="rating-desc">Đánh giá cao nhất</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Cụm nút hành động -->
+    <div class="filter-actions-group">
+      <button
+        type="button"
+        class="btn-clear"
+        (click)="onClearFilter()"
+        id="btn-clear-filters"
+      >
+        Xóa lọc
+      </button>
+      <button
+        type="button"
+        class="btn-submit"
+        (click)="onApplyFilter()"
+        id="btn-apply-filters"
+      >
+        Lọc sản phẩm
+      </button>
+    </div>
+  </div>
+</section>

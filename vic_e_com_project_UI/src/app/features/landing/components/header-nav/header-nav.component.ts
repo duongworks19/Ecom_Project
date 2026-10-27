@@ -2,7 +2,7 @@ import { Component, EventEmitter, Input, Output, computed, inject, signal } from
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { CategoryItem } from '../../../../core/models/category.model';
+import { CategoryItem, CategoryTreeNode } from '../../../../core/models/category.model';
 import { AuthService } from '../../../../core/services/auth.service';
 import { UserMenuComponent } from '../../../../layouts/customer-layout/components/user-menu/user-menu.component';
 
@@ -27,9 +27,28 @@ export class HeaderNavComponent {
   readonly isSearchFocused = signal<boolean>(false);
   readonly isCategoryMenuOpen = signal<boolean>(false);
 
-  readonly userInitial = computed(() => {
-    const name = this.authService.currentUserNameSignal() || 'U';
-    return name.trim().charAt(0).toUpperCase();
+  readonly hasHierarchy = computed(() => {
+    return this.categories.some((c) => c.parentId !== null && c.parentId !== undefined);
+  });
+
+  readonly treeColumns = computed<CategoryTreeNode[]>(() => {
+    const list = this.categories;
+    const parentMap = new Map<number | string, CategoryTreeNode>();
+    const roots: CategoryTreeNode[] = [];
+
+    for (const item of list) {
+      parentMap.set(item.id, { ...item, children: [] });
+    }
+
+    for (const item of list) {
+      const node = parentMap.get(item.id)!;
+      if (item.parentId && parentMap.has(item.parentId)) {
+        parentMap.get(item.parentId)!.children.push(node);
+      } else if (!item.parentId) {
+        roots.push(node);
+      }
+    }
+    return roots.length > 0 ? roots : list.map((i) => ({ ...i, children: [] }));
   });
 
   onSearchInput(val: string) {
@@ -46,13 +65,8 @@ export class HeaderNavComponent {
     this.isCategoryMenuOpen.update((v) => !v);
   }
 
-  selectCategory(id: string) {
-    this.categorySelected.emit(id);
+  selectCategory(slugOrId: string | number) {
+    this.categorySelected.emit(String(slugOrId));
     this.isCategoryMenuOpen.set(false);
-  }
-
-  logout() {
-    this.authService.logout();
-    void this.router.navigateByUrl('/login');
   }
 }

@@ -1,5 +1,5 @@
 <div class="landing-page-wrapper">
-  <!-- 1. Header Navigation -->
+  <!-- 1. Sticky Primary Header -->
   <app-header-nav
     [categories]="categories()"
     [activeCategoryId]="activeCategoryId()"
@@ -7,20 +7,16 @@
     (searchQueryChanged)="onSearchQueryChanged($event)"
   />
 
-  <!-- 2. Hero Section (Headline, CTA, Category Chips) -->
-  <app-hero-banner
-    [categories]="categories()"
-    [activeCategoryId]="activeCategoryId()"
-    (categorySelected)="onCategorySelected($event)"
-  />
+  <!-- 2. Trust Badges Strip (40px flat) -->
+  <app-hero-banner />
 
-  <!-- 3. Value Props (Trust & Guarantee Pillars) -->
-  <app-value-props />
+  <!-- 2b. Multi-criteria Product Filter Bar (UC05 & UC06) -->
+  <app-product-filter-bar [categories]="categories()" />
 
-  <!-- 4. Flash Sale Live Countdown Section (Giờ vàng săn deal cho người dùng mới) -->
+  <!-- 3. Flash Sale Countdown Section -->
   <app-flash-sale />
 
-  <!-- 5. Pinterest-Style Masonry Product Grid (Được lọc mượt mà theo danh mục đang chọn) -->
+  <!-- 4. Pinterest Masonry Product Feed -->
   <app-product-masonry
     [products]="filteredProducts()"
     [activeCategory]="currentCategory()"
@@ -29,18 +25,10 @@
     (saveToggled)="onSaveToggled($event)"
   />
 
-  <!-- 6. Editorial Magazine Alternating Showcase -->
-  <app-editorial-magazine
-    (categorySelected)="onCategorySelected($event)"
-  />
-
-  <!-- 7. Bottom Hero CTA Dark Strip -->
-  <app-cta-banner />
-
-  <!-- 8. Magazine Footer -->
+  <!-- 5. Footer (giữ nguyên 100%) -->
   <app-footer />
 
-  <!-- 9. Interactive Toast Message Feedback -->
+  <!-- Toast Feedback -->
   @if (toastMessage(); as msg) {
     <div class="toast-floating" role="status">
       <span>{{ msg }}</span>
