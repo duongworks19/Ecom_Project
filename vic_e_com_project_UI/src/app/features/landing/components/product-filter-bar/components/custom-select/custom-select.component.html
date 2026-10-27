@@ -1,0 +1,41 @@
+<div class="custom-select-wrapper">
+  <!-- Trigger Control -->
+  <button
+    type="button"
+    class="custom-select-trigger"
+    [class.open]="isOpen()"
+    (click)="toggleDropdown()"
+    aria-haspopup="listbox"
+    [attr.aria-expanded]="isOpen()"
+  >
+    <span class="label-text">{{ displayLabel() }}</span>
+    <svg class="chevron" [class.rotated]="isOpen()" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none">
+      <polyline points="6 9 12 15 18 9"/>
+    </svg>
+  </button>
+
+  <!-- Dropdown Panel (chuẩn CSS bo góc 16px giống ảnh 1) -->
+  @if (isOpen()) {
+    <div class="custom-dropdown-panel" role="listbox">
+      @for (opt of options; track opt.value) {
+        <div
+          class="select-option-row"
+          [class.selected]="isSelected(opt.value)"
+          (click)="selectOption(opt.value, $event)"
+          role="option"
+          [attr.aria-selected]="isSelected(opt.value)"
+        >
+          <div class="option-content">
+            @if (opt.icon) {
+              <span class="option-icon">{{ opt.icon }}</span>
+            }
+            <span class="option-label">{{ opt.label }}</span>
+          </div>
+          @if (isSelected(opt.value)) {
+            <span class="check-icon">✓</span>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>
