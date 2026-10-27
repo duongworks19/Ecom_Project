@@ -1,0 +1,122 @@
+<div class="tree-select-wrapper">
+  <!-- Trigger Control (Look & feel theo {component.text-input}) -->
+  <button
+    type="button"
+    class="tree-select-trigger"
+    [class.open]="isOpen()"
+    (click)="toggleDropdown()"
+    aria-haspopup="listbox"
+    [attr.aria-expanded]="isOpen()"
+    id="btn-category-tree-select"
+  >
+    <span class="label-text">{{ displayLabel() }}</span>
+    <svg class="chevron" [class.rotated]="isOpen()" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none">
+      <polyline points="6 9 12 15 18 9"/>
+    </svg>
+  </button>
+
+  <!-- Dropdown Menu Accordion -->
+  @if (isOpen()) {
+    <div class="tree-dropdown-panel" role="listbox">
+      <!-- 0. Tất cả danh mục -->
+      <div
+        class="tree-node-row tier-root"
+        [class.selected]="isSelected('all')"
+        (click)="selectCategory('all', $event)"
+        role="option"
+        [attr.aria-selected]="isSelected('all')"
+      >
+        <span class="node-title">Tất cả danh mục</span>
+        @if (isSelected('all')) {
+          <span class="check-icon">✓</span>
+        }
+      </div>
+
+      <!-- 1. Danh mục đa tầng -->
+      @for (node of treeNodes(); track node.id) {
+        <div class="tree-node-group">
+          <div
+            class="tree-node-row"
+            [class.selected]="isSelected(node.slug || '' + node.id)"
+            (click)="selectCategory(node.slug || '' + node.id, $event)"
+            role="option"
+            [attr.aria-selected]="isSelected(node.slug || '' + node.id)"
+          >
+            <span class="node-title">{{ node.name }}</span>
+            @if (isSelected(node.slug || '' + node.id)) {
+              <span class="check-icon">✓</span>
+            }
+            @if (node.children.length > 0) {
+              <button
+                type="button"
+                class="arrow-toggle-btn"
+                [class.expanded]="isExpanded(node.id)"
+                (click)="toggleExpand(node.id, $event)"
+                aria-label="Mở rộng danh mục con"
+              >
+                <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.5" fill="none">
+                  <polyline points="9 18 15 12 9 6"/>
+                </svg>
+              </button>
+            }
+          </div>
+
+          <!-- Tầng 2 -->
+          @if (node.children.length > 0 && isExpanded(node.id)) {
+            <div class="tree-branch level-2">
+              @for (child of node.children; track child.id) {
+                <div class="tree-node-group">
+                  <div
+                    class="tree-node-row"
+                    [class.selected]="isSelected(child.slug || '' + child.id)"
+                    (click)="selectCategory(child.slug || '' + child.id, $event)"
+                    role="option"
+                    [attr.aria-selected]="isSelected(child.slug || '' + child.id)"
+                  >
+                    <span class="node-title">{{ child.name }}</span>
+                    @if (isSelected(child.slug || '' + child.id)) {
+                      <span class="check-icon">✓</span>
+                    }
+                    @if (child.children.length > 0) {
+                      <button
+                        type="button"
+                        class="arrow-toggle-btn"
+                        [class.expanded]="isExpanded(child.id)"
+                        (click)="toggleExpand(child.id, $event)"
+                        aria-label="Mở rộng danh mục con tầng 3"
+                      >
+                        <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.5" fill="none">
+                          <polyline points="9 18 15 12 9 6"/>
+                        </svg>
+                      </button>
+                    }
+                  </div>
+
+                  <!-- Tầng 3 -->
+                  @if (child.children.length > 0 && isExpanded(child.id)) {
+                    <div class="tree-branch level-3">
+                      @for (subChild of child.children; track subChild.id) {
+                        <div
+                          class="tree-node-row"
+                          [class.selected]="isSelected(subChild.slug || '' + subChild.id)"
+                          (click)="selectCategory(subChild.slug || '' + subChild.id, $event)"
+                          role="option"
+                          [attr.aria-selected]="isSelected(subChild.slug || '' + subChild.id)"
+                        >
+                          <span class="node-title">{{ subChild.name }}</span>
+                          @if (isSelected(subChild.slug || '' + subChild.id)) {
+                            <span class="check-icon">✓</span>
+                          }
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>
