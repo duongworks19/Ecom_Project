@@ -133,13 +133,21 @@ export interface SellerRecentOrder {
 export interface SellerVoucher {
   id: number;
   code: string;
-  title: string;
-  discountText: string;
+  title?: string;
+  discountText?: string;
+  discountType?: 'PERCENT' | 'FIXED';
+  value?: number;
+  maxDiscount?: number;
   minOrderAmount: number;
   usedCount: number;
-  totalQuota: number;
-  expiryDate: string;
-  active: boolean;
+  totalQuota?: number;
+  usageLimit?: number;
+  expiryDate?: string;
+  startAt?: string;
+  endAt?: string;
+  status?: string;
+  displayStatus?: string;
+  active?: boolean;
 }
 
 export interface SellerPromotion {

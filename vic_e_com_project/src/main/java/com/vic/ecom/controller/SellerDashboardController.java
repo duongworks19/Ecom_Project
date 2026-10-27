@@ -58,22 +58,6 @@ public class SellerDashboardController {
         return ResponseEntity.ok(ApiResponse.ok("Thêm sản phẩm mới thành công", result));
     }
 
-    @PostMapping("/vouchers")
-    public ResponseEntity<ApiResponse<SellerVoucherDto>> createVoucher(
-            @RequestBody SellerVoucherDto request
-    ) {
-        SellerVoucherDto result = sellerDashboardService.createVoucher(request);
-        return ResponseEntity.ok(ApiResponse.ok("Tạo mã giảm giá thành công", result));
-    }
-
-    @PatchMapping("/vouchers/{voucherId}/toggle")
-    public ResponseEntity<ApiResponse<SellerVoucherDto>> toggleVoucher(
-            @PathVariable Long voucherId
-    ) {
-        SellerVoucherDto result = sellerDashboardService.toggleVoucherStatus(voucherId);
-        return ResponseEntity.ok(ApiResponse.ok("Cập nhật trạng thái voucher thành công", result));
-    }
-
     @PostMapping("/reviews/{reviewId}/reply")
     public ResponseEntity<ApiResponse<SellerReviewQuestionDto>> replyReview(
             @PathVariable Long reviewId,

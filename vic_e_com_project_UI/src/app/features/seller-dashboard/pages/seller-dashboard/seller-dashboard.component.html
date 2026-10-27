@@ -520,7 +520,7 @@
           </div>
 
           <div class="box">
-            @for (v of vouchers(); track v.code) {
+            @for (v of vouchers(); track (v.id || v.code)) {
               <div class="row">
                 <div class="g">
                   <span class="mono">{{ v.code }}</span>
@@ -538,6 +538,10 @@
                   </button>
                 }
                 <button class="btn sm" (click)="deleteVoucher(v.code)">Xóa</button>
+              </div>
+            } @empty {
+              <div style="padding: 32px; text-align: center; color: var(--muted); font-size: 14px;">
+                Chưa có mã giảm giá nào. Hãy bấm <b>"+ Tạo voucher"</b> để tạo mã khuyến mãi cho gian hàng!
               </div>
             }
           </div>

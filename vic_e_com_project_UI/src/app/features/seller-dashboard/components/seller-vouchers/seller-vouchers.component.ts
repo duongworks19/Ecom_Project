@@ -65,12 +65,12 @@ export class SellerVouchersComponent {
     this.modalError.set(null);
     this.form = {
       code: v.code,
-      title: v.title,
-      discountType: v.discountText.includes('%') ? 'PERCENT' : 'FIXED',
-      val: 20000,
-      minOrder: v.minOrderAmount,
-      quota: v.totalQuota,
-      expiryDate: v.expiryDate,
+      title: v.title || 'Giảm giá mua sắm',
+      discountType: (v.discountText || '').includes('%') ? 'PERCENT' : (v.discountType || 'FIXED'),
+      val: v.value != null ? Number(v.value) : 20000,
+      minOrder: v.minOrderAmount || 0,
+      quota: v.totalQuota || v.usageLimit || 100,
+      expiryDate: v.expiryDate || (v.endAt ? v.endAt.split('T')[0] : '31/12/2026'),
     };
     this.showModal.set(true);
   }

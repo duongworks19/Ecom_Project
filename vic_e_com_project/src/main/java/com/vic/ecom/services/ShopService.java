@@ -1,17 +1,22 @@
 package com.vic.ecom.services;
 
+import com.vic.ecom.dto.VoucherDtos;
 import com.vic.ecom.dto.seller.SellerProductDto;
 import com.vic.ecom.dto.vendor.ShopResponse;
 import com.vic.ecom.entity.Product;
 import com.vic.ecom.entity.Shop;
+import com.vic.ecom.entity.Voucher;
 import com.vic.ecom.enums.ShopStatus;
+import com.vic.ecom.enums.VoucherStatus;
 import com.vic.ecom.repository.ProductRepository;
 import com.vic.ecom.repository.ShopRepository;
+import com.vic.ecom.repository.VoucherRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -22,6 +27,7 @@ public class ShopService {
 
     private final ShopRepository shopRepository;
     private final ProductRepository productRepository;
+    private final VoucherRepository voucherRepository;
 
     @Transactional(readOnly = true)
     public ShopResponse getShopById(Long id) {
@@ -86,5 +92,17 @@ public class ShopService {
                     .build());
         }
         return result;
+    }
+
+    @Transactional(readOnly = true)
+    public List<VoucherDtos.Response> getActiveVouchersByShopId(Long shopId) {
+        LocalDateTime now = LocalDateTime.now();
+        List<Voucher> vouchers = voucherRepository.findByShopIdAndStatus(shopId, VoucherStatus.ACTIVE);
+        return vouchers.stream()
+                .filter(v -> (v.getStartAt() == null || !now.isBefore(v.getStartAt()))
+                        && (v.getEndAt() == null || !now.isAfter(v.getEndAt()))
+                        && (v.getUsageLimit() == null || v.getUsedCount() == null || v.getUsedCount() < v.getUsageLimit()))
+                .map(v -> VoucherService.toResponse(v, now))
+                .collect(Collectors.toList());
     }
 }

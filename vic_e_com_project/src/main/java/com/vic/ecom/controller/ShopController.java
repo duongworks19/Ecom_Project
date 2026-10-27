@@ -51,6 +51,12 @@ public class ShopController {
         return ResponseEntity.ok(ApiResponse.ok("Danh sách sản phẩm của gian hàng", products));
     }
 
+    @GetMapping("/{id}/vouchers")
+    public ResponseEntity<ApiResponse<List<com.vic.ecom.dto.VoucherDtos.Response>>> getVouchersByShopId(@PathVariable Long id) {
+        List<com.vic.ecom.dto.VoucherDtos.Response> vouchers = shopService.getActiveVouchersByShopId(id);
+        return ResponseEntity.ok(ApiResponse.ok("Danh sách voucher hoạt động của gian hàng", vouchers));
+    }
+
     @GetMapping("/by-vendor/{vendorId}")
     public ResponseEntity<ApiResponse<ShopResponse>> getShopByVendorId(@PathVariable Long vendorId) {
         ShopResponse shop = shopService.getShopByVendorId(vendorId);

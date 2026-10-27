@@ -1,5 +1,6 @@
 package com.vic.ecom.services;
 
+import com.vic.ecom.dto.VoucherDtos;
 import com.vic.ecom.dto.seller.*;
 import com.vic.ecom.entity.*;
 import com.vic.ecom.enums.ApprovalStatus;
@@ -7,6 +8,7 @@ import com.vic.ecom.enums.OrderStatus;
 import com.vic.ecom.enums.ShopStatus;
 import com.vic.ecom.enums.UserRole;
 import com.vic.ecom.enums.UserStatus;
+import com.vic.ecom.enums.VoucherStatus;
 import com.vic.ecom.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -15,6 +17,7 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -40,7 +43,7 @@ public class SellerDashboardService {
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
     private final OrderRepository orderRepository;
-    private final ShopVoucherRepository shopVoucherRepository;
+    private final VoucherRepository voucherRepository;
     private final ShopPromotionRepository shopPromotionRepository;
     private final ShopReviewRepository shopReviewRepository;
     private final DispatchService dispatchService;
@@ -158,14 +161,6 @@ public class SellerDashboardService {
             orderRepository.saveAll(initialOrders);
         }
 
-        if (shopVoucherRepository.findByShopIdOrderByIdDesc(shopId).isEmpty()) {
-            List<ShopVoucher> initialVouchers = List.of(
-                    buildVoucher(shop, "LUMI20K", "Giảm 20.000đ cho đơn từ 199K", "20.000đ", BigDecimal.valueOf(199000), 42, 100, "31/10/2026", true),
-                    buildVoucher(shop, "LUMINEW10", "Giảm 10% khách hàng mới theo dõi shop", "10%", BigDecimal.valueOf(150000), 68, 200, "15/11/2026", true)
-            );
-            shopVoucherRepository.saveAll(initialVouchers);
-        }
-
         if (shopPromotionRepository.findByShopIdOrderByIdDesc(shopId).isEmpty()) {
             List<ShopPromotion> initialPromotions = List.of(
                     buildPromotion(shop, "Flash Sale Góc Nhỏ Ấm Cúng — Tháng 10", 25, 4, "14/10/2026 - 20/10/2026", "RUNNING"),
@@ -225,20 +220,6 @@ public class SellerDashboardService {
         return o;
     }
 
-    private ShopVoucher buildVoucher(Shop shop, String code, String title, String discountText, BigDecimal minOrderAmount, int usedCount, int totalQuota, String expiryDate, boolean active) {
-        ShopVoucher v = new ShopVoucher();
-        v.setShop(shop);
-        v.setCode(code);
-        v.setTitle(title);
-        v.setDiscountText(discountText);
-        v.setMinOrderAmount(minOrderAmount);
-        v.setUsedCount(usedCount);
-        v.setTotalQuota(totalQuota);
-        v.setExpiryDate(expiryDate);
-        v.setActive(active);
-        return v;
-    }
-
     private ShopPromotion buildPromotion(Shop shop, String name, int discountPercent, int productCount, String timeRange, String status) {
         ShopPromotion pr = new ShopPromotion();
         pr.setShop(shop);
@@ -285,7 +266,7 @@ public class SellerDashboardService {
 
         List<Product> dbProducts = productRepository.findByShopIdOrderByIdDesc(shopId);
         List<Order> dbOrders = orderRepository.findByShopIdOrderByCreatedAtDescIdDesc(shopId);
-        List<ShopVoucher> dbVouchers = shopVoucherRepository.findByShopIdOrderByIdDesc(shopId);
+        List<Voucher> dbVouchers = voucherRepository.findByShopIdAndStatusNotOrderByIdDesc(shopId, VoucherStatus.DELETED);
         List<ShopPromotion> dbPromotions = shopPromotionRepository.findByShopIdOrderByIdDesc(shopId);
         List<ShopReview> dbReviews = shopReviewRepository.findByShopIdOrderByIdDesc(shopId);
 
@@ -308,8 +289,9 @@ public class SellerDashboardService {
                 .map(this::toOrderDto)
                 .collect(Collectors.toList());
 
-        List<SellerVoucherDto> vouchers = dbVouchers.stream()
-                .map(this::toVoucherDto)
+        LocalDateTime now = LocalDateTime.now();
+        List<VoucherDtos.Response> vouchers = dbVouchers.stream()
+                .map(v -> VoucherService.toResponse(v, now))
                 .collect(Collectors.toList());
 
         List<SellerPromotionDto> promotions = dbPromotions.stream()
@@ -512,34 +494,6 @@ public class SellerDashboardService {
     }
 
     @Transactional
-    public SellerVoucherDto createVoucher(SellerVoucherDto request) {
-        Shop shop = getOrCreateInitializedShop(null);
-
-        ShopVoucher voucher = new ShopVoucher();
-        voucher.setShop(shop);
-        voucher.setCode(request.getCode() != null ? request.getCode().trim().toUpperCase() : "LUMISALE");
-        voucher.setTitle(request.getTitle() != null ? request.getTitle().trim() : "Voucher ưu đãi gian hàng");
-        voucher.setDiscountText(request.getDiscountText() != null ? request.getDiscountText().trim() : "20.000đ");
-        voucher.setMinOrderAmount(request.getMinOrderAmount() != null ? request.getMinOrderAmount() : BigDecimal.valueOf(100000));
-        voucher.setUsedCount(0);
-        voucher.setTotalQuota(request.getTotalQuota() != null ? request.getTotalQuota() : 50);
-        voucher.setExpiryDate(request.getExpiryDate() != null && !request.getExpiryDate().isBlank() ? request.getExpiryDate() : "30/11/2026");
-        voucher.setActive(true);
-
-        ShopVoucher saved = shopVoucherRepository.save(voucher);
-        return toVoucherDto(saved);
-    }
-
-    @Transactional
-    public SellerVoucherDto toggleVoucherStatus(Long voucherId) {
-        ShopVoucher voucher = shopVoucherRepository.findById(voucherId)
-                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy voucher với id: " + voucherId));
-        voucher.setActive(!Boolean.TRUE.equals(voucher.getActive()));
-        ShopVoucher saved = shopVoucherRepository.save(voucher);
-        return toVoucherDto(saved);
-    }
-
-    @Transactional
     public SellerReviewQuestionDto replyReview(Long reviewId, String replyText) {
         ShopReview review = shopReviewRepository.findById(reviewId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đánh giá/câu hỏi với id: " + reviewId));
@@ -724,20 +678,6 @@ public class SellerDashboardService {
                 .actionText(actionText)
                 .actionStyle(actionStyle)
                 .nextAction(nextAction)
-                .build();
-    }
-
-    private SellerVoucherDto toVoucherDto(ShopVoucher v) {
-        return SellerVoucherDto.builder()
-                .id(v.getId())
-                .code(v.getCode())
-                .title(v.getTitle())
-                .discountText(v.getDiscountText())
-                .minOrderAmount(v.getMinOrderAmount())
-                .usedCount(v.getUsedCount())
-                .totalQuota(v.getTotalQuota())
-                .expiryDate(v.getExpiryDate())
-                .active(v.getActive())
                 .build();
     }
 
