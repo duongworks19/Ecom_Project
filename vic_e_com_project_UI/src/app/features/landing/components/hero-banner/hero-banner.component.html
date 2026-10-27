@@ -1,60 +1,9 @@
-<section class="hero-section" id="hero-banner">
-  <div class="hero-container">
-    <div class="hero-announcement-pill">
-      <span class="pulse-dot"></span>
-      <span class="pill-text">Siêu Sàn Mua Sắm Trực Tuyến Đa Ngành Hàng 2026</span>
+<!-- Trust Badges Strip (40px flat) -->
+<div class="trust-strip" role="list" aria-label="Cam kết chất lượng">
+  @for (badge of badges; track badge.icon) {
+    <div class="trust-item" role="listitem">
+      <span class="trust-icon">{{ badge.icon }}</span>
+      <span class="trust-label">{{ badge.label }}</span>
     </div>
-
-    <!-- 70px Display XL Headline -->
-    <h1 class="hero-title">
-      Khám phá &amp; sắm trọn vẹn<br/>
-      <span class="text-accent-gradient">mọi thứ bạn cần</span> online
-    </h1>
-
-    <p class="hero-subtitle">
-      Từ công nghệ flagship, thời trang đón đầu xu hướng, nội thất tinh tế đến ẩm thực thượng hạng.
-      Trải nghiệm mua sắm cảm hứng ghim Pinterest trực quan và tiện lợi.
-    </p>
-
-    <!-- Hero Actions -->
-    <div class="hero-actions">
-      @if (!authService.isLoggedInSignal()) {
-        <a
-          routerLink="/register"
-          class="hero-btn-primary"
-          id="btn-hero-register"
-        >
-          <span>Đăng ký tài khoản mới</span>
-          <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.5" fill="none">
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-            <polyline points="12 5 19 12 12 19"></polyline>
-          </svg>
-        </a>
-      }
-
-      <a href="#discovery-grid" class="hero-btn-secondary" id="btn-hero-explore">
-        Khám phá sản phẩm
-      </a>
-
-      <a routerLink="/seller/onboarding" class="hero-btn-seller" id="btn-hero-seller-onboarding">
-        <span>🏪 Mở gian hàng bán hàng (0đ)</span>
-      </a>
-    </div>
-
-    <!-- Quick Category Filter Chips Strip (filter-chip token) -->
-    <div class="filter-chip-strip" role="tablist" aria-label="Bộ lọc danh mục">
-      @for (cat of categories; track cat.id) {
-        <button
-          type="button"
-          class="filter-chip"
-          [class.active]="activeCategoryId === cat.id"
-          (click)="onSelectCategory(cat.id)"
-          role="tab"
-          [attr.aria-selected]="activeCategoryId === cat.id"
-        >
-          {{ cat.name }}
-        </button>
-      }
-    </div>
-  </div>
-</section>
+  }
+</div>

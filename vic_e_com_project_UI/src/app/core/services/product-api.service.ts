@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, catchError, map, of } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { Product } from '../models/product.model';
-import { CategoryItem } from '../models/category.model';
+import { CategoryItem, PublicCategoryResponse } from '../models/category.model';
 
 @Injectable({
   providedIn: 'root',
@@ -21,7 +21,8 @@ export class ProductApiService {
       ? `${this.baseUrl}/categories`
       : `${this.baseUrl}/categories.json`;
 
-    return this.http.get<CategoryItem[]>(url).pipe(
+    return this.http.get<{ data: PublicCategoryResponse }>(url).pipe(
+      map((response) => response.data.items),
       catchError(() =>
         this.baseUrl.startsWith('http')
           ? this.http.get<CategoryItem[]>('/api/categories.json').pipe(catchError(() => of(null)))

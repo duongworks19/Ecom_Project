@@ -2,6 +2,14 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { Product } from '../models/product.model';
 import { CategoryItem } from '../models/category.model';
 import { ProductApiService } from './product-api.service';
+import { INITIAL_PRODUCTS } from '../../features/landing/constants/landing-products.mock';
+
+export interface ProductFilterState {
+  category: string;
+  priceRange: string;
+  rating: string;
+  sort: string;
+}
 
 @Injectable({
   providedIn: 'root',
@@ -9,426 +17,64 @@ import { ProductApiService } from './product-api.service';
 export class ProductService {
   private readonly productApi = inject(ProductApiService);
 
-  private readonly initialCategories: CategoryItem[] = [
-    {
-      id: 'all',
-      name: 'Tất cả sản phẩm',
-      tagline: 'Toàn bộ danh mục chọn lọc',
-      itemCount: '250.000+',
-      bannerImage: 'https://images.unsplash.com/photo-1472851294608-062f824d29cc?auto=format&fit=crop&w=600&q=80',
-    },
-    {
-      id: 'tech',
-      name: 'Công nghệ & Điện máy',
-      tagline: 'Smartphone, laptop, audio cao cấp',
-      itemCount: '45.000+',
-      bannerImage: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=600&q=80',
-    },
-    {
-      id: 'fashion',
-      name: 'Thời trang & Phụ kiện',
-      tagline: 'Lookbook & Local Brands nổi bật',
-      itemCount: '85.000+',
-      bannerImage: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=600&q=80',
-    },
-    {
-      id: 'home',
-      name: 'Nhà cửa & Nội thất',
-      tagline: 'Không gian sống chuẩn Scandinavian',
-      itemCount: '32.000+',
-      bannerImage: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=600&q=80',
-    },
-    {
-      id: 'beauty',
-      name: 'Làm đẹp & Chăm sóc da',
-      tagline: 'Mỹ phẩm, Nước hoa & Skincare Authentic',
-      itemCount: '28.000+',
-      bannerImage: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=600&q=80',
-    },
-    {
-      id: 'sports',
-      name: 'Thể thao & Dã ngoại',
-      tagline: 'Camping, Trekking, Gym chuyên nghiệp',
-      itemCount: '19.000+',
-      bannerImage: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=600&q=80',
-    },
-    {
-      id: 'food',
-      name: 'Ẩm thực & Bách hóa',
-      tagline: 'Rượu vang, hạt organic, trà thơm',
-      itemCount: '15.000+',
-      bannerImage: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=600&q=80',
-    },
-    {
-      id: 'kids',
-      name: 'Mẹ & Bé, Đồ chơi',
-      tagline: 'Đồ chơi giáo dục & xe đẩy cao cấp',
-      itemCount: '12.000+',
-      bannerImage: 'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=600&q=80',
-    },
-    {
-      id: 'books',
-      name: 'Sách & Nghệ thuật',
-      tagline: 'Artbook, sổ da & bút máy cổ điển',
-      itemCount: '9.500+',
-      bannerImage: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=600&q=80',
-    },
-  ];
-
-  private readonly initialProducts: Product[] = [
-    {
-      id: 'p-1',
-      name: 'Tai Nghe Chống Ồn Flagship Sony WH-1000XM5 Hi-Res Audio',
-      category: 'tech',
-      categoryLabel: 'Công nghệ & Điện máy',
-      price: 6890000,
-      originalPrice: 8990000,
-      discountPercent: 23,
-      isSaleItem: true,
-      tag: 'Chính hãng',
-      rating: 4.9,
-      soldCount: 3890,
-      image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=700&q=80',
-      aspectRatio: 'portrait-standard',
-      seller: {
-        name: 'Sony Official Flagship Store',
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80',
-        verified: true,
-      },
-    },
-    {
-      id: 'p-2',
-      name: 'Áo Khoác Trench Coat Dáng Rộng Phong Cách Paris Tối Giản',
-      category: 'fashion',
-      categoryLabel: 'Thời trang & Phụ kiện',
-      price: 1450000,
-      originalPrice: 2200000,
-      discountPercent: 34,
-      isSaleItem: true,
-      tag: 'Xu hướng',
-      rating: 4.8,
-      soldCount: 1950,
-      image: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=700&q=80',
-      aspectRatio: 'portrait-tall',
-      seller: {
-        name: 'Atelier Maison Studio',
-        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&q=80',
-        verified: true,
-      },
-    },
-    {
-      id: 'p-3',
-      name: 'Ghế Thư Giãn Đọc Sách Phong Cách Bắc Âu Gỗ Sồi Tự Nhiên',
-      category: 'home',
-      categoryLabel: 'Nhà cửa & Nội thất',
-      price: 3850000,
-      originalPrice: 5200000,
-      discountPercent: 26,
-      isSaleItem: false,
-      tag: 'Tuyển chọn',
-      rating: 5.0,
-      soldCount: 780,
-      image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=700&q=80',
-      aspectRatio: 'portrait-standard',
-      seller: {
-        name: 'Nordic Living Decor',
-        avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=120&q=80',
-        verified: true,
-      },
-    },
-    {
-      id: 'p-4',
-      name: 'Nước Hoa Niche Cao Cấp Santal Wood Essence Eau De Parfum 100ml',
-      category: 'beauty',
-      categoryLabel: 'Làm đẹp & Chăm sóc da',
-      price: 2490000,
-      originalPrice: 3500000,
-      discountPercent: 29,
-      isSaleItem: true,
-      tag: 'Bán chạy',
-      rating: 4.9,
-      soldCount: 1640,
-      image: 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=700&q=80',
-      aspectRatio: 'square',
-      seller: {
-        name: 'Maison De Parfum',
-        avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=120&q=80',
-        verified: true,
-      },
-    },
-    {
-      id: 'p-5',
-      name: 'Máy Ảnh Mirrorless Cổ Điển Cảm Biến APS-C 40.2MP 4K60p',
-      category: 'tech',
-      categoryLabel: 'Công nghệ & Điện máy',
-      price: 38900000,
-      originalPrice: 44500000,
-      discountPercent: 13,
-      isSaleItem: false,
-      tag: 'Chính hãng',
-      rating: 5.0,
-      soldCount: 420,
-      image: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=700&q=80',
-      aspectRatio: 'portrait-standard',
-      seller: {
-        name: 'Camera Pro Global',
-        avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=120&q=80',
-        verified: true,
-      },
-    },
-    {
-      id: 'p-6',
-      name: 'Lều Cắm Trại Vintage Glamping 4-6 Người Chống Nước Oxford 600D',
-      category: 'sports',
-      categoryLabel: 'Thể thao & Dã ngoại',
-      price: 4200000,
-      originalPrice: 5900000,
-      discountPercent: 29,
-      isSaleItem: false,
-      tag: 'Tuyển chọn',
-      rating: 4.8,
-      soldCount: 920,
-      image: 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=700&q=80',
-      aspectRatio: 'portrait-tall',
-      seller: {
-        name: 'Wilderness Camping Gear',
-        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=120&q=80',
-        verified: true,
-      },
-    },
-    {
-      id: 'p-7',
-      name: 'Máy Pha Cà Phê Espresso Thủ Công Gia Đình Áp Suất 15 Bar',
-      category: 'home',
-      categoryLabel: 'Nhà cửa & Nội thất',
-      price: 4990000,
-      originalPrice: 6500000,
-      discountPercent: 23,
-      isSaleItem: true,
-      tag: 'Bán chạy',
-      rating: 4.9,
-      soldCount: 2150,
-      image: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=700&q=80',
-      aspectRatio: 'portrait-standard',
-      seller: {
-        name: 'Barista Lab Equipment',
-        avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80',
-        verified: true,
-      },
-    },
-    {
-      id: 'p-8',
-      name: 'Giày Sneaker Retro Vintage Da Lộn Phối Canvas Cổ Thấp Unisex',
-      category: 'fashion',
-      categoryLabel: 'Thời trang & Phụ kiện',
-      price: 1280000,
-      originalPrice: 1950000,
-      discountPercent: 34,
-      isSaleItem: false,
-      tag: 'Xu hướng',
-      rating: 4.7,
-      soldCount: 5120,
-      image: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=700&q=80',
-      aspectRatio: 'square',
-      seller: {
-        name: 'Kicks Culture Official',
-        avatar: 'https://images.unsplash.com/photo-1527980965255-d3b416303d12?auto=format&fit=crop&w=120&q=80',
-        verified: true,
-      },
-    },
-    {
-      id: 'p-9',
-      name: 'Hộp Quà Hạt Dinh Dưỡng Cao Cấp Macca & Hạnh Nhân Organic Nhập Khẩu',
-      category: 'food',
-      categoryLabel: 'Ẩm thực & Bách hóa',
-      price: 650000,
-      originalPrice: 850000,
-      discountPercent: 24,
-      isSaleItem: false,
-      tag: 'Organic',
-      rating: 4.9,
-      soldCount: 3400,
-      image: 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&w=700&q=80',
-      aspectRatio: 'square',
-      seller: {
-        name: 'Green Harvest Farm',
-        avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=120&q=80',
-        verified: true,
-      },
-    },
-    {
-      id: 'p-10',
-      name: 'Bàn Phím Cơ Custom Không Dây Keychron Q1 Pro Vỏ Nhôm CNC',
-      category: 'tech',
-      categoryLabel: 'Công nghệ & Điện máy',
-      price: 4690000,
-      originalPrice: 5500000,
-      discountPercent: 15,
-      isSaleItem: false,
-      tag: 'Chính hãng',
-      rating: 5.0,
-      soldCount: 1120,
-      image: 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=700&q=80',
-      aspectRatio: 'portrait-standard',
-      seller: {
-        name: 'Keychron Authorized Flagship',
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80',
-        verified: true,
-      },
-    },
-    {
-      id: 'p-11',
-      name: 'Serum Phục Hồi Dưỡng Ẩm Chuyên Sâu Tái Tạo Hàng Rào Bảo Vệ Da 50ml',
-      category: 'beauty',
-      categoryLabel: 'Làm đẹp & Chăm sóc da',
-      price: 1850000,
-      originalPrice: 2400000,
-      discountPercent: 23,
-      isSaleItem: false,
-      tag: 'Chính hãng',
-      rating: 4.9,
-      soldCount: 6800,
-      image: 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=700&q=80',
-      aspectRatio: 'portrait-tall',
-      seller: {
-        name: 'Dermacare Authentic Lab',
-        avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=120&q=80',
-        verified: true,
-      },
-    },
-    {
-      id: 'p-12',
-      name: 'Xe Đẩy Trẻ Em Gấp Gọn Siêu Nhẹ Cao Cấp Tự Động Mở Bằng 1 Nút Bấm',
-      category: 'kids',
-      categoryLabel: 'Mẹ & Bé, Đồ chơi',
-      price: 3200000,
-      originalPrice: 4500000,
-      discountPercent: 29,
-      isSaleItem: false,
-      tag: 'Tuyển chọn',
-      rating: 4.8,
-      soldCount: 840,
-      image: 'https://images.unsplash.com/photo-1591088398332-8a7791972843?auto=format&fit=crop&w=700&q=80',
-      aspectRatio: 'portrait-standard',
-      seller: {
-        name: 'BabyCare Global Store',
-        avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=120&q=80',
-        verified: true,
-      },
-    },
-    {
-      id: 'p-13',
-      name: 'Bộ Sách Nghệ Thuật & Thiết Kế Không Gian Sống The Kinfolk Home Bìa Cứng',
-      category: 'books',
-      categoryLabel: 'Sách & Nghệ thuật',
-      price: 980000,
-      originalPrice: 1350000,
-      discountPercent: 27,
-      isSaleItem: false,
-      tag: 'Nghệ thuật',
-      rating: 5.0,
-      soldCount: 1100,
-      image: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=700&q=80',
-      aspectRatio: 'portrait-tall',
-      seller: {
-        name: 'Artisan Books & Gallery',
-        avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=120&q=80',
-        verified: true,
-      },
-    },
-    {
-      id: 'p-14',
-      name: 'Ván Chèo Đứng Bơm Hơi SUP Inflatable Touring Trọn Bộ Phụ Kiện',
-      category: 'sports',
-      categoryLabel: 'Thể thao & Dã ngoại',
-      price: 5800000,
-      originalPrice: 7900000,
-      discountPercent: 26,
-      isSaleItem: false,
-      tag: 'Tuyển chọn',
-      rating: 4.9,
-      soldCount: 520,
-      image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=700&q=80',
-      aspectRatio: 'portrait-standard',
-      seller: {
-        name: 'Aqua Marine Sports',
-        avatar: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=120&q=80',
-        verified: true,
-      },
-    },
-    {
-      id: 'p-15',
-      name: 'Rượu Vang Đỏ Cao Cấp Nhập Khẩu Bordeaux Grand Cru 2018 Ủ Thùng Gỗ Sồi',
-      category: 'food',
-      categoryLabel: 'Ẩm thực & Bách hóa',
-      price: 1890000,
-      originalPrice: 2600000,
-      discountPercent: 27,
-      isSaleItem: false,
-      tag: 'Chính hãng',
-      rating: 4.8,
-      soldCount: 970,
-      image: 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=700&q=80',
-      aspectRatio: 'portrait-tall',
-      seller: {
-        name: 'Château Wine Cellar',
-        avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=120&q=80',
-        verified: true,
-      },
-    },
-    {
-      id: 'p-16',
-      name: 'Đèn Bàn Trang Trí Nghệ Thuật Gốm Sứ Thô Phong Cách Wabi-Sabi',
-      category: 'home',
-      categoryLabel: 'Nhà cửa & Nội thất',
-      price: 1150000,
-      originalPrice: 1750000,
-      discountPercent: 34,
-      isSaleItem: false,
-      tag: 'Thủ công',
-      rating: 4.9,
-      soldCount: 1250,
-      image: 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=700&q=80',
-      aspectRatio: 'square',
-      seller: {
-        name: 'Terra Cotta Living Studio',
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80',
-        verified: true,
-      },
-    },
-  ];
-
-  // Signals quản lý trạng thái
-  readonly categories = signal<CategoryItem[]>(this.initialCategories);
-  readonly allProducts = signal<Product[]>(this.initialProducts);
+  readonly categories = signal<CategoryItem[]>([]);
+  readonly allProducts = signal<Product[]>(INITIAL_PRODUCTS);
   readonly activeCategoryId = signal<string>('all');
   readonly searchQuery = signal<string>('');
+  readonly selectedPriceRange = signal<string>('all');
+  readonly selectedRating = signal<string>('all');
+  readonly selectedSort = signal<string>('default');
   readonly isLoading = signal<boolean>(false);
 
-  // Danh mục đang được kích hoạt
   readonly currentCategory = computed(() => {
-    const id = this.activeCategoryId();
-    return this.categories().find((c) => c.id === id) || this.categories()[0];
+    const idOrSlug = this.activeCategoryId();
+    if (idOrSlug === 'all') return null;
+    return this.categories().find(
+      (c) => String(c.id) === idOrSlug || c.slug === idOrSlug,
+    ) || null;
   });
 
-  // Lọc sản phẩm theo danh mục và từ khóa tìm kiếm
   readonly filteredProducts = computed(() => {
-    let list = this.allProducts();
+    let list = [...this.allProducts()];
     const cat = this.activeCategoryId();
     const query = this.searchQuery().trim().toLowerCase();
+    const price = this.selectedPriceRange();
+    const minRating = this.selectedRating();
+    const sort = this.selectedSort();
 
     if (cat !== 'all') {
-      list = list.filter((p) => p.category === cat);
+      const targetCat = this.categories().find(
+        (c) => String(c.id) === cat || c.slug === cat,
+      );
+      const slug = targetCat ? targetCat.slug.toLowerCase() : cat.toLowerCase();
+      list = list.filter((p) =>
+        p.category.toLowerCase().includes(slug) ||
+        p.categoryLabel.toLowerCase().includes(slug) ||
+        (targetCat && p.categoryLabel.toLowerCase().includes(targetCat.name.toLowerCase())),
+      );
     }
 
     if (query) {
-      list = list.filter(
-        (p) =>
-          p.name.toLowerCase().includes(query) ||
-          p.categoryLabel.toLowerCase().includes(query) ||
-          p.seller.name.toLowerCase().includes(query)
+      list = list.filter((p) =>
+        p.name.toLowerCase().includes(query) ||
+        p.categoryLabel.toLowerCase().includes(query) ||
+        p.seller.name.toLowerCase().includes(query),
       );
     }
+
+    if (price === 'under-500k') list = list.filter((p) => p.price < 500000);
+    else if (price === '500k-2m') list = list.filter((p) => p.price >= 500000 && p.price <= 2000000);
+    else if (price === '2m-5m') list = list.filter((p) => p.price >= 2000000 && p.price <= 5000000);
+    else if (price === 'above-5m') list = list.filter((p) => p.price > 5000000);
+
+    if (minRating === '4') list = list.filter((p) => p.rating >= 4.0);
+    else if (minRating === '4.5') list = list.filter((p) => p.rating >= 4.5);
+    else if (minRating === '5') list = list.filter((p) => p.rating >= 5.0);
+
+    if (sort === 'price-asc') list.sort((a, b) => a.price - b.price);
+    else if (sort === 'price-desc') list.sort((a, b) => b.price - a.price);
+    else if (sort === 'rating-desc') list.sort((a, b) => b.rating - a.rating);
+    else if (sort === 'popular') list.sort((a, b) => b.soldCount - a.soldCount);
 
     return list;
   });
@@ -437,44 +83,38 @@ export class ProductService {
     this.fetchDataFromApi();
   }
 
-  /**
-   * Gọi API Backend để nạp danh mục và sản phẩm
-   */
   fetchDataFromApi() {
     this.isLoading.set(true);
-
-    // 1. Tải danh mục từ API
     this.productApi.getCategories().subscribe({
       next: (apiCategories) => {
         if (apiCategories && apiCategories.length > 0) {
           this.categories.set(apiCategories);
         }
-      },
-    });
-
-    // 2. Tải sản phẩm từ API
-    this.productApi.getProducts().subscribe({
-      next: (apiProducts) => {
-        if (apiProducts && apiProducts.length > 0) {
-          this.allProducts.set(apiProducts);
-        }
         this.isLoading.set(false);
       },
-      error: () => {
-        this.isLoading.set(false);
-      },
+      error: () => this.isLoading.set(false),
     });
   }
 
-  /**
-   * Chọn danh mục & tự động cuộn mượt xuống lưới sản phẩm
-   */
-  setCategory(categoryId: string, autoScroll = true) {
-    this.activeCategoryId.set(categoryId);
+  setCategory(categoryIdOrSlug: string, autoScroll = true) {
+    this.activeCategoryId.set(categoryIdOrSlug);
+    if (autoScroll) this.scrollToDiscoveryGrid();
+  }
 
-    if (autoScroll) {
-      this.scrollToDiscoveryGrid();
-    }
+  setFilters(criteria: Partial<ProductFilterState>, autoScroll = false) {
+    if (criteria.category !== undefined) this.activeCategoryId.set(criteria.category);
+    if (criteria.priceRange !== undefined) this.selectedPriceRange.set(criteria.priceRange);
+    if (criteria.rating !== undefined) this.selectedRating.set(criteria.rating);
+    if (criteria.sort !== undefined) this.selectedSort.set(criteria.sort);
+    if (autoScroll) this.scrollToDiscoveryGrid();
+  }
+
+  resetAllFilters() {
+    this.activeCategoryId.set('all');
+    this.selectedPriceRange.set('all');
+    this.selectedRating.set('all');
+    this.selectedSort.set('default');
+    this.searchQuery.set('');
   }
 
   setSearchQuery(query: string) {
@@ -483,10 +123,8 @@ export class ProductService {
 
   scrollToDiscoveryGrid() {
     setTimeout(() => {
-      const element = document.getElementById('discovery-grid');
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
+      const el = document.getElementById('discovery-grid');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 50);
   }
 }
