@@ -14,6 +14,8 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
 import { ProfileApiService } from '../../../../features/account/profile/data-access/profile-api.service';
 import { AvatarComponent } from '../../../../shared/ui/avatar/avatar.component';
+import { CartStateService } from '../../../../features/cart/services/cart-state.service';
+import { WishlistStateService } from '../../../../features/wishlist/services/wishlist-state.service';
 
 @Component({
   selector: 'app-user-menu',
@@ -28,6 +30,8 @@ export class UserMenuComponent implements OnInit {
   private readonly router = inject(Router);
   readonly authService = inject(AuthService);
   readonly profileService = inject(ProfileApiService);
+  private readonly cartState = inject(CartStateService);
+  private readonly wishlistState = inject(WishlistStateService);
 
   readonly isOpen = signal<boolean>(false);
 
@@ -137,6 +141,11 @@ export class UserMenuComponent implements OnInit {
     void this.router.navigateByUrl('/account/orders');
   }
 
+  navigateToWishlist(): void {
+    this.closeMenu(false);
+    void this.router.navigateByUrl('/account/wishlist');
+  }
+
   navigateToAdmin(): void {
     this.closeMenu(false);
     void this.router.navigateByUrl('/admin');
@@ -149,6 +158,8 @@ export class UserMenuComponent implements OnInit {
 
   logout(): void {
     this.closeMenu(false);
+    this.cartState.clear();
+    this.wishlistState.clear();
     this.profileService.logout().subscribe({
       next: () => {
         void this.router.navigateByUrl('/login');

@@ -28,10 +28,20 @@ export interface ShopData {
   ratingAvg?: number;
 }
 
+import { AddToCartPanelComponent } from '../../../product/components/add-to-cart-panel/add-to-cart-panel.component';
+import { WishlistHeartButtonComponent } from '../../../wishlist/components/wishlist-heart-button/wishlist-heart-button.component';
+
 @Component({
   selector: 'app-shop-storefront',
   standalone: true,
-  imports: [CommonModule, FormsModule, DecimalPipe, RouterLink],
+  imports: [
+    CommonModule,
+    FormsModule,
+    DecimalPipe,
+    RouterLink,
+    AddToCartPanelComponent,
+    WishlistHeartButtonComponent,
+  ],
   templateUrl: './shop-storefront.component.html',
   styleUrl: './shop-storefront.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -269,8 +279,7 @@ export class ShopStorefrontComponent implements OnInit {
 
   buyNow(product: SellerProduct, event?: Event): void {
     event?.stopPropagation();
-    this.showToast(`Đã thêm "${product.name}" vào giỏ hàng của bạn!`);
-    this.selectedProduct.set(null);
+    this.selectedProduct.set(product);
   }
 
   showToast(msg: string): void {

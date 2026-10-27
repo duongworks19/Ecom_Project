@@ -645,3 +645,15 @@ a {
     flex-wrap: wrap;
   }
 }
+
+.img-wrap {
+  position: relative;
+
+  .heart-pos {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 2;
+  }
+}
+

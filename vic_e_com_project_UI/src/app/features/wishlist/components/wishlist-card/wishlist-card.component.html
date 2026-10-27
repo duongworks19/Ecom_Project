@@ -1,0 +1,67 @@
+<article class="wl-card" [class.wl-card--unavailable]="!item().available">
+  <div class="wl-card__media">
+    @if (item().imageUrl) {
+      <img
+        [src]="item().imageUrl"
+        [alt]="item().name"
+        loading="lazy"
+        class="wl-card__image"
+      />
+    } @else {
+      <div class="wl-card__img-placeholder" aria-label="Ảnh sản phẩm">Ảnh sản phẩm</div>
+    }
+
+    @if (!item().available) {
+      <span class="wl-card__unavailable-badge">Hết hàng</span>
+    }
+
+    <div class="wl-card__heart">
+      <app-wishlist-heart-button
+        [productId]="item().productId"
+        (toggled)="onHeartClick()"
+      />
+    </div>
+  </div>
+
+  <div class="wl-card__info">
+    <h3 class="wl-card__name">{{ item().name }}</h3>
+
+    <p class="wl-card__price">
+      @if (item().hasMultipleVariants) {
+        Từ {{ item().minPrice | vndCurrency }}
+      } @else {
+        {{ item().minPrice | vndCurrency }}
+      }
+    </p>
+
+    <p class="wl-card__meta">
+      ★ {{ item().ratingAvg | number:'1.1-1' }} · Đã bán {{ item().soldCount }}
+    </p>
+
+    <button
+      type="button"
+      class="wl-card__add-btn"
+      [disabled]="!item().available || isAddingToCart()"
+      [attr.aria-busy]="isAddingToCart()"
+      (click)="onAddToCart()"
+    >
+      @if (!item().available) {
+        Hết hàng
+      } @else if (isAddingToCart()) {
+        Đang thêm...
+      } @else {
+        Thêm vào giỏ hàng
+      }
+    </button>
+  </div>
+</article>
+
+<app-variant-picker-dialog
+  [isOpen]="isPickerOpen()"
+  [productId]="item().productId"
+  [productName]="item().name"
+  [imageUrl]="item().imageUrl"
+  mode="add"
+  (closed)="isPickerOpen.set(false)"
+  (confirmed)="onVariantConfirmed($event)"
+/>

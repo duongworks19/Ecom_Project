@@ -37,6 +37,15 @@
         >
           Địa chỉ
         </a>
+        <a
+          routerLink="/account/wishlist"
+          routerLinkActive="account-sidebar__link--active"
+          #wishlistRla="routerLinkActive"
+          [attr.aria-current]="wishlistRla.isActive ? 'page' : null"
+          class="account-sidebar__link"
+        >
+          Yêu thích
+        </a>
       </div>
 
       <div class="account-sidebar__group">

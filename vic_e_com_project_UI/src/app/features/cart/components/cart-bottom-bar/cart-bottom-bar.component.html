@@ -1,0 +1,51 @@
+<div class="cart-bar">
+  <div class="cart-bar__inner">
+    <!-- Left: Select all & Bulk delete -->
+    <div class="cart-bar__left">
+      <label class="cart-bar__check-label">
+        <input
+          type="checkbox"
+          class="cart-bar__checkbox"
+          [checked]="allChecked"
+          (change)="onToggle($event)"
+          aria-label="Chọn tất cả sản phẩm"
+        />
+        <span class="cart-bar__check-text">Chọn tất cả ({{ totalAvailableCount }})</span>
+      </label>
+
+      <button
+        type="button"
+        class="cart-bar__del-btn"
+        [disabled]="selectedCount === 0 || isDeleting"
+        (click)="onDelete()"
+      >
+        {{ isDeleting ? 'Đang xóa...' : 'Xóa' }}
+        @if (selectedCount > 0) {
+          ({{ selectedCount }})
+        }
+      </button>
+    </div>
+
+    <!-- Right: Summary & Checkout button -->
+    <div class="cart-bar__right">
+      <div class="cart-bar__summary">
+        <span class="cart-bar__subtext">
+          Tổng thanh toán ({{ selectedCount }} sản phẩm):
+        </span>
+        <span class="cart-bar__total-amount">
+          {{ totalAmount | vndCurrency }}
+        </span>
+      </div>
+
+      <button
+        type="button"
+        class="cart-bar__checkout-btn"
+        [disabled]="selectedCount === 0"
+        (click)="onCheckout()"
+        id="btn-cart-checkout"
+      >
+        Mua hàng
+      </button>
+    </div>
+  </div>
+</div>

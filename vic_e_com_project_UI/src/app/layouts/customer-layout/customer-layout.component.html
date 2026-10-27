@@ -1,9 +1,13 @@
 <div class="customer-shell">
   <header class="customer-header">
     <div class="customer-header__inner">
-      <a routerLink="/" class="customer-header__brand" aria-label="Trang chủ VIC MART">
-        <span class="customer-header__logo-badge" aria-hidden="true">V</span>
-        <span class="customer-header__brand-name">VIC MART</span>
+      <a routerLink="/" class="customer-header__brand" aria-label="Trang chủ VICMART">
+        <div class="customer-header__brand-icon">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+            <path d="M12 2C6.48 2 2 6.48 2 12c0 4.24 2.63 7.87 6.4 9.28-.09-.79-.17-2 .03-2.86.19-.78 1.21-5.14 1.21-5.14s-.31-.62-.31-1.53c0-1.43.83-2.51 1.87-2.51.88 0 1.31.66 1.31 1.45 0 .89-.57 2.21-.86 3.44-.24 1.03.52 1.88 1.54 1.88 1.84 0 3.27-1.94 3.27-4.75 0-2.49-1.79-4.22-4.33-4.22-2.95 0-4.69 2.21-4.69 4.5 0 .89.34 1.84.78 2.37.09.1.1.19.07.3-.09.34-.28 1.12-.31 1.28-.04.2-.17.24-.38.14-1.42-.66-2.31-2.74-2.31-4.42 0-3.6 2.61-6.91 7.54-6.91 3.96 0 7.03 2.82 7.03 6.59 0 3.93-2.48 7.1-5.92 7.1-1.16 0-2.24-.6-2.62-1.31l-.71 2.72c-.26.99-.96 2.22-1.42 2.99 1.14.35 2.35.55 3.61.55 5.52 0 10-4.48 10-10S17.52 2 12 2z"/>
+          </svg>
+        </div>
+        <span class="customer-header__brand-name">VIC<span>MART</span></span>
       </a>
 
       <div class="customer-header__search" role="search">
@@ -31,25 +35,45 @@
       </div>
 
       <div class="customer-header__actions">
-        <button
-          type="button"
-          class="customer-header__cart-btn"
-          aria-label="Giỏ hàng"
-        >
-          <svg
-            viewBox="0 0 24 24"
-            width="20"
-            height="20"
-            stroke="currentColor"
-            stroke-width="2"
-            fill="none"
-            aria-hidden="true"
-          >
-            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
-            <line x1="3" y1="6" x2="21" y2="6"></line>
-            <path d="M16 10a4 4 0 0 1-8 0"></path>
-          </svg>
-        </button>
+        @if (authService.currentRoleSignal() === 'VENDOR' || authService.currentRoleSignal() === 'ROLE_VENDOR') {
+          <a routerLink="/seller/dashboard" class="customer-header__seller-link" id="btn-customer-seller">
+            <span class="customer-header__seller-dot"></span>Kênh người bán
+          </a>
+        } 
+        <!-- @else if (authService.currentRoleSignal() !== 'ADMIN' && authService.currentRoleSignal() !== 'ROLE_ADMIN') {
+          <a routerLink="/seller/onboarding" class="customer-header__seller-link" id="btn-customer-seller">
+            <span class="customer-header__seller-dot"></span>Kênh người bán
+          </a>
+        } -->
+
+        <!-- Nút yêu thích với badge -->
+        <a routerLink="/account/wishlist" class="customer-header__icon-btn" id="btn-customer-wishlist" aria-label="Danh sách yêu thích">
+          <span class="customer-header__icon-inner">
+            <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none" aria-hidden="true">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+            </svg>
+          </span>
+          @if (wishlistState.count() > 0) {
+            <span class="customer-header__badge">
+              {{ wishlistState.count() > 99 ? '99+' : wishlistState.count() }}
+            </span>
+          }
+        </a>
+
+        <!-- Nút giỏ hàng với badge -->
+        <a routerLink="/cart" class="customer-header__icon-btn" id="btn-customer-cart" aria-label="Giỏ hàng">
+          <span class="customer-header__icon-inner">
+            <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none" aria-hidden="true">
+              <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+            </svg>
+          </span>
+          @if (cartState.count() > 0) {
+            <span class="customer-header__badge">
+              {{ cartState.count() > 99 ? '99+' : cartState.count() }}
+            </span>
+          }
+        </a>
 
         <app-user-menu />
       </div>

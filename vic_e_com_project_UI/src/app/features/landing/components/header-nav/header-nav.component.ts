@@ -1,20 +1,25 @@
-import { Component, EventEmitter, Input, Output, computed, inject, signal } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { CategoryItem, CategoryTreeNode } from '../../../../core/models/category.model';
 import { AuthService } from '../../../../core/services/auth.service';
 import { UserMenuComponent } from '../../../../layouts/customer-layout/components/user-menu/user-menu.component';
+import { CartStateService } from '../../../cart/services/cart-state.service';
+import { WishlistStateService } from '../../../wishlist/services/wishlist-state.service';
+import { MiniCartComponent } from '../../../cart/components/mini-cart/mini-cart.component';
 
 @Component({
   selector: 'app-header-nav',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, UserMenuComponent],
+  imports: [CommonModule, FormsModule, RouterLink, UserMenuComponent, MiniCartComponent],
   templateUrl: './header-nav.component.html',
   styleUrl: './header-nav.component.scss',
 })
-export class HeaderNavComponent {
+export class HeaderNavComponent implements OnInit {
   readonly authService = inject(AuthService);
+  readonly cartState = inject(CartStateService);
+  readonly wishlistState = inject(WishlistStateService);
   private readonly router = inject(Router);
 
   @Input({ required: true }) categories: CategoryItem[] = [];
@@ -26,13 +31,29 @@ export class HeaderNavComponent {
   readonly searchQuery = signal<string>('');
   readonly isSearchFocused = signal<boolean>(false);
   readonly isCategoryMenuOpen = signal<boolean>(false);
+  readonly isMiniCartOpen = signal<boolean>(false);
 
-  readonly hasHierarchy = computed(() => {
-    return this.categories.some((c) => c.parentId !== null && c.parentId !== undefined);
-  });
+  ngOnInit(): void {
+    if (this.authService.isLoggedIn()) {
+      this.cartState.refreshCount();
+      this.wishlistState.refreshIds();
+    }
+  }
 
-  readonly treeColumns = computed<CategoryTreeNode[]>(() => {
-    const list = this.categories;
+  toggleMiniCart(): void {
+    this.isMiniCartOpen.update((v) => !v);
+  }
+
+  closeMiniCart(): void {
+    this.isMiniCartOpen.set(false);
+  }
+
+  hasHierarchy(): boolean {
+    return Array.isArray(this.categories) && this.categories.some((c) => c.parentId !== null && c.parentId !== undefined);
+  }
+
+  treeColumns(): CategoryTreeNode[] {
+    const list = this.categories || [];
     const parentMap = new Map<number | string, CategoryTreeNode>();
     const roots: CategoryTreeNode[] = [];
 
@@ -49,7 +70,7 @@ export class HeaderNavComponent {
       }
     }
     return roots.length > 0 ? roots : list.map((i) => ({ ...i, children: [] }));
-  });
+  }
 
   onSearchInput(val: string) {
     this.searchQuery.set(val);

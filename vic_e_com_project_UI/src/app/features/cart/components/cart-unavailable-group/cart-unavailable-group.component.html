@@ -1,0 +1,60 @@
+@if (items.length > 0) {
+  <div class="cart-unavail">
+    <div class="cart-unavail__header">
+      <div class="cart-unavail__title-wrap">
+        <span class="cart-unavail__badge">Không khả dụng</span>
+        <span class="cart-unavail__count">{{ items.length }} sản phẩm không thể đặt hàng</span>
+      </div>
+
+      <button
+        type="button"
+        class="cart-unavail__clear-all-btn"
+        [disabled]="isDeletingAll"
+        (click)="onDeleteAll()"
+      >
+        <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none">
+          <polyline points="3 6 5 6 21 6" />
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+        </svg>
+        <span>{{ isDeletingAll ? 'Đang xóa...' : 'Xóa tất cả' }}</span>
+      </button>
+    </div>
+
+    <div class="cart-unavail__list">
+      @for (item of items; track item.itemId) {
+        <div class="cart-unavail__row">
+          <div class="cart-unavail__product">
+            <div class="cart-unavail__thumb">
+              @if (item.imageUrl) {
+                <img [src]="item.imageUrl" [alt]="item.productName" loading="lazy" />
+              } @else {
+                <div class="cart-unavail__no-image">📦</div>
+              }
+            </div>
+
+            <div class="cart-unavail__info">
+              <h4 class="cart-unavail__name">{{ item.productName }}</h4>
+              <span class="cart-unavail__variant">Phân loại: {{ item.variantLabel || 'Mặc định' }}</span>
+              <span class="cart-unavail__reason">{{ item.reason || 'Sản phẩm tạm thời không khả dụng' }}</span>
+            </div>
+          </div>
+
+          <div class="cart-unavail__price">
+            {{ item.unitPrice | vndCurrency }}
+          </div>
+
+          <div class="cart-unavail__action">
+            <button
+              type="button"
+              class="cart-unavail__del-btn"
+              (click)="onDelete(item.itemId)"
+              aria-label="Xóa sản phẩm"
+            >
+              Xóa
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+}

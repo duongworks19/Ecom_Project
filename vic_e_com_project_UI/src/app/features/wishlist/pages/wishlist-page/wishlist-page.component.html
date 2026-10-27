@@ -1,0 +1,59 @@
+<section class="wl-page" aria-labelledby="wl-title">
+  <div class="wl-page__heading">
+    <h1 id="wl-title" class="wl-page__title">
+      Sản phẩm yêu thích
+      @if (!isLoading()) {
+        <span class="wl-page__count">{{ totalElements() }} sản phẩm</span>
+      }
+    </h1>
+    @if (!isLoading() && items().length > 0) {
+      <p class="wl-page__hint">Giá hiển thị là giá thấp nhất trong các phân loại. Bấm trái tim để bỏ khỏi danh sách.</p>
+    }
+  </div>
+
+  @if (isLoading()) {
+    <div class="wl-page__grid" aria-busy="true" aria-label="Đang tải">
+      @for (s of skeletonArr; track $index) {
+        <div class="wl-page__skeleton">
+          <app-skeleton height="260px" rounded="md" />
+          <app-skeleton height="16px" rounded="md" />
+          <app-skeleton height="14px" width="60%" rounded="md" />
+          <app-skeleton height="38px" rounded="md" />
+        </div>
+      }
+    </div>
+  } @else if (errorMsg()) {
+    <div class="wl-page__error">
+      <p>{{ errorMsg() }}</p>
+      <button type="button" class="wl-page__retry" (click)="loadPage(0)">Thử lại</button>
+    </div>
+  } @else if (items().length === 0) {
+    <div class="wl-page__empty">
+      <p class="wl-page__empty-title">Bạn chưa có sản phẩm yêu thích</p>
+      <a routerLink="/" class="wl-page__discover">Khám phá sản phẩm</a>
+    </div>
+  } @else {
+    <div class="wl-page__grid">
+      @for (item of items(); track item.productId) {
+        <app-wishlist-card
+          [item]="item"
+          (heartToggled)="onHeartToggled(item.productId)"
+        />
+      }
+    </div>
+
+    @if (hasMore()) {
+      <div class="wl-page__load-more">
+        <button
+          type="button"
+          class="wl-page__load-more-btn"
+          [disabled]="isLoadingMore()"
+          [attr.aria-busy]="isLoadingMore()"
+          (click)="loadMore()"
+        >
+          {{ isLoadingMore() ? 'Đang tải...' : 'Xem thêm' }}
+        </button>
+      </div>
+    }
+  }
+</section>
