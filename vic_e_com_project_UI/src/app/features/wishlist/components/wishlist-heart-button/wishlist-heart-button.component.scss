@@ -1,0 +1,27 @@
+.heart-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--rounded-full);
+  border: none;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+
+  &:hover {
+    transform: scale(1.1);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-focus-outer);
+    outline-offset: 2px;
+  }
+
+  &--liked {
+    color: var(--color-primary);
+  }
+}

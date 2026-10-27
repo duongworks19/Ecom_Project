@@ -50,23 +50,32 @@
     flex-shrink: 0;
   }
 
-  &__logo-badge {
+  &__brand-icon {
     width: 36px;
     height: 36px;
     border-radius: var(--rounded-full, 9999px);
     background-color: var(--color-primary, #e60023);
-    color: var(--color-on-dark, #ffffff);
-    font-size: 16px;
-    font-weight: 700;
-    display: inline-flex;
+    color: var(--color-on-primary, #ffffff);
+    display: flex;
     align-items: center;
     justify-content: center;
+    transition: transform var(--transition-fast, 0.15s ease);
+
+    &:hover {
+      transform: scale(1.05);
+    }
   }
 
   &__brand-name {
-    font-size: 18px;
-    font-weight: 700;
+    font-family: var(--font-family-display, inherit);
+    font-size: 19px;
+    font-weight: 800;
+    color: var(--color-ink, #000000);
     letter-spacing: -0.02em;
+
+    span {
+      color: var(--color-primary, #e60023);
+    }
   }
 
   &__search {
@@ -111,24 +120,77 @@
     flex-shrink: 0;
   }
 
-  &__cart-btn {
-    width: 44px;
-    height: 44px;
-    border-radius: var(--rounded-full, 9999px);
-    background-color: var(--color-surface-card, #f6f6f3);
-    color: var(--color-ink, #000000);
-    border: none;
-    cursor: pointer;
+  &__seller-link {
     display: inline-flex;
     align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-primary, #e60023);
+    background-color: #fce8eb;
+    border-radius: var(--rounded-full, 9999px);
+    text-decoration: none;
+    transition: opacity var(--transition-fast, 0.15s ease);
+
+    &:hover {
+      opacity: 0.9;
+    }
+  }
+
+  &__seller-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: var(--color-primary, #e60023);
+  }
+
+  &__icon-btn {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
     justify-content: center;
+    border-radius: var(--rounded-full, 9999px);
+    color: var(--color-ink, #000000);
+    text-decoration: none;
+    transition: background-color var(--transition-fast, 0.15s ease);
+    position: relative;
+
+    &:hover {
+      background-color: var(--color-surface-card, #f6f6f3);
+    }
 
     &:focus-visible {
       outline: 2px solid var(--color-ink, #000000);
       box-shadow: 0 0 0 4px var(--color-focus-outer, #435ee5);
     }
   }
+
+  &__icon-inner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    background: var(--color-primary, #e60023);
+    color: #fff;
+    border-radius: var(--rounded-full, 9999px);
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 18px;
+    text-align: center;
+    pointer-events: none;
+  }
 }
+
 
 @media (max-width: 640px) {
   .customer-header {

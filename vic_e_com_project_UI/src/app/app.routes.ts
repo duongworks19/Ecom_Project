@@ -75,6 +75,21 @@ export const routes: Routes = [
     title: 'Gian hàng — VIC MART',
   },
   {
+    path: 'cart',
+    component: CustomerLayoutComponent,
+    canActivate: [passwordChangeGuard, customerAuthGuard],
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./features/cart/pages/cart-page/cart-page.component').then(
+            (m) => m.CartPageComponent
+          ),
+      },
+    ],
+    title: 'Giỏ hàng — VIC MART',
+  },
+  {
     path: 'account',
     component: CustomerLayoutComponent,
     canActivate: [passwordChangeGuard, customerAuthGuard],

@@ -68,17 +68,46 @@
       }
 
       @if (authService.isLoggedInSignal()) {
+        <!-- Nút yêu thích với badge -->
         <a routerLink="/account/wishlist" class="icon-btn" id="btn-nav-wishlist" aria-label="Danh sách yêu thích">
-          <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none">
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-          </svg>
+          <span class="icon-btn__icon">
+            <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+            </svg>
+          </span>
+          @if (wishlistState.count() > 0) {
+            <span class="icon-btn__badge" aria-label="{{ wishlistState.count() }} sản phẩm yêu thích">
+              {{ wishlistState.count() > 99 ? '99+' : wishlistState.count() }}
+            </span>
+          }
         </a>
-        <a routerLink="/cart" class="icon-btn" id="btn-nav-cart" aria-label="Giỏ hàng">
-          <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none">
-            <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
-            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
-          </svg>
-        </a>
+
+        <!-- Nút giỏ hàng với badge + mini-cart -->
+        <div class="icon-btn-wrap" style="position:relative">
+          <button
+            type="button"
+            class="icon-btn"
+            id="btn-nav-cart"
+            aria-label="Giỏ hàng"
+            (click)="toggleMiniCart()"
+          >
+            <span class="icon-btn__icon">
+              <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none">
+                <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+              </svg>
+            </span>
+            @if (cartState.count() > 0) {
+              <span class="icon-btn__badge" aria-label="{{ cartState.count() }} sản phẩm trong giỏ">
+                {{ cartState.count() > 99 ? '99+' : cartState.count() }}
+              </span>
+            }
+          </button>
+          <app-mini-cart
+            [isOpen]="isMiniCartOpen()"
+            (closed)="closeMiniCart()"
+          />
+        </div>
         <app-user-menu />
       } @else {
         <a routerLink="/login" class="btn-secondary" id="btn-nav-login">Đăng nhập</a>

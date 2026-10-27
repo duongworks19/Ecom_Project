@@ -1,0 +1,131 @@
+.cart-bar {
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  background: var(--color-canvas);
+  border-top: 1px solid var(--color-hairline);
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
+  padding: var(--spacing-md) 0;
+
+  &__inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--spacing-lg);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-lg);
+
+    @media (max-width: 768px) {
+      flex-direction: column;
+      align-items: stretch;
+      gap: var(--spacing-md);
+    }
+  }
+
+  &__left {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xl);
+
+    @media (max-width: 768px) {
+      justify-content: space-between;
+    }
+  }
+
+  &__check-label {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    cursor: pointer;
+    user-select: none;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--color-ink);
+  }
+
+  &__checkbox {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--color-primary);
+    cursor: pointer;
+  }
+
+  &__del-btn {
+    background: transparent;
+    border: none;
+    color: var(--color-mute);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 6px 12px;
+    border-radius: var(--rounded-sm);
+    transition: all 0.2s ease;
+
+    &:hover:not(:disabled) {
+      color: var(--color-error);
+      background: rgba(230, 0, 35, 0.06);
+    }
+
+    &:disabled {
+      color: var(--color-ash);
+      cursor: not-allowed;
+    }
+  }
+
+  &__right {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xl);
+
+    @media (max-width: 768px) {
+      justify-content: space-between;
+    }
+  }
+
+  &__summary {
+    display: flex;
+    align-items: baseline;
+    gap: var(--spacing-md);
+  }
+
+  &__subtext {
+    font-size: 14px;
+    color: var(--color-mute);
+  }
+
+  &__total-amount {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--color-primary);
+    letter-spacing: -0.5px;
+  }
+
+  &__checkout-btn {
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+    border: none;
+    border-radius: var(--rounded-full);
+    padding: 12px 36px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(230, 0, 35, 0.25);
+
+    &:hover:not(:disabled) {
+      background: var(--color-primary-pressed);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(230, 0, 35, 0.35);
+    }
+
+    &:disabled {
+      background: var(--color-hairline);
+      color: var(--color-ash);
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+  }
+}

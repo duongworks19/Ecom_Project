@@ -43,6 +43,16 @@
         Đơn mua
       </button>
 
+      <button
+        #menuItem
+        type="button"
+        role="menuitem"
+        class="user-menu__item"
+        (click)="navigateToWishlist()"
+      >
+        Sản phẩm yêu thích
+      </button>
+
       @if (authService.currentRoleSignal() === 'ADMIN' || authService.currentRoleSignal() === 'ROLE_ADMIN') {
         <button
           #menuItem
@@ -51,7 +61,7 @@
           class="user-menu__item"
           (click)="navigateToAdmin()"
         >
-          🛡️ Trang Quản trị hệ thống
+          Quay lại trang quản trị
         </button>
       }
 

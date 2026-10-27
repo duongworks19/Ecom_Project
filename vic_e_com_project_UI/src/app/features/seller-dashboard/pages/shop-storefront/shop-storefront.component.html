@@ -110,6 +110,9 @@
           <img [src]="prod.imageUrl" [alt]="prod.name" loading="lazy" />
           @if (prod.stock <= 10) { <span class="stock-badge">Chỉ còn {{ prod.stock }}</span>
             }
+          <div class="heart-pos" (click)="$event.stopPropagation()">
+            <app-wishlist-heart-button [productId]="prod.id" />
+          </div>
         </div>
         <div class="prod-body">
           <small class="cat">{{ prod.category }} · SKU {{ prod.sku }}</small>
@@ -195,17 +198,11 @@
       <div class="modal-info">
         <span class="cat-badge">{{ item.category }}</span>
         <h2>{{ item.name }}</h2>
-        <p class="sku">Mã SKU: {{ item.sku }} · Phân loại: {{ item.variant }}</p>
-        <strong class="big-price">{{ item.price | number:'1.0-0' }}₫</strong>
-        <p class="stock-info">Tồn kho sẵn có: <b>{{ item.stock }}</b> sản phẩm · Đã bán <b>{{ item.soldCount }}</b></p>
-        <div class="modal-actions">
-          <button type="button" class="pill red" (click)="buyNow(item)">
-            Thêm vào giỏ hàng ngay
-          </button>
-          <button type="button" class="pill" (click)="selectedProduct.set(null)">
-            Tiếp tục xem Shop
-          </button>
-        </div>
+        <p class="sku">Mã SKU: {{ item.sku }}</p>
+        <app-add-to-cart-panel
+          [productId]="item.id"
+          (addedToCart)="selectedProduct.set(null)"
+        />
       </div>
     </div>
   </div>

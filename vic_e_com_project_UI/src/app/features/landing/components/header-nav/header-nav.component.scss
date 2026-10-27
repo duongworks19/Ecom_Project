@@ -153,7 +153,36 @@
   border-radius: var(--rounded-full);
   color: var(--color-ink);
   text-decoration: none;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  transition: background-color var(--transition-fast);
+
   &:hover { background-color: var(--color-surface-card); }
+
+  &__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+    border-radius: var(--rounded-full);
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 18px;
+    text-align: center;
+    pointer-events: none;
+  }
 }
 
 .btn-primary, .btn-secondary {
@@ -251,3 +280,55 @@
   .category-dropdown-panel { left: 16px; right: 16px; min-width: auto; }
   .category-dropdown-panel .category-grid { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* Badge wrapper cho icon tim và giỏ hàng */
+.icon-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: var(--rounded-full);
+  color: var(--color-ink);
+  text-decoration: none;
+  transition: background 0.15s;
+
+  &:hover { background: var(--color-surface-card); }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-focus-outer);
+    outline-offset: 2px;
+  }
+
+  &__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+    border-radius: var(--rounded-full);
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 18px;
+    text-align: center;
+    pointer-events: none;
+  }
+}
+
+.icon-btn-wrap {
+  position: relative;
+  display: inline-flex;
+}
+

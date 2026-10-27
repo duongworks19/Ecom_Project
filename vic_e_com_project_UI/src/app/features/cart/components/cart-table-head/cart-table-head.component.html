@@ -1,0 +1,18 @@
+<div class="cart-th" role="row">
+  <div class="cart-th__col cart-th__product">
+    <label class="cart-th__check-label">
+      <input
+        type="checkbox"
+        class="cart-th__checkbox"
+        [checked]="isAllChecked"
+        (change)="onToggle($event)"
+        aria-label="Chọn tất cả sản phẩm"
+      />
+      <span class="cart-th__title">Sản phẩm ({{ totalCount }})</span>
+    </label>
+  </div>
+  <div class="cart-th__col cart-th__price">Đơn giá</div>
+  <div class="cart-th__col cart-th__qty">Số lượng</div>
+  <div class="cart-th__col cart-th__total">Số tiền</div>
+  <div class="cart-th__col cart-th__action">Thao tác</div>
+</div>

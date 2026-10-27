@@ -1,0 +1,108 @@
+@if (isOpen) {
+  <div class="variant-dialog-overlay" (click)="onClose()">
+    <div class="variant-dialog" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+      <!-- Header -->
+      <div class="variant-dialog__header">
+        <div class="variant-dialog__preview">
+          <div class="variant-dialog__thumb">
+            @if (imageUrl) {
+              <img [src]="imageUrl" [alt]="productName" />
+            } @else {
+              <div class="variant-dialog__no-thumb">📦</div>
+            }
+          </div>
+          <div class="variant-dialog__meta">
+            <h3 class="variant-dialog__product-name">{{ productName }}</h3>
+            @if (getSelectedVariant(); as v) {
+              <div class="variant-dialog__price">{{ v.price | vndCurrency }}</div>
+              <div class="variant-dialog__stock">Kho: {{ v.stockQty }}</div>
+            }
+          </div>
+        </div>
+
+        <button type="button" class="variant-dialog__close-btn" (click)="onClose()" aria-label="Đóng">
+          <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Body -->
+      <div class="variant-dialog__body">
+        @if (isLoading()) {
+          <div class="variant-dialog__loading">
+            <div class="variant-dialog__spinner"></div>
+            <p>Đang tải thông tin phân loại...</p>
+          </div>
+        } @else if (errorMsg()) {
+          <div class="variant-dialog__error">
+            <p>{{ errorMsg() }}</p>
+          </div>
+        } @else {
+          <!-- Variant Options -->
+          <div class="variant-dialog__section">
+            <label class="variant-dialog__section-label">Phân loại hàng:</label>
+            <div class="variant-dialog__options">
+              @for (v of variants(); track v.variantId) {
+                <button
+                  type="button"
+                  class="variant-dialog__option-btn"
+                  [class.active]="selectedVariantId() === v.variantId"
+                  [disabled]="!v.available || v.stockQty <= 0"
+                  (click)="selectVariant(v)"
+                >
+                  {{ v.label }}
+                  @if (!v.available || v.stockQty <= 0) {
+                    <span class="variant-dialog__oos-tag">(Hết)</span>
+                  }
+                </button>
+              }
+            </div>
+          </div>
+
+          <!-- Quantity Stepper (if add mode) -->
+          @if (mode === 'add') {
+            <div class="variant-dialog__section variant-dialog__section--qty">
+              <label class="variant-dialog__section-label">Số lượng:</label>
+              <div class="variant-dialog__stepper">
+                <button
+                  type="button"
+                  class="variant-dialog__step-btn"
+                  [disabled]="quantity() <= 1"
+                  (click)="decreaseQty()"
+                >
+                  −
+                </button>
+                <span class="variant-dialog__qty-val">{{ quantity() }}</span>
+                <button
+                  type="button"
+                  class="variant-dialog__step-btn"
+                  [disabled]="!getSelectedVariant() || quantity() >= (getSelectedVariant()?.stockQty || 1)"
+                  (click)="increaseQty()"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+          }
+        }
+      </div>
+
+      <!-- Footer Actions -->
+      <div class="variant-dialog__footer">
+        <button type="button" class="variant-dialog__cancel-btn" (click)="onClose()">
+          Hủy
+        </button>
+        <button
+          type="button"
+          class="variant-dialog__confirm-btn"
+          [disabled]="isLoading() || !selectedVariantId() || (getSelectedVariant() && getSelectedVariant()!.stockQty <= 0)"
+          (click)="onConfirm()"
+        >
+          {{ mode === 'change' ? 'Xác nhận' : 'Thêm vào giỏ hàng' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

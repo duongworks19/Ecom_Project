@@ -39,6 +39,14 @@ export const ACCOUNT_ROUTES: Routes = [
             './orders/pages/order-detail-placeholder-page/order-detail-placeholder-page.component'
           ).then((m) => m.OrderDetailPlaceholderPageComponent),
       },
+      {
+        path: 'wishlist',
+        loadComponent: () =>
+          import('../wishlist/pages/wishlist-page/wishlist-page.component').then(
+            (m) => m.WishlistPageComponent
+          ),
+        title: 'Sản phẩm yêu thích — VIC MART',
+      },
     ],
   },
 ];

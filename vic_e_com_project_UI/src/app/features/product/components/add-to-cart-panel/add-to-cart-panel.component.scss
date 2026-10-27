@@ -1,0 +1,207 @@
+.cart-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-md) 0;
+
+  &__loading,
+  &__error {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    background: var(--color-surface-soft);
+    border-radius: var(--rounded-sm);
+    font-size: 13px;
+    color: var(--color-mute);
+  }
+
+  &__spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--color-secondary-bg);
+    border-top-color: var(--color-primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  &__retry-btn {
+    background: transparent;
+    border: 1px solid var(--color-hairline);
+    padding: 2px 8px;
+    border-radius: var(--rounded-sm);
+    font-size: 12px;
+    cursor: pointer;
+  }
+
+  &__price-row {
+    display: flex;
+    align-items: baseline;
+    gap: var(--spacing-md);
+  }
+
+  &__price {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--color-primary);
+    letter-spacing: -0.5px;
+  }
+
+  &__stock {
+    font-size: 13px;
+    color: var(--color-mute);
+  }
+
+  &__section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+  }
+
+  &__label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-ink);
+  }
+
+  &__options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  &__option-btn {
+    padding: 8px 16px;
+    border-radius: var(--rounded-sm);
+    border: 1px solid var(--color-hairline);
+    background: var(--color-canvas);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-ink);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+
+    &:hover:not(:disabled) {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+    }
+
+    &.active {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+      background: rgba(230, 0, 35, 0.05);
+      font-weight: 600;
+    }
+
+    &:disabled {
+      border-style: dashed;
+      color: var(--color-ash);
+      background: var(--color-surface-soft);
+      cursor: not-allowed;
+    }
+  }
+
+  &__oos {
+    font-size: 11px;
+    color: var(--color-mute);
+  }
+
+  &__stepper {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--rounded-sm);
+    background: var(--color-canvas);
+    overflow: hidden;
+    width: fit-content;
+  }
+
+  &__step-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    font-size: 18px;
+    color: var(--color-ink);
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      background: var(--color-secondary-bg);
+    }
+
+    &:disabled {
+      color: var(--color-ash);
+      cursor: not-allowed;
+    }
+  }
+
+  &__step-input {
+    width: 48px;
+    height: 32px;
+    border: none;
+    border-left: 1px solid var(--color-hairline-soft);
+    border-right: 1px solid var(--color-hairline-soft);
+    text-align: center;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-ink);
+    background: transparent;
+    appearance: textfield;
+    -moz-appearance: textfield;
+
+    &::-webkit-inner-spin-button,
+    &::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    &:focus {
+      outline: none;
+      background: var(--color-surface-soft);
+    }
+  }
+
+  &__actions {
+    margin-top: var(--spacing-sm);
+  }
+
+  &__add-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+    border: none;
+    border-radius: var(--rounded-full);
+    padding: 12px 32px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(230, 0, 35, 0.25);
+    transition: all 0.2s ease;
+
+    &:hover:not(:disabled) {
+      background: var(--color-primary-pressed);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(230, 0, 35, 0.35);
+    }
+
+    &:disabled {
+      background: var(--color-hairline);
+      color: var(--color-ash);
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

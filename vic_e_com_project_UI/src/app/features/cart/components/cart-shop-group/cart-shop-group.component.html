@@ -1,0 +1,36 @@
+<div class="cart-shop">
+  <!-- Header của từng Shop -->
+  <div class="cart-shop__header">
+    <label class="cart-shop__label">
+      <input
+        type="checkbox"
+        class="cart-shop__checkbox"
+        [checked]="isAllShopItemsChecked()"
+        (change)="onShopCheckboxChange($event)"
+        aria-label="Chọn toàn bộ sản phẩm của {{ shop.shopName }}"
+      />
+      <div class="cart-shop__badge">Shop</div>
+      <a [routerLink]="['/shop', shop.shopId]" class="cart-shop__name">
+        {{ shop.shopName }}
+        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none">
+          <polyline points="9 18 15 12 9 6" />
+        </svg>
+      </a>
+    </label>
+  </div>
+
+  <!-- Danh sách dòng sản phẩm của Shop -->
+  <div class="cart-shop__items">
+    @for (item of itemsWithTotal; track item.itemId) {
+      <app-cart-item-row
+        [item]="item"
+        [isChecked]="isItemChecked(item.itemId)"
+        [isUpdating]="isItemUpdating(item.itemId)"
+        (toggleCheck)="onItemToggle(item.itemId, $event)"
+        (quantityChange)="onItemQuantityChange(item.itemId, $event)"
+        (variantChangeRequested)="onVariantChangeRequested($event)"
+        (deleteItem)="onItemDelete($event)"
+      />
+    }
+  </div>
+</div>

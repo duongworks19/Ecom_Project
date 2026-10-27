@@ -1,0 +1,94 @@
+<div class="cart-page">
+  <div class="cart-page__container">
+    <div class="cart-page__header">
+      <h1 class="cart-page__title">
+        Giỏ hàng
+        @if (!isLoading() && totalAvailableCount() > 0) {
+          <span class="cart-page__badge">({{ totalAvailableCount() }} sản phẩm)</span>
+        }
+      </h1>
+    </div>
+
+    @if (isLoading()) {
+      <div class="cart-page__skeleton" aria-busy="true">
+        <app-skeleton height="48px" rounded="md" />
+        <app-skeleton height="140px" rounded="md" />
+        <app-skeleton height="140px" rounded="md" />
+      </div>
+    } @else if (errorMsg()) {
+      <div class="cart-page__error">
+        <p>{{ errorMsg() }}</p>
+        <button type="button" class="cart-page__retry-btn" (click)="loadCart()">Thử lại</button>
+      </div>
+    } @else if (isCartEmpty()) {
+      <!-- Empty Cart State -->
+      <div class="cart-page__empty">
+        <div class="cart-page__empty-icon">🛒</div>
+        <h2 class="cart-page__empty-title">Giỏ hàng của bạn còn trống</h2>
+        <p class="cart-page__empty-sub">Hãy khám phá thêm hàng ngàn sản phẩm tuyệt vời trên VICMART!</p>
+        <a routerLink="/" class="cart-page__empty-btn">Mua sắm ngay</a>
+      </div>
+    } @else {
+      <!-- Table Header -->
+      <app-cart-table-head
+        [isAllChecked]="isAllChecked()"
+        [totalCount]="totalAvailableCount()"
+        (toggleAll)="onToggleAll($event)"
+      />
+
+      <!-- Shop Groups -->
+      <div class="cart-page__shops">
+        @for (shop of cart()?.shops; track shop.shopId) {
+          <app-cart-shop-group
+            [shop]="shop"
+            [itemsWithTotal]="getShopItemsWithTotal(shop)"
+            [selectedItemIds]="selectedItemIds()"
+            [updatingItemIds]="updatingItemIds()"
+            (toggleShop)="onToggleShop(shop, $event)"
+            (toggleItem)="onToggleItem($event)"
+            (quantityChange)="onQuantityChange($event)"
+            (variantChangeRequested)="onRequestVariantChange($event)"
+            (deleteItem)="onDeleteItem($event)"
+          />
+        }
+      </div>
+
+      <!-- Unavailable Items Group -->
+      @if (unavailableItems().length > 0) {
+        <app-cart-unavailable-group
+          [items]="unavailableItems()"
+          [isDeletingAll]="isDeletingUnavailable()"
+          (deleteAllUnavailable)="onDeleteAllUnavailable()"
+          (deleteItem)="onDeleteItem($event)"
+        />
+      }
+
+      <!-- Sticky Bottom Summary Bar -->
+      @if (totalAvailableCount() > 0) {
+        <app-cart-bottom-bar
+          [allChecked]="isAllChecked()"
+          [totalAvailableCount]="totalAvailableCount()"
+          [selectedCount]="selectedCount()"
+          [totalAmount]="totalSelectedAmount()"
+          [isDeleting]="isBulkDeleting()"
+          (toggleAll)="onToggleAll($event)"
+          (deleteSelected)="onDeleteSelected()"
+          (checkout)="onCheckout()"
+        />
+      }
+    }
+  </div>
+
+  <!-- Variant Picker Dialog for changing variant -->
+  <app-variant-picker-dialog
+    [isOpen]="isVariantPickerOpen()"
+    [productId]="activeEditingItem()?.productId || null"
+    [productName]="activeEditingItem()?.productName || ''"
+    [imageUrl]="activeEditingItem()?.imageUrl || null"
+    [currentVariantId]="activeEditingItem()?.variantId || null"
+    [initialQuantity]="activeEditingItem()?.quantity || 1"
+    mode="change"
+    (closed)="isVariantPickerOpen.set(false)"
+    (confirmed)="onVariantConfirmed($event)"
+  />
+</div>

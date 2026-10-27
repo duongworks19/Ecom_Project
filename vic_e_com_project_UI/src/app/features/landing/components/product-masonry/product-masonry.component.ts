@@ -6,18 +6,21 @@ import { NgClass } from '@angular/common';
 import { Product } from '../../../../core/models/product.model';
 import { CategoryItem } from '../../../../core/models/category.model';
 import { StoreConfigService } from '../../../../core/services/store-config.service';
+import { WishlistHeartButtonComponent } from '../../../wishlist/components/wishlist-heart-button/wishlist-heart-button.component';
+import { AuthService } from '../../../../core/services/auth.service';
 
 const PAGE_SIZE = 12;
 
 @Component({
   selector: 'app-product-masonry',
   standalone: true,
-  imports: [NgClass],
+  imports: [NgClass, WishlistHeartButtonComponent],
   templateUrl: './product-masonry.component.html',
   styleUrl: './product-masonry.component.scss',
 })
 export class ProductMasonryComponent implements OnChanges {
   private readonly storeConfig = inject(StoreConfigService);
+  readonly authService = inject(AuthService);
 
   @Input({ required: true }) products: Product[] = [];
   @Input() activeCategory: CategoryItem | null = null;
@@ -29,7 +32,6 @@ export class ProductMasonryComponent implements OnChanges {
   readonly isSaleActive = computed(
     () => this.storeConfig.promotionConfig().isSaleCampaignActive,
   );
-  readonly savedProductIds = signal<Set<string>>(new Set());
   readonly page = signal<number>(1);
 
   /** Slice của products hiện tại theo trang */
@@ -48,18 +50,6 @@ export class ProductMasonryComponent implements OnChanges {
 
   loadMore(): void {
     this.page.update(p => p + 1);
-  }
-
-  toggleSave(productId: string, event?: Event): void {
-    event?.stopPropagation();
-    const s = new Set(this.savedProductIds());
-    s.has(productId) ? s.delete(productId) : s.add(productId);
-    this.savedProductIds.set(s);
-    this.saveToggled.emit(productId);
-  }
-
-  isSaved(productId: string): boolean {
-    return this.savedProductIds().has(productId);
   }
 
   onResetCategory(): void { this.resetCategory.emit(); }

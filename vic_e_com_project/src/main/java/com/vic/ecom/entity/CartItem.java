@@ -20,6 +20,10 @@ public class CartItem {
     @Column(name = "variant_id", nullable = false)
     private Long variantId;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "variant_id", insertable = false, updatable = false)
+    private ProductVariant variant;
+
     @Column(nullable = false)
     private Integer quantity = 1;
 
