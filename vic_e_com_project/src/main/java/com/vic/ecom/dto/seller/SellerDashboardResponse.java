@@ -1,5 +1,6 @@
 package com.vic.ecom.dto.seller;
 
+import com.vic.ecom.dto.VoucherDtos;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -33,7 +34,7 @@ public class SellerDashboardResponse {
     private List<SellerLowStockDto> lowStockProducts;
     private List<SellerRecentOrderDto> recentOrders;
     private List<SellerProductDto> products;
-    private List<SellerVoucherDto> vouchers;
+    private List<VoucherDtos.Response> vouchers;
     private List<SellerPromotionDto> promotions;
     private List<SellerReviewQuestionDto> reviews;
     private SellerShopProfileDto shopProfile;

@@ -32,6 +32,7 @@ import {
 export class SellerDashboardService {
   private readonly http = inject(HttpClient);
   private readonly API_URL = 'http://localhost:9090/api/seller/dashboard';
+  private readonly VOUCHERS_API_URL = 'http://localhost:9090/api/seller/vouchers';
 
   readonly dashboard = signal<SellerDashboardData>(
     createDefaultSellerDashboardData()
@@ -193,7 +194,26 @@ export class SellerDashboardService {
             this.products.set(data.products);
           }
           if (data.vouchers && data.vouchers.length > 0) {
-            this.vouchers.set(data.vouchers);
+            const mappedVouchers: SellerVoucher[] = data.vouchers.map((v: any) => ({
+              id: v.id,
+              code: v.code,
+              title: v.title || 'Voucher gian hàng',
+              discountText: v.discountText || (v.discountType === 'PERCENT' ? `Giảm ${v.value}%` : `Giảm ${Number(v.value).toLocaleString('vi-VN')}₫`),
+              discountType: v.discountType,
+              value: Number(v.value) || 0,
+              maxDiscount: v.maxDiscount != null ? Number(v.maxDiscount) : undefined,
+              minOrderAmount: Number(v.minOrderAmount) || 0,
+              usedCount: v.usedCount || 0,
+              totalQuota: v.usageLimit || 100,
+              usageLimit: v.usageLimit || 100,
+              expiryDate: v.expiryDate || (v.endAt ? v.endAt.split('T')[0] : ''),
+              startAt: v.startAt,
+              endAt: v.endAt,
+              status: v.status,
+              displayStatus: v.displayStatus,
+              active: v.status === 'ACTIVE' && v.displayStatus !== 'EXPIRED' && v.displayStatus !== 'EXHAUSTED',
+            }));
+            this.vouchers.set(mappedVouchers);
           }
           if (data.promotions && data.promotions.length > 0) {
             this.promotions.set(data.promotions);
@@ -471,50 +491,70 @@ export class SellerDashboardService {
     totalQuota: number;
     expiryDate: string;
   }): void {
-    const newVoucher: SellerVoucher = {
-      id: Date.now(),
+    const isPercent = payload.discountText.includes('%');
+    const matchVal = payload.discountText.match(/\d+/);
+    const numVal = matchVal ? parseInt(matchVal[0], 10) : (isPercent ? 10 : 20000);
+    const now = new Date();
+    const nextMonth = new Date();
+    nextMonth.setDate(now.getDate() + 30);
+
+    const body = {
       code: payload.code.trim().toUpperCase(),
-      title: payload.title.trim(),
-      discountText: payload.discountText.trim(),
-      minOrderAmount: Number(payload.minOrderAmount) || 100000,
-      usedCount: 0,
-      totalQuota: Number(payload.totalQuota) || 50,
-      expiryDate: payload.expiryDate || '30/11/2026',
-      active: true,
+      discountType: isPercent ? 'PERCENT' : 'FIXED',
+      value: numVal,
+      maxDiscount: isPercent ? 50000 : null,
+      minOrderAmount: Number(payload.minOrderAmount) || 0,
+      usageLimit: Number(payload.totalQuota) || 50,
+      startAt: now.toISOString().split('.')[0],
+      endAt: nextMonth.toISOString().split('.')[0],
     };
 
-    this.vouchers.update((list) => [newVoucher, ...list]);
-    if (!this.stepVoucherDone()) {
-      this.stepVoucherDone.set(true);
-      this.recalculateCompletedSteps();
-    }
-    this.showToast(`Đã tạo mã giảm giá ${newVoucher.code} thành công!`);
-
     this.http
-      .post<{ code?: number; data?: SellerVoucher }>(`${this.API_URL}/vouchers`, newVoucher)
-      .pipe(catchError(() => of(null)))
+      .post<{ code?: string; message?: string; data?: any }>(this.VOUCHERS_API_URL, body)
+      .pipe(catchError((err) => {
+        this.showToast(err?.error?.message || 'Có lỗi xảy ra khi tạo voucher');
+        return of(null);
+      }))
       .subscribe((res) => {
-        if (res?.data?.id) {
-          this.vouchers.update((list) =>
-            list.map((v) =>
-              v.id === newVoucher.id
-                ? { ...newVoucher, ...res.data, minOrderAmount: Number(res.data!.minOrderAmount) }
-                : v
-            )
-          );
+        if (res?.data) {
+          const v = res.data;
+          const newVoucher: SellerVoucher = {
+            id: v.id,
+            code: v.code,
+            title: payload.title || 'Voucher gian hàng',
+            discountText: v.discountType === 'PERCENT' ? `Giảm ${v.value}%` : `Giảm ${v.value}₫`,
+            minOrderAmount: Number(v.minOrderAmount) || 0,
+            usedCount: v.usedCount || 0,
+            totalQuota: v.usageLimit || 50,
+            expiryDate: v.endAt ? v.endAt.split('T')[0] : payload.expiryDate,
+            active: v.status === 'ACTIVE',
+          };
+          this.vouchers.update((list) => [newVoucher, ...list.filter((x) => x.code !== newVoucher.code)]);
+          if (!this.stepVoucherDone()) {
+            this.stepVoucherDone.set(true);
+            this.recalculateCompletedSteps();
+          }
+          this.showToast(`Đã tạo mã giảm giá ${newVoucher.code} thành công!`);
         }
       });
   }
 
   toggleVoucherStatus(voucherId: number): void {
+    const target = this.vouchers().find((v) => v.id === voucherId);
+    const nextStatus = target?.active ? 'PAUSED' : 'ACTIVE';
+
     this.vouchers.update((list) =>
       list.map((v) => (v.id === voucherId ? { ...v, active: !v.active } : v))
     );
     this.http
-      .patch(`${this.API_URL}/vouchers/${voucherId}/toggle`, {})
-      .pipe(catchError(() => of(null)))
-      .subscribe();
-    this.showToast('Đã cập nhật trạng thái voucher!');
+      .patch(`${this.VOUCHERS_API_URL}/${voucherId}/status`, { status: nextStatus })
+      .pipe(catchError((err) => {
+        this.showToast(err?.error?.message || 'Lỗi cập nhật trạng thái');
+        return of(null);
+      }))
+      .subscribe(() => {
+        this.showToast('Đã cập nhật trạng thái voucher!');
+      });
   }
 
   replyCustomerReview(reviewId: number, replyText: string): void {

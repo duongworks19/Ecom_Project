@@ -59,6 +59,7 @@ export interface QuestionItem {
 }
 
 export interface VoucherItem {
+  id?: number;
   code: string;
   t: 'PERCENT' | 'FIXED';
   val: number;
@@ -110,6 +111,7 @@ export class SellerDashboardComponent implements OnInit {
     this.loadProducts();
     this.detectApprovedRole();
     this.loadCurrentShopInfo();
+    this.loadVouchers();
   }
 
   loadCurrentShopInfo(): void {
@@ -126,6 +128,31 @@ export class SellerDashboardComponent implements OnInit {
             ad: shop.pickupAddress || 'Số 12 Ngõ 88 Trần Thái Tông, Cầu Giấy, Hà Nội',
             hr: '08:00 – 21:00',
           });
+        }
+      },
+      error: () => {},
+    });
+  }
+
+  loadVouchers(): void {
+    this.http.get<any>('http://localhost:9090/api/seller/vouchers').subscribe({
+      next: (res) => {
+        const list = res?.data || [];
+        if (Array.isArray(list)) {
+          const mapped: VoucherItem[] = list.map((item: any) => ({
+            id: item.id,
+            code: item.code,
+            t: item.discountType === 'FIXED' ? 'FIXED' : 'PERCENT',
+            val: Number(item.value) || 0,
+            max: Number(item.maxDiscount) || 0,
+            min: Number(item.minOrderAmount) || 0,
+            lim: item.usageLimit || 100,
+            used: item.usedCount || 0,
+            from: item.startAt ? item.startAt.split('T')[0] : '',
+            to: item.endAt ? item.endAt.split('T')[0] : '',
+            st: (item.status === 'DELETED' ? 'DELETED' : (item.displayStatus === 'EXPIRED' ? 'EXPIRED' : (item.status || 'ACTIVE'))) as any,
+          }));
+          this.vouchers.set(mapped);
         }
       },
       error: () => {},
@@ -369,10 +396,7 @@ export class SellerDashboardComponent implements OnInit {
   ]);
 
   // Vouchers
-  readonly vouchers = signal<VoucherItem[]>([
-    { code: 'LUMI10', t: 'PERCENT', val: 10, max: 50000, min: 300000, lim: 200, used: 37, from: '2026-10-01', to: '2026-10-31', st: 'ACTIVE' },
-    { code: 'FREESHIP30', t: 'FIXED', val: 30000, max: 0, min: 199000, lim: 100, used: 100, from: '2026-09-01', to: '2026-09-30', st: 'EXPIRED' },
-  ]);
+  readonly vouchers = signal<VoucherItem[]>([]);
 
   // Giảm giá / Flash sale
   readonly campaigns = signal<CampaignItem[]>([
@@ -826,15 +850,21 @@ export class SellerDashboardComponent implements OnInit {
 
   // Voucher
   openCreateVoucherModal(): void {
+    const today = new Date();
+    const nextMonth = new Date();
+    nextMonth.setDate(today.getDate() + 30);
+    const fromStr = today.toISOString().split('T')[0];
+    const toStr = nextMonth.toISOString().split('T')[0];
+
     this.formVoucher.set({
       code: '',
       t: 'PERCENT',
       val: 10,
       max: 50000,
-      min: 300000,
+      min: 100000,
       lim: 200,
-      from: '2026-10-22',
-      to: '2026-11-22',
+      from: fromStr,
+      to: toStr,
     });
     this.modalTitle.set('Tạo voucher mới cho Shop');
     this.modalType.set('voucher_form');
@@ -858,32 +888,85 @@ export class SellerDashboardComponent implements OnInit {
       return;
     }
 
-    const newVoucher: VoucherItem = {
+    const payload = {
       code,
-      t: v.t || 'PERCENT',
-      val: v.val,
-      max: v.max || 0,
-      min: v.min || 0,
-      lim: v.lim || 100,
-      used: 0,
-      from: v.from || '2026-10-22',
-      to: v.to,
-      st: 'ACTIVE',
+      discountType: v.t || 'PERCENT',
+      value: v.val,
+      maxDiscount: v.t === 'PERCENT' ? (v.max && Number(v.max) > 0 ? Number(v.max) : null) : null,
+      minOrderAmount: v.min ? Number(v.min) : 0,
+      usageLimit: v.lim ? Number(v.lim) : 100,
+      startAt: v.from ? (v.from.includes('T') ? v.from.split('.')[0] : `${v.from}T00:00:00`) : null,
+      endAt: v.to ? (v.to.includes('T') ? v.to.split('.')[0] : `${v.to}T23:59:59`) : null,
     };
-    this.vouchers.update((list) => [newVoucher, ...list]);
-    this.showToast(`🎉 Đã tạo mã voucher ${code}.`);
-    this.closeGenericModal();
+
+    this.http.post<any>('http://localhost:9090/api/seller/vouchers', payload).subscribe({
+      next: (res) => {
+        const saved = res?.data;
+        const newVoucher: VoucherItem = {
+          id: saved?.id,
+          code: saved?.code || code,
+          t: (saved?.discountType || v.t || 'PERCENT') as 'PERCENT' | 'FIXED',
+          val: saved?.value != null ? Number(saved.value) : (v.val ?? 0),
+          max: saved?.maxDiscount != null ? Number(saved.maxDiscount) : (v.max || 0),
+          min: saved?.minOrderAmount != null ? Number(saved.minOrderAmount) : (v.min || 0),
+          lim: saved?.usageLimit || v.lim || 100,
+          used: saved?.usedCount || 0,
+          from: saved?.startAt ? saved.startAt.split('T')[0] : (v.from || ''),
+          to: saved?.endAt ? saved.endAt.split('T')[0] : (v.to || ''),
+          st: (saved?.status || 'ACTIVE') as any,
+        };
+        this.vouchers.update((list) => [newVoucher, ...list.filter((item) => item.code !== newVoucher.code)]);
+        this.showToast(`🎉 Đã tạo mã voucher ${code}.`);
+        this.closeGenericModal();
+      },
+      error: (err) => {
+        this.modalError.set(err?.error?.message || 'Có lỗi xảy ra khi tạo voucher trên hệ thống.');
+      },
+    });
   }
 
   toggleVoucher(code: string): void {
-    this.vouchers.update((list) =>
-      list.map((v) => (v.code === code ? { ...v, st: v.st === 'ACTIVE' ? 'PAUSED' : 'ACTIVE' } : v))
-    );
+    const target = this.vouchers().find((v) => v.code === code);
+    if (!target) return;
+    const newStatus = target.st === 'ACTIVE' ? 'PAUSED' : 'ACTIVE';
+    if (target.id) {
+      this.http.patch<any>(`http://localhost:9090/api/seller/vouchers/${target.id}/status`, { status: newStatus }).subscribe({
+        next: () => {
+          this.vouchers.update((list) =>
+            list.map((v) => (v.code === code ? { ...v, st: newStatus } : v))
+          );
+          this.showToast(`Đã chuyển voucher ${code} sang ${newStatus === 'ACTIVE' ? 'Đang chạy' : 'Tạm dừng'}.`);
+        },
+        error: (err) => {
+          this.showToast(err?.error?.message || 'Không thể cập nhật trạng thái voucher.');
+        },
+      });
+    } else {
+      this.vouchers.update((list) =>
+        list.map((v) => (v.code === code ? { ...v, st: newStatus } : v))
+      );
+      this.showToast(`Đã chuyển voucher ${code} sang ${newStatus === 'ACTIVE' ? 'Đang chạy' : 'Tạm dừng'}.`);
+    }
   }
 
   deleteVoucher(code: string): void {
-    this.vouchers.update((list) => list.filter((v) => v.code !== code));
-    this.showToast(`Đã xóa voucher ${code}.`);
+    const target = this.vouchers().find((v) => v.code === code);
+    if (!target) return;
+    if (!confirm(`Bạn có chắc chắn muốn xóa voucher "${code}" không?`)) return;
+    if (target.id) {
+      this.http.delete<any>(`http://localhost:9090/api/seller/vouchers/${target.id}`).subscribe({
+        next: () => {
+          this.vouchers.update((list) => list.filter((v) => v.code !== code));
+          this.showToast(`Đã xóa voucher ${code}.`);
+        },
+        error: (err) => {
+          this.showToast(err?.error?.message || 'Không thể xóa voucher.');
+        },
+      });
+    } else {
+      this.vouchers.update((list) => list.filter((v) => v.code !== code));
+      this.showToast(`Đã xóa voucher ${code}.`);
+    }
   }
 
   // Hồ sơ shop
