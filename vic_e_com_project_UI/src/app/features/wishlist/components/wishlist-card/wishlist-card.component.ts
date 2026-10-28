@@ -8,7 +8,6 @@ import {
   signal,
 } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
-import { RouterLink } from '@angular/router';
 import { WishlistItem } from '../../models/wishlist.models';
 import { WishlistHeartButtonComponent } from '../wishlist-heart-button/wishlist-heart-button.component';
 import { VndCurrencyPipe } from '../../../../shared/pipes/vnd-currency.pipe';
@@ -26,7 +25,6 @@ import {
   selector: 'app-wishlist-card',
   standalone: true,
   imports: [
-    RouterLink,
     DecimalPipe,
     WishlistHeartButtonComponent,
     VndCurrencyPipe,

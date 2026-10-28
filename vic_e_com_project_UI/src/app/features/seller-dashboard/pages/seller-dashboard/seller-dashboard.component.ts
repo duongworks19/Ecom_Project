@@ -263,15 +263,6 @@ export class SellerDashboardComponent implements OnInit {
   readonly formDescription = signal<string>('');
   readonly formImageUrl = signal<string>('');
 
-  // Danh sách ảnh mẫu gợi ý
-  readonly sampleImages = [
-    { label: 'Đèn ngủ gỗ', url: 'https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=600&q=80' },
-    { label: 'Kệ treo tường', url: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=600&q=80' },
-    { label: 'Bình gốm', url: 'https://images.unsplash.com/photo-1612196808214-b8e1d6145a8c?auto=format&fit=crop&w=600&q=80' },
-    { label: 'Thảm cotton', url: 'https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?auto=format&fit=crop&w=600&q=80' },
-    { label: 'Gương tròn', url: 'https://images.unsplash.com/photo-1618220179428-22790b461013?auto=format&fit=crop&w=600&q=80' },
-    { label: 'Nến thơm', url: 'https://images.unsplash.com/photo-1602874801007-bd458bb1b8b6?auto=format&fit=crop&w=600&q=80' },
-  ];
   readonly formVariants = signal<ProductVariant[]>([
     { sku: 'DN-NAU', a: 'Nâu', p: 389000, q: 2, l: 5 },
     { sku: 'DN-NAT', a: 'Tự nhiên', p: 389000, q: 18, l: 5 },
@@ -441,6 +432,12 @@ export class SellerDashboardComponent implements OnInit {
     () => this.pendingOrderCount() + this.preparingOrderCount() + this.lowStockItems().length + this.unrepliedQuestionCount()
   );
 
+  // Computed product counts by status
+  readonly allProductCount = computed(() => this.products().filter((p) => p.s !== 'DELETED').length);
+  readonly visibleProductCount = computed(() => this.products().filter((p) => p.s === 'VISIBLE').length);
+  readonly hiddenProductCount = computed(() => this.products().filter((p) => p.s === 'HIDDEN').length);
+  readonly draftProductCount = computed(() => this.products().filter((p) => p.s === 'DRAFT').length);
+
   // Computed filtered products
   readonly filteredProducts = computed(() => {
     const q = this.searchQuery().trim().toLowerCase();
@@ -568,11 +565,6 @@ export class SellerDashboardComponent implements OnInit {
 
   clearImage(): void {
     this.formImageUrl.set('');
-  }
-
-  selectPresetImage(url: string): void {
-    this.formImageUrl.set(url);
-    this.modalError.set('');
   }
 
   onImageFileSelected(event: Event): void {
@@ -738,7 +730,11 @@ export class SellerDashboardComponent implements OnInit {
           this.syncToStorageAndStorefront(updated);
           return updated;
         });
-        this.showToast(targetStatus === 'VISIBLE' ? 'Đã hiển thị sản phẩm trên sàn.' : 'Đã ẩn sản phẩm.');
+        this.showToast(
+          targetStatus === 'VISIBLE'
+            ? `▶️ Đã hiển thị lại sản phẩm "${p.n}" trên gian hàng khách.`
+            : `⏸️ Đã ẩn sản phẩm "${p.n}" (khách hàng sẽ không thấy sản phẩm này).`
+        );
       },
       error: () => {
         this.products.update((list) => {
@@ -746,7 +742,11 @@ export class SellerDashboardComponent implements OnInit {
           this.syncToStorageAndStorefront(updated);
           return updated;
         });
-        this.showToast(targetStatus === 'VISIBLE' ? 'Đã hiển thị sản phẩm trên sàn.' : 'Đã ẩn sản phẩm.');
+        this.showToast(
+          targetStatus === 'VISIBLE'
+            ? `▶️ Đã hiển thị lại sản phẩm "${p.n}" trên gian hàng khách.`
+            : `⏸️ Đã ẩn sản phẩm "${p.n}" (khách hàng sẽ không thấy sản phẩm này).`
+        );
       },
     });
   }

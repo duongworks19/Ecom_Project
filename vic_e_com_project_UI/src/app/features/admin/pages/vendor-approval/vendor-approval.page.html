@@ -4,198 +4,239 @@
 
   <div class="bar" role="group" aria-label="Lọc theo trạng thái">
     @for (t of tabs; track t.key) {
-      <button
-        class="chip"
-        type="button"
-        [attr.aria-pressed]="filter() === t.key"
-        (click)="setFilter(t.key)"
-      >
-        {{ t.label }}<small>{{ counts()[t.key] }}</small>
-      </button>
+    <button class="chip" type="button" [attr.aria-pressed]="filter() === t.key" (click)="setFilter(t.key)">
+      {{ t.label }}<small>{{ counts()[t.key] }}</small>
+    </button>
     }
-    <input
-      class="search"
-      type="search"
-      placeholder="Tìm theo tên shop, email, SĐT…"
-      aria-label="Tìm vendor"
-      [value]="query()"
-      (input)="onSearch($event)"
-    />
+    <input class="search" type="search" placeholder="Tìm theo tên shop, email, SĐT…" aria-label="Tìm vendor"
+      [value]="query()" (input)="onSearch($event)" />
   </div>
 
   <div class="grid">
     <div class="list">
       @if (visibleVendors().length === 0) {
-        <div class="empty panel">Không có hồ sơ nào khớp. Thử đổi bộ lọc hoặc từ khóa.</div>
+      <div class="empty panel">Không có hồ sơ nào khớp. Thử đổi bộ lọc hoặc từ khóa.</div>
       } @else {
-        @for (v of visibleVendors(); track v.id) {
-          <button
-            class="item"
-            type="button"
-            [attr.aria-current]="v.id === selectedVendor()?.id"
-            (click)="selectVendor(v.id)"
-          >
-            <span class="av">{{ initial(v.shop) }}</span>
-            <span>
-              <b>{{ v.shop }}</b>
-              <span class="m">{{ v.owner }} · {{ v.at.slice(0, 10) }}</span>
-            </span>
-            <span class="tag {{ statusClass(v.status) }}">{{ statusLabel(v.status) }}</span>
-          </button>
+      @for (v of visibleVendors(); track v.id) {
+      <button class="item" type="button" [attr.aria-current]="v.id === selectedVendor()?.id"
+        (click)="selectVendor(v.id)">
+        @if (v.logo) {
+        <img [src]="v.logo" [alt]="v.shop" class="av av-real-img" />
+        } @else {
+        <span class="av">{{ initial(v.shop) }}</span>
         }
+        <span>
+          <b>{{ v.shop }}</b>
+          <span class="m">{{ v.owner }} · {{ v.at.slice(0, 10) }}</span>
+        </span>
+        <span class="tag {{ statusClass(v.status) }}">{{ statusLabel(v.status) }}</span>
+      </button>
+      }
       }
     </div>
 
     <section class="panel" aria-live="polite">
       @if (selectedVendor(); as v) {
-        <div class="banner">
-          <div class="logo-lg">{{ initial(v.shop) }}</div>
-        </div>
-        <div class="pbody">
-          <div class="head">
-            <h2>{{ v.shop }}</h2>
-            <span class="tag {{ statusClass(v.status) }}">{{ statusLabel(v.status) }}</span>
-          </div>
-          <p class="desc">{{ v.desc || 'Vendor chưa nhập giới thiệu gian hàng.' }}</p>
-
-          <!-- Status Notes -->
-          @if (v.status === 'APPROVED') {
-            <div class="note ok">Đã duyệt bởi {{ v.by || 'Quản trị viên' }} lúc {{ v.dat || v.at }}. Gian hàng đã được kích hoạt.</div>
-          } @else if (v.status === 'REJECTED') {
-            <div class="note no"><b>Lý do từ chối:</b> {{ v.reason || 'Không đạt tiêu chuẩn kiểm duyệt.' }}<br>{{ v.dat || v.at }}</div>
-          } @else if (v.status === 'NEED_INFO') {
-            <div class="note warn">
-              <b>Đang chờ vendor bổ sung</b> (hạn {{ v.due || '7 ngày' }}).<br />
-              Cần bổ sung: {{ v.req?.join(', ') || 'Giấy tờ theo yêu cầu' }}.<br />
-              {{ v.rnote }}<br />
-              {{ keptCount(v) }}/4 mục đã đạt sẽ được giữ nguyên khi vendor gửi lại.
-            </div>
-          } @else if (v.status === 'RESUBMITTED') {
-            <div class="note info">
-              <b>Vendor đã bổ sung hồ sơ.</b> Mục cập nhật: {{ v.req?.join(', ') }}.
-              Giữ nguyên {{ keptCount(v) }}/4 mục đã đạt, chỉ cần kiểm tra lại mục đánh dấu “Cần kiểm tra lại”.
-            </div>
+      <div class="banner">
+        <div class="logo-lg">
+          @if (v.logo) {
+          <img [src]="v.logo" [alt]="v.shop" class="logo-real-img" />
+          } @else {
+          <span>{{ initial(v.shop) }}</span>
           }
+        </div>
+      </div>
+      <div class="pbody">
+        <div class="head">
+          <h2>{{ v.shop }}</h2>
+          <span class="tag {{ statusClass(v.status) }}">{{ statusLabel(v.status) }}</span>
+        </div>
+        <p class="desc">{{ v.desc || 'Vendor chưa nhập giới thiệu gian hàng.' }}</p>
 
-          <h3>Thông tin đăng ký</h3>
-          <dl>
-            <dt>Chủ gian hàng</dt><dd>{{ v.owner }}</dd>
-            <dt>Email</dt><dd>{{ v.email }}</dd>
-            <dt>Số điện thoại</dt><dd>{{ v.phone }}</dd>
-            <dt>Mô hình kinh doanh</dt><dd>{{ v.model }}</dd>
-            <dt>Danh mục chính</dt><dd>{{ v.cat }}</dd>
-            <dt>Mã số thuế</dt><dd>{{ v.tax || '—' }}</dd>
-            <dt>Kho lấy hàng</dt><dd>{{ v.pickup }}</dd>
-            <dt>Gửi lúc</dt><dd>{{ v.at }}</dd>
-          </dl>
+        <!-- Status Notes -->
+        @if (v.status === 'APPROVED') {
+        <div class="note ok">Đã duyệt bởi {{ v.by || 'Quản trị viên' }} lúc {{ v.dat || v.at }}. Gian hàng đã được kích
+          hoạt.</div>
+        } @else if (v.status === 'REJECTED') {
+        <div class="note no"><b>Lý do từ chối:</b> {{ v.reason || 'Không đạt tiêu chuẩn kiểm duyệt.' }}<br>{{ v.dat ||
+          v.at }}</div>
+        } @else if (v.status === 'NEED_INFO') {
+        <div class="note warn">
+          <b>Đang chờ vendor bổ sung</b> (hạn {{ v.due || '7 ngày' }}).<br />
+          Cần bổ sung: {{ v.req?.join(', ') || 'Giấy tờ theo yêu cầu' }}.<br />
+          {{ v.rnote }}<br />
+          {{ keptCount(v) }}/4 mục đã đạt sẽ được giữ nguyên khi vendor gửi lại.
+        </div>
+        } @else if (v.status === 'RESUBMITTED') {
+        <div class="note info">
+          <b>Vendor đã bổ sung hồ sơ.</b> Mục cập nhật: {{ v.req?.join(', ') }}.
+          Giữ nguyên {{ keptCount(v) }}/4 mục đã đạt, chỉ cần kiểm tra lại mục đánh dấu “Cần kiểm tra lại”.
+        </div>
+        }
 
-          <h3>Giấy tờ xác minh (KYC)</h3>
-          <div class="docs">
-            @for (d of v.docs; track d) {
-              <div class="doc">
-                <span>{{ d }}</span>
-                @if (v.status === 'RESUBMITTED' && v.fresh?.includes(d)) {
-                  <em class="new">Mới</em>
-                }
+        <h3>Thông tin đăng ký</h3>
+        <dl>
+          <dt>Chủ gian hàng</dt>
+          <dd>{{ v.owner }}</dd>
+          <dt>Email</dt>
+          <dd>{{ v.email }}</dd>
+          <dt>Số điện thoại</dt>
+          <dd>{{ v.phone }}</dd>
+          <dt>Mô hình kinh doanh</dt>
+          <dd>{{ v.model }}</dd>
+          <dt>Danh mục chính</dt>
+          <dd>{{ v.cat }}</dd>
+          <!-- <dt>Mã số thuế</dt><dd>{{ v.tax || '—' }}</dd> -->
+          <dt>Kho lấy hàng</dt>
+          <dd>{{ v.pickup }}</dd>
+          <dt>Gửi lúc</dt>
+          <dd>{{ v.at }}</dd>
+        </dl>
+
+        <h3>Giấy tờ xác minh (KYC)</h3>
+        <div class="docs-grid">
+          @for (d of (v.docItems || []); track d.name) {
+          <div class="doc-item-card" [class.has-preview]="!!d.url" (click)="d.url && openPreviewModal(d.url, d.name)"
+            [title]="d.url ? 'Click để xem phóng to ' + d.name : d.name">
+            <div class="doc-media">
+              @if (d.url) {
+              <img [src]="d.url" [alt]="d.name" class="doc-preview-img" (error)="onDocImgError($event, d)" />
+              <div class="doc-hover-mask">
+                <span class="btn-zoom">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  </svg>
+                  Phóng to
+                </span>
               </div>
-            }
-            @if (v.status === 'NEED_INFO') {
-              @for (r of v.req; track r) {
-                <div class="doc miss"><span>Thiếu: {{ r }}</span></div>
+              } @else {
+              <div class="doc-empty-state">
+                <span class="empty-doc-icon">📄</span>
+                <span class="empty-doc-label">Chưa có ảnh</span>
+              </div>
               }
-            }
+              @if (d.isNew || (v.status === 'RESUBMITTED' && v.fresh?.includes(d.name))) {
+              <span class="badge-fresh-doc">Mới cập nhật</span>
+              }
+            </div>
+            <div class="doc-info-bar">
+              <span class="doc-title-text">{{ d.name }}</span>
+              @if (d.url) {
+              <span class="doc-status-ok">Đã nộp</span>
+              } @else {
+              <span class="doc-status-miss">Thiếu</span>
+              }
+            </div>
           </div>
-
-          <!-- Review Checks & Actions for Open Applications -->
-          @if (isOpen(v)) {
-            <h3>Kiểm tra trước khi duyệt</h3>
-            <div class="checks">
-              @for (label of checkLabels; track label; let i = $index) {
-                <label>
-                  <input
-                    type="checkbox"
-                    [checked]="currentChecks()[i]"
-                    (change)="toggleCheck(i, $event)"
-                  />
-                  {{ label }}
-                  @if (v.status === 'RESUBMITTED') {
-                    @if (redoIndices(v).has(i)) {
-                      <span class="tag info">Cần kiểm tra lại</span>
-                    } @else {
-                      <span class="tag ok">Giữ nguyên</span>
-                    }
-                  }
-                </label>
-              }
-            </div>
-
-            <div class="acts">
-              <button class="btn p" type="button" [disabled]="!allChecked()" (click)="approve()">
-                Duyệt vendor
-              </button>
-              <button class="btn s" type="button" (click)="openRequestInfoDialog()">
-                Yêu cầu bổ sung
-              </button>
-              <button class="btn s" type="button" (click)="openRejectDialog()">
-                Từ chối
-              </button>
-              @if (!allChecked()) {
-                <span class="hint">Tick đủ 4 mục để duyệt. Thiếu giấy tờ thì chọn “Yêu cầu bổ sung”, đừng từ chối.</span>
-              }
-            </div>
           }
-
-          <!-- Demo Sim Button -->
           @if (v.status === 'NEED_INFO') {
-            <div class="acts" style="border: 0; padding: 0 0 24px;">
-              <button class="btn s" type="button" (click)="simulateResubmit()">
-                Demo: giả lập vendor đã bổ sung
-              </button>
-              <span class="hint">Chỉ có trong bản demo. Thực tế vendor tự cập nhật ở kênh người bán.</span>
+          @for (r of v.req; track r) {
+          @if (!hasDoc(v, r)) {
+          <div class="doc-item-card doc-item-missing">
+            <div class="doc-media missing-media">
+              <span class="missing-badge-icon">⚠️</span>
+              <span class="missing-hint">Cần bổ sung</span>
             </div>
+            <div class="doc-info-bar">
+              <span class="doc-title-text text-danger">{{ r }}</span>
+              <span class="doc-status-miss">Đang chờ</span>
+            </div>
+          </div>
           }
-
-          <!-- Danger Action: Xóa tài khoản shop vi phạm luật cấm -->
-          @if (v.status === 'APPROVED') {
-            <div class="acts danger-acts">
-              <button class="btn danger" type="button" (click)="openTerminateDialog()">
-                Xóa tài khoản shop (Vi phạm luật cấm)
-              </button>
-              <span class="hint">Áp dụng khi shop bán hàng giả, hàng cấm, lừa đảo hoặc vi phạm pháp luật.</span>
-            </div>
           }
-
-          <!-- Processing History Timeline -->
-          @if (v.h && v.h.length > 0) {
-            <div style="margin-top: 24px;">
-              <h3>Lịch sử xử lý</h3>
-              <ol class="tl">
-                @for (entry of v.h; track entry.t) {
-                  <li><b>{{ entry.t }}</b> {{ entry.x }}</li>
-                }
-              </ol>
-            </div>
           }
         </div>
+
+        <!-- Review Checks & Actions for Open Applications -->
+        @if (isOpen(v)) {
+        <h3>Kiểm tra trước khi duyệt</h3>
+        <div class="checks">
+          @for (label of checkLabels; track label; let i = $index) {
+          <label>
+            <input type="checkbox" [checked]="currentChecks()[i]" (change)="toggleCheck(i, $event)" />
+            {{ label }}
+            @if (v.status === 'RESUBMITTED') {
+            @if (redoIndices(v).has(i)) {
+            <span class="tag info">Cần kiểm tra lại</span>
+            } @else {
+            <span class="tag ok">Giữ nguyên</span>
+            }
+            }
+          </label>
+          }
+        </div>
+
+        <div class="acts">
+          <button class="btn p" type="button" [disabled]="!allChecked()" (click)="approve()">
+            Duyệt vendor
+          </button>
+          <button class="btn s" type="button" (click)="openRequestInfoDialog()">
+            Yêu cầu bổ sung
+          </button>
+          <button class="btn s" type="button" (click)="openRejectDialog()">
+            Từ chối
+          </button>
+          @if (!allChecked()) {
+          <span class="hint">Tick đủ 4 mục để duyệt. Thiếu giấy tờ thì chọn “Yêu cầu bổ sung”, đừng từ chối.</span>
+          }
+        </div>
+        }
+
+        <!-- Demo Sim Button -->
+        @if (v.status === 'NEED_INFO') {
+        <div class="acts" style="border: 0; padding: 0 0 24px;">
+          <button class="btn s" type="button" (click)="simulateResubmit()">
+            Demo: giả lập vendor đã bổ sung
+          </button>
+          <span class="hint">Chỉ có trong bản demo. Thực tế vendor tự cập nhật ở kênh người bán.</span>
+        </div>
+        }
+
+        <!-- Danger Action: Xóa tài khoản shop vi phạm luật cấm -->
+        @if (v.status === 'APPROVED') {
+        <div class="acts danger-acts">
+          <button class="btn danger" type="button" (click)="openTerminateDialog()">
+            Xóa tài khoản shop (Vi phạm luật cấm)
+          </button>
+          <span class="hint">Áp dụng khi shop bán hàng giả, hàng cấm, lừa đảo hoặc vi phạm pháp luật.</span>
+        </div>
+        }
+
+        <!-- Processing History Timeline -->
+        @if (v.h && v.h.length > 0) {
+        <div style="margin-top: 24px;">
+          <h3>Lịch sử xử lý</h3>
+          <ol class="tl">
+            @for (entry of v.h; track entry.t) {
+            <li><b>{{ entry.t }}</b> {{ entry.x }}</li>
+            }
+          </ol>
+        </div>
+        }
+      </div>
       } @else {
-        <div class="empty">Chọn một hồ sơ để xem chi tiết.</div>
+      <div class="empty">Chọn một hồ sơ để xem chi tiết.</div>
       }
     </section>
   </div>
 </div>
 
 <!-- Modal 1: Từ chối hồ sơ -->
-<div class="scrim" [class.on]="showRejectModal()" role="dialog" aria-modal="true" (click)="$event.target === $event.currentTarget && closeModals()">
+<div class="scrim" [class.on]="showRejectModal()" role="dialog" aria-modal="true"
+  (click)="$event.target === $event.currentTarget && closeModals()">
   <div class="modal">
     <h2>Từ chối hồ sơ</h2>
     <p class="hint">{{ selectedVendor()?.shop }}</p>
-    <textarea [(ngModel)]="rejectReason" placeholder="Nêu rõ lý do để vendor biết cần sửa gì…" maxlength="500"></textarea>
+    <textarea [(ngModel)]="rejectReason" placeholder="Nêu rõ lý do để vendor biết cần sửa gì…"
+      maxlength="500"></textarea>
     @if (rejectError()) {
-      <div class="err" role="alert">{{ rejectError() }}</div>
+    <div class="err" role="alert">{{ rejectError() }}</div>
     }
     <div class="quick">
       @for (item of quickSuggestions; track item) {
-        <button type="button" class="chip" (click)="addRejectSuggestion(item)">{{ item }}</button>
+      <button type="button" class="chip" (click)="addRejectSuggestion(item)">{{ item }}</button>
       }
     </div>
     <div class="acts" style="border: 0; padding-top: 20px; justify-content: flex-end;">
@@ -206,27 +247,25 @@
 </div>
 
 <!-- Modal 2: Yêu cầu bổ sung hồ sơ -->
-<div class="scrim" [class.on]="showReqModal()" role="dialog" aria-modal="true" (click)="$event.target === $event.currentTarget && closeModals()">
+<div class="scrim" [class.on]="showReqModal()" role="dialog" aria-modal="true"
+  (click)="$event.target === $event.currentTarget && closeModals()">
   <div class="modal">
     <h2>Yêu cầu bổ sung hồ sơ</h2>
     <p class="hint">{{ selectedVendor()?.shop }}</p>
     <div class="quick" style="margin: 14px 0 0;">
       @for (item of availableDocChecks; track item) {
-        <button
-          type="button"
-          class="chip"
-          [attr.aria-pressed]="isReqItemSelected(item)"
-          (click)="toggleReqItem(item)"
-        >
-          {{ item }}
-        </button>
+      <button type="button" class="chip" [attr.aria-pressed]="isReqItemSelected(item)" (click)="toggleReqItem(item)">
+        {{ item }}
+      </button>
       }
     </div>
-    <textarea [(ngModel)]="reqNote" placeholder="Hướng dẫn cụ thể cho vendor, ví dụ: chụp rõ 4 góc CCCD…" maxlength="500"></textarea>
+    <textarea [(ngModel)]="reqNote" placeholder="Hướng dẫn cụ thể cho vendor, ví dụ: chụp rõ 4 góc CCCD…"
+      maxlength="500"></textarea>
     @if (reqError()) {
-      <div class="err" role="alert">{{ reqError() }}</div>
+    <div class="err" role="alert">{{ reqError() }}</div>
     }
-    <p class="hint" style="margin: 4px 0 0;">Hạn bổ sung: 7 ngày. Các mục bạn đã tick được giữ nguyên, khi vendor gửi lại chỉ cần kiểm tra các mục liên quan.</p>
+    <p class="hint" style="margin: 4px 0 0;">Hạn bổ sung: 7 ngày. Các mục bạn đã tick được giữ nguyên, khi vendor gửi
+      lại chỉ cần kiểm tra các mục liên quan.</p>
     <div class="acts" style="border: 0; padding-top: 20px; justify-content: flex-end;">
       <button class="btn s" type="button" (click)="closeModals()">Hủy</button>
       <button class="btn p" type="button" (click)="confirmReq()">Gửi yêu cầu</button>
@@ -235,31 +274,32 @@
 </div>
 
 <!-- Modal 3: Xóa tài khoản shop vi phạm luật cấm -->
-<div class="scrim" [class.on]="showTerminateModal()" role="dialog" aria-modal="true" (click)="$event.target === $event.currentTarget && closeModals()">
+<div class="scrim" [class.on]="showTerminateModal()" role="dialog" aria-modal="true"
+  (click)="$event.target === $event.currentTarget && closeModals()">
   <div class="modal">
     <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
       <span style="font-size: 22px;">⚠️</span>
       <h2 style="color: var(--err); margin: 0;">Xóa tài khoản shop vi phạm</h2>
     </div>
-    <p class="hint">Shop: <strong>{{ selectedVendor()?.shop }}</strong> · Chủ tài khoản: <strong>{{ selectedVendor()?.owner }}</strong></p>
-    <div style="background: var(--err-bg); border: 1px solid var(--err); color: var(--err); border-radius: 12px; padding: 12px 16px; font-size: 13px; margin: 12px 0;">
-      <strong>CẢNH BÁO:</strong> Thao tác này sẽ xóa vĩnh viễn quyền người bán, vô hiệu hóa tài khoản người dùng, ẩn toàn bộ sản phẩm và hủy tất cả phiên đăng nhập hiện tại của shop.
+    <p class="hint">Shop: <strong>{{ selectedVendor()?.shop }}</strong> · Chủ tài khoản: <strong>{{
+        selectedVendor()?.owner }}</strong></p>
+    <div
+      style="background: var(--err-bg); border: 1px solid var(--err); color: var(--err); border-radius: 12px; padding: 12px 16px; font-size: 13px; margin: 12px 0;">
+      <strong>CẢNH BÁO:</strong> Thao tác này sẽ xóa vĩnh viễn quyền người bán, vô hiệu hóa tài khoản người dùng, ẩn
+      toàn bộ sản phẩm và hủy tất cả phiên đăng nhập hiện tại của shop.
     </div>
     <div class="quick" style="margin: 10px 0;">
       @for (item of violationTypes; track item) {
-        <button
-          type="button"
-          class="chip"
-          [class.active]="selectedViolation === item"
-          (click)="selectedViolation = item"
-        >
-          {{ item }}
-        </button>
+      <button type="button" class="chip" [class.active]="selectedViolation === item" (click)="selectedViolation = item">
+        {{ item }}
+      </button>
       }
     </div>
-    <textarea [(ngModel)]="terminateReason" placeholder="Ghi rõ hành vi vi phạm (ví dụ: phát hiện bán hàng nhái thương hiệu X, kinh doanh sản phẩm cấm theo nghị định...)" maxlength="500"></textarea>
+    <textarea [(ngModel)]="terminateReason"
+      placeholder="Ghi rõ hành vi vi phạm (ví dụ: phát hiện bán hàng nhái thương hiệu X, kinh doanh sản phẩm cấm theo nghị định...)"
+      maxlength="500"></textarea>
     @if (terminateError()) {
-      <div class="err" role="alert">{{ terminateError() }}</div>
+    <div class="err" role="alert">{{ terminateError() }}</div>
     }
     <div class="acts" style="border: 0; padding-top: 20px; justify-content: flex-end;">
       <button class="btn s" type="button" (click)="closeModals()">Hủy</button>
@@ -268,7 +308,29 @@
   </div>
 </div>
 
+<!-- Modal 4: Phóng to giấy tờ KYC / Xem ảnh hồ sơ -->
+@if (previewDocModal()) {
+<div class="scrim on lightbox-scrim" role="dialog" aria-modal="true" (click)="closePreviewModal()">
+  <div class="lightbox-dialog" (click)="$event.stopPropagation()">
+    <div class="lightbox-header">
+      <div class="lightbox-title">
+        <span class="lightbox-icon">🔍</span>
+        <h4>{{ previewDocTitle() }} - {{ selectedVendor()?.shop }}</h4>
+      </div>
+      <button type="button" class="btn-lightbox-close" (click)="closePreviewModal()" aria-label="Đóng">✕</button>
+    </div>
+    <div class="lightbox-body">
+      <img [src]="previewDocUrl()" [alt]="previewDocTitle()" class="lightbox-img" />
+    </div>
+    <div class="lightbox-footer">
+      <span class="lightbox-hint">Nhấp vào vùng tối bên ngoài hoặc nút Đóng để quay lại</span>
+      <button class="btn s" type="button" (click)="closePreviewModal()">Đóng</button>
+    </div>
+  </div>
+</div>
+}
+
 <!-- Floating Toast Notification -->
 @if (toastMessage()) {
-  <div class="toast on" role="status">{{ toastMessage() }}</div>
+<div class="toast on" role="status">{{ toastMessage() }}</div>
 }

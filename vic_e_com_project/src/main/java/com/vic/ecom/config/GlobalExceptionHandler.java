@@ -65,11 +65,14 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.fail("Access denied"));
     }
 
-    // Catch-all → 500, no stack trace
+    // Catch-all → 500
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleGeneral(Exception ex) {
         log.error("Unhandled backend exception: {}", ex.toString(), ex);
+        String message = (ex.getMessage() != null && !ex.getMessage().isBlank())
+                ? ex.getMessage()
+                : "Đã xảy ra lỗi, vui lòng thử lại sau";
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.fail("INTERNAL_ERROR", "Đã xảy ra lỗi, vui lòng thử lại sau", null));
+                .body(ApiResponse.fail("INTERNAL_ERROR", message, null));
     }
 }

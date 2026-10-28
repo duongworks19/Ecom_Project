@@ -111,6 +111,25 @@
     </div>
   </div>
 
+  <!-- Thông báo lỗi khi trùng thông tin hoặc kiểm tra không hợp lệ -->
+  @if (errorMessage) {
+    <div class="submit-error-banner" role="alert">
+      <div class="error-banner-header">
+        <span class="error-icon">⚠️</span>
+        <span>Thông tin không hợp lệ hoặc đã bị trùng trên hệ thống:</span>
+      </div>
+      <p class="error-banner-text">{{ errorMessage }}</p>
+      @if (errorStepToFix) {
+        <button type="button" class="btn-jump-fix" (click)="jumpToStep.emit(errorStepToFix)">
+          <span>✏️ Chuyển ngay đến Bước {{ errorStepToFix }} để chỉnh sửa</span>
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+      }
+    </div>
+  }
+
   <!-- Cam kết & Điều khoản -->
   <div class="terms-agreements-box">
     <label class="checkbox-label">

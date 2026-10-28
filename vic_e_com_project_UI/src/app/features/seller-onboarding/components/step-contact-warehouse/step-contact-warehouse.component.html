@@ -30,18 +30,35 @@
 
       <div class="form-group">
         <label class="form-label required" for="rep-phone">Số điện thoại liên hệ</label>
-        <input
-          id="rep-phone"
-          type="tel"
-          class="form-control"
-          placeholder="0912 345 678"
-          [(ngModel)]="contactInfo.phone"
-          (ngModelChange)="emitChange()"
-          name="phone"
-          [disabled]="readOnly"
-          required
-        />
-        <span class="form-hint">Shipper sẽ gọi số này khi đến lấy hàng hoặc đối soát đơn.</span>
+        <div class="input-with-feedback" [class.valid]="phoneCheckStatus() === 'AVAILABLE'" [class.invalid]="phoneCheckStatus() === 'TAKEN'">
+          <input
+            id="rep-phone"
+            type="tel"
+            class="form-control"
+            placeholder="0912 345 678"
+            [ngModel]="contactInfo.phone"
+            (ngModelChange)="onPhoneInput($event)"
+            name="phone"
+            [disabled]="readOnly"
+            required
+          />
+          <div class="feedback-indicator">
+            @if (isCheckingPhone()) {
+              <span class="spinner-small" aria-label="Đang kiểm tra..."></span>
+            } @else if (phoneCheckStatus() === 'AVAILABLE') {
+              <span class="icon-success" title="Số điện thoại khả dụng">✓</span>
+            } @else if (phoneCheckStatus() === 'TAKEN') {
+              <span class="icon-error" title="Số điện thoại đã tồn tại">✕</span>
+            }
+          </div>
+        </div>
+        @if (phoneCheckMessage()) {
+          <p class="feedback-msg" [class.success]="phoneCheckStatus() === 'AVAILABLE'" [class.error]="phoneCheckStatus() === 'TAKEN'">
+            {{ phoneCheckMessage() }}
+          </p>
+        } @else {
+          <span class="form-hint">Shipper sẽ gọi số này khi đến lấy hàng hoặc đối soát đơn.</span>
+        }
       </div>
     </div>
 

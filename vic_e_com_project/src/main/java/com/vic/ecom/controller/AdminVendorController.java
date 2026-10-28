@@ -44,9 +44,13 @@ public class AdminVendorController {
         PageRequest pageable = PageRequest.of(Math.max(0, page), Math.max(1, size));
 
         ApprovalStatus status = null;
-        if (statusParam != null && !statusParam.isBlank() && !"ALL".equalsIgnoreCase(statusParam)) {
+        if (statusParam != null && !statusParam.isBlank() && !"ALL".equalsIgnoreCase(statusParam) && !"TODO".equalsIgnoreCase(statusParam)) {
             try {
-                status = ApprovalStatus.valueOf(statusParam.trim().toUpperCase());
+                if ("NEED_INFO".equalsIgnoreCase(statusParam.trim()) || "REVISION_NEEDED".equalsIgnoreCase(statusParam.trim())) {
+                    status = ApprovalStatus.REVISION_NEEDED;
+                } else {
+                    status = ApprovalStatus.valueOf(statusParam.trim().toUpperCase());
+                }
             } catch (Exception ignored) {
             }
         }

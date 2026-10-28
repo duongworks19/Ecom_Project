@@ -34,31 +34,11 @@ export class StepContactWarehouseComponent implements OnInit {
   readonly isCheckingEmail = signal<boolean>(false);
   readonly emailCheckStatus = signal<'NONE' | 'AVAILABLE' | 'TAKEN'>('NONE');
   readonly emailCheckMessage = signal<string>('');
-/*
-  // Reactive email check
-  readonly emailCheckSubject = new Subject<string>();
-  readonly isCheckingEmail = signal<boolean>(false);
-  readonly emailCheckStatus = signal<'NONE' | 'AVAILABLE' | 'TAKEN'>('NONE');
-  readonly emailCheckMessage = signal<string>('');
 
-  readonly provinces = ['Hà Nội', 'TP. Hồ Chí Minh', 'Đà Nẵng', 'Hải Phòng', 'Cần Thơ', 'Bình Dương'];
-
-  readonly districts: Record<string, string[]> = {
-    'Hà Nội': ['Quận Cầu Giấy', 'Quận Đống Đa', 'Quận Ba Đình', 'Quận Hai Bà Trưng', 'Quận Nam Từ Liêm'],
-    'TP. Hồ Chí Minh': ['Quận 1', 'Quận 3', 'Quận 7', 'Quận Bình Thạnh', 'TP. Thủ Đức'],
-    'Đà Nẵng': ['Quận Hải Châu', 'Quận Thanh Khê', 'Quận Sơn Trà'],
-    'Hải Phòng': ['Quận Hồng Bàng', 'Quận Ngô Quyền', 'Quận Lê Chân'],
-    'Cần Thơ': ['Quận Ninh Kiều', 'Quận Cái Răng', 'Quận Bình Thủy'],
-    'Bình Dương': ['TP. Thủ Dầu Một', 'TP. Dĩ An', 'TP. Thuận An'],
-  };
-
-  readonly wards: Record<string, string[]> = {
-    'Quận Cầu Giấy': ['Phường Dịch Vọng Hậu', 'Phường Dịch Vọng', 'Phường Nghĩa Đô', 'Phường Mai Dịch'],
-    'Quận Đống Đa': ['Phường Láng Hạ', 'Phường Ô Chợ Dừa', 'Phường Kim Liên'],
-    'Quận 1': ['Phường Bến Nghé', 'Phường Bến Thành', 'Phường Tân Định'],
-    'TP. Thủ Đức': ['Phường Thảo Điền', 'Phường An Phú', 'Phường Hiệp Phú'],
-  };
-*/
+  readonly phoneCheckSubject = new Subject<string>();
+  readonly isCheckingPhone = signal<boolean>(false);
+  readonly phoneCheckStatus = signal<'NONE' | 'AVAILABLE' | 'TAKEN'>('NONE');
+  readonly phoneCheckMessage = signal<string>('');
 
   ngOnInit(): void {
     this.emailCheckSubject.pipe(
@@ -68,9 +48,60 @@ export class StepContactWarehouseComponent implements OnInit {
       this.performEmailCheck(email);
     });
 
+    this.phoneCheckSubject.pipe(
+      debounceTime(400),
+      distinctUntilChanged()
+    ).subscribe((phone) => {
+      this.performPhoneCheck(phone);
+    });
+
     if (this.contactInfo.email && this.contactInfo.email.trim()) {
       this.performEmailCheck(this.contactInfo.email.trim());
     }
+    if (this.contactInfo.phone && this.contactInfo.phone.trim()) {
+      this.performPhoneCheck(this.contactInfo.phone.trim());
+    }
+  }
+
+  onPhoneInput(value: string): void {
+    this.contactInfo.phone = value;
+    this.emitChange();
+    const trimmed = (value || '').trim();
+    if (trimmed && this.isValidPhone(trimmed)) {
+      this.isCheckingPhone.set(true);
+      this.phoneCheckSubject.next(trimmed);
+    } else {
+      this.isCheckingPhone.set(false);
+      this.phoneCheckStatus.set(trimmed ? 'TAKEN' : 'NONE');
+      this.phoneCheckMessage.set(trimmed ? 'Số điện thoại không đúng định dạng (10 số)' : '');
+    }
+  }
+
+  private isValidPhone(phone: string): boolean {
+    const cleaned = phone.replace(/[\s.-]/g, '');
+    return /^(0[35789]\d{8}|84[35789]\d{8})$/.test(cleaned);
+  }
+
+  private performPhoneCheck(phone: string): void {
+    const cleaned = phone.replace(/[\s.-]/g, '');
+    if (!this.isValidPhone(cleaned)) {
+      this.isCheckingPhone.set(false);
+      this.phoneCheckStatus.set('TAKEN');
+      this.phoneCheckMessage.set('Số điện thoại không đúng định dạng (10 số)');
+      return;
+    }
+
+    this.isCheckingPhone.set(true);
+    this.onboardingService.checkPhoneAvailable(cleaned).subscribe({
+      next: (res) => {
+        this.isCheckingPhone.set(false);
+        this.phoneCheckStatus.set(res.isAvailable ? 'AVAILABLE' : 'TAKEN');
+        this.phoneCheckMessage.set(res.message);
+      },
+      error: () => {
+        this.isCheckingPhone.set(false);
+      },
+    });
   }
 
   onEmailInput(value: string): void {
@@ -183,7 +214,9 @@ export class StepContactWarehouseComponent implements OnInit {
       this.contactInfo.district?.trim() &&
       this.contactInfo.ward?.trim() &&
       this.emailCheckStatus() !== 'TAKEN' &&
+      this.phoneCheckStatus() !== 'TAKEN' &&
       !this.isCheckingEmail() &&
+      !this.isCheckingPhone() &&
       this.contactInfo.detailedAddress?.trim()
     );
   }

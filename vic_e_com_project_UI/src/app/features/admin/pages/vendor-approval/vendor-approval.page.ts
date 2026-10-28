@@ -3,6 +3,10 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, debounceTime, takeUntil } from 'rxjs';
 import {
+  DEFAULT_CCCD_BACK,
+  DEFAULT_CCCD_FRONT,
+  DEFAULT_LICENSE,
+  DocumentItem,
   VENDOR_DOCUMENT_CHECKS,
   VendorApplication,
   VendorApprovalService,
@@ -88,8 +92,8 @@ export class VendorApprovalPage implements OnDestroy {
   readonly counts = computed(() => {
     const list = this.applications();
     return {
-      TODO: list.filter((v) => v.status === 'PENDING' || v.status === 'RESUBMITTED').length,
-      NEED_INFO: list.filter((v) => v.status === 'NEED_INFO').length,
+      TODO: list.filter((v) => v.status === 'PENDING').length,
+      NEED_INFO: list.filter((v) => v.status === 'NEED_INFO' || v.status === 'RESUBMITTED').length,
       APPROVED: list.filter((v) => v.status === 'APPROVED').length,
       REJECTED: list.filter((v) => v.status === 'REJECTED').length,
       ALL: list.length,
@@ -104,7 +108,8 @@ export class VendorApprovalPage implements OnDestroy {
 
     return list.filter((v) => {
       let matchesTab = true;
-      if (f === 'TODO') matchesTab = v.status === 'PENDING' || v.status === 'RESUBMITTED';
+      if (f === 'TODO') matchesTab = v.status === 'PENDING';
+      else if (f === 'NEED_INFO') matchesTab = v.status === 'NEED_INFO' || v.status === 'RESUBMITTED';
       else if (f !== 'ALL') matchesTab = v.status === f;
 
       if (!matchesTab) return false;
@@ -193,7 +198,11 @@ export class VendorApprovalPage implements OnDestroy {
   }
 
   isOpen(v: VendorApplication): boolean {
-    return v.status === 'PENDING' || v.status === 'RESUBMITTED';
+    return (
+      v.status === 'PENDING' ||
+      v.status === 'RESUBMITTED' ||
+      (v.status === 'NEED_INFO' && ((v.fresh?.length || 0) > 0 || (v.docItems || []).some((d) => d.isNew)))
+    );
   }
 
   redoIndices(v: VendorApplication): Set<number> {
@@ -289,12 +298,18 @@ export class VendorApprovalPage implements OnDestroy {
     this.service
       .requestAdditionalInfo(vendor.id, items, note)
       .pipe(takeUntil(this.destroy$))
-      .subscribe((updated) => {
-        this.applications.update((list) => list.map((v) => (v.id === updated.id ? updated : v)));
-        this.showReqModal.set(false);
-        this.filter.set('NEED_INFO');
-        this.selectedId.set(updated.id);
-        this.showToast(`Đã gửi yêu cầu bổ sung cho ${updated.shop}. Hồ sơ chuyển sang Chờ vendor bổ sung.`);
+      .subscribe({
+        next: (updated) => {
+          this.applications.update((list) => list.map((v) => (v.id === updated.id ? updated : v)));
+          this.showReqModal.set(false);
+          this.filter.set('NEED_INFO');
+          this.selectedId.set(updated.id);
+          this.showToast(`Đã gửi yêu cầu bổ sung cho ${updated.shop}. Hồ sơ chuyển sang Chờ vendor bổ sung.`);
+        },
+        error: (err) => {
+          const msg = err?.error?.message || err?.message || 'Có lỗi khi gửi yêu cầu bổ sung. Vui lòng thử lại.';
+          this.reqError.set(msg);
+        },
       });
   }
 
@@ -349,7 +364,7 @@ export class VendorApprovalPage implements OnDestroy {
         });
 
         this.applications.update((list) => list.map((v) => (v.id === updated.id ? updated : v)));
-        this.filter.set('TODO');
+        this.filter.set('NEED_INFO');
         this.selectedId.set(updated.id);
         this.showToast(`${updated.shop} đã bổ sung hồ sơ.`);
       });
@@ -397,5 +412,29 @@ export class VendorApprovalPage implements OnDestroy {
 
   initial(name: string): string {
     return name ? name.trim().charAt(0).toUpperCase() : 'V';
+  }
+
+  // --- IMAGE PREVIEW LIGHTBOX ---
+  readonly previewDocModal = signal<boolean>(false);
+  readonly previewDocUrl = signal<string>('');
+  readonly previewDocTitle = signal<string>('');
+
+  openPreviewModal(url: string, title: string): void {
+    if (!url) return;
+    this.previewDocUrl.set(url);
+    this.previewDocTitle.set(title);
+    this.previewDocModal.set(true);
+  }
+
+  closePreviewModal(): void {
+    this.previewDocModal.set(false);
+  }
+
+  hasDoc(v: VendorApplication, name: string): boolean {
+    return (v.docItems || []).some((d) => d.name === name && !!d.url);
+  }
+
+  onDocImgError(event: Event, d: DocumentItem): void {
+    d.url = undefined;
   }
 }

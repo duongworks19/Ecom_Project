@@ -52,7 +52,7 @@ public class ShopService {
 
     @Transactional(readOnly = true)
     public List<SellerProductDto> getActiveProductsByShopId(Long shopId) {
-        List<Product> products = productRepository.findByShopIdAndStatusNotOrderByIdDesc(shopId, "DELETED");
+        List<Product> products = productRepository.findByShopIdAndStatusOrderByIdDesc(shopId, "VISIBLE");
         List<SellerProductDto> result = new ArrayList<>();
         for (Product p : products) {
             BigDecimal minPrice = BigDecimal.ZERO;

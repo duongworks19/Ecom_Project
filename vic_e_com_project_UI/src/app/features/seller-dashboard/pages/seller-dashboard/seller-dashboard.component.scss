@@ -870,46 +870,6 @@ textarea {
       border-color: var(--ash);
     }
   }
-
-  .quick-img-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-
-  .img-preset-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 3px 10px 3px 4px;
-    background: var(--canvas);
-    border: 1px solid var(--hair);
-    border-radius: 9999px;
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--ink);
-    cursor: pointer;
-    transition: all 0.15s;
-
-    img {
-      width: 22px;
-      height: 22px;
-      border-radius: 9999px;
-      object-fit: cover;
-    }
-
-    &:hover {
-      border-color: var(--primary);
-      background: #fff5f5;
-    }
-
-    &.selected {
-      border-color: var(--primary);
-      background: #fff0f1;
-      color: var(--primary);
-      font-weight: 700;
-    }
-  }
 }
 
 .quick {

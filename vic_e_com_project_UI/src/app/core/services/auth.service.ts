@@ -141,6 +141,11 @@ export abstract class AuthService {
     return localStorage.getItem('mustChangePassword') === 'true';
   }
 
+  updateRoleLocally(newRole: string): void {
+    localStorage.setItem('role', newRole);
+    this.currentRoleSignal.set(newRole);
+  }
+
   logout(): void {
     sessionStorage.setItem('explicit_logout', '1');
     localStorage.removeItem('token');
@@ -149,6 +154,7 @@ export abstract class AuthService {
     localStorage.removeItem('fullName');
     localStorage.removeItem('mustChangePassword');
     localStorage.removeItem('currentUsername');
+    localStorage.removeItem('vic_seller_onboarding_draft');
     this.isLoggedInSignal.set(false);
     this.currentRoleSignal.set(null);
     this.currentUserNameSignal.set(null);

@@ -50,6 +50,24 @@ public class VendorController {
         )));
     }
 
+    @GetMapping("/check-phone")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> checkPhone(
+            @RequestParam String phone,
+            Authentication auth) {
+        Long currentUserId = null;
+        if (auth != null && auth.isAuthenticated() && auth.getName() != null && !"anonymousUser".equals(auth.getName())) {
+            currentUserId = userRepository.findByEmail(auth.getName())
+                    .or(() -> userRepository.findByPhone(auth.getName()))
+                    .map(User::getId)
+                    .orElse(null);
+        }
+        boolean available = vendorService.isPhoneAvailable(phone, currentUserId, null);
+        return ResponseEntity.ok(ApiResponse.ok("Kiểm tra số điện thoại", Map.of(
+                "isAvailable", available,
+                "message", available ? "Số điện thoại hợp lệ và khả dụng" : "Số điện thoại này đã được đăng ký trên hệ thống"
+        )));
+    }
+
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<VendorResponse>> getMyVendorProfile(Authentication auth) {
         Long userId = extractUserId(auth);
@@ -66,6 +84,15 @@ public class VendorController {
         return ResponseEntity.status(201).body(ApiResponse.ok("Đăng ký người bán thành công, vui lòng chờ duyệt", res));
     }
 
+    @PutMapping("/resubmit")
+    public ResponseEntity<ApiResponse<VendorResponse>> resubmitVendor(
+            Authentication auth,
+            @RequestBody VendorRegisterRequest req) {
+        Long userId = extractUserId(auth);
+        VendorResponse res = vendorService.registerVendor(userId, req);
+        return ResponseEntity.ok(ApiResponse.ok("Cập nhật bổ sung thông tin hồ sơ thành công, vui lòng chờ duyệt", res));
+    }
+
     @PostMapping("/{id}/review")
     public ResponseEntity<ApiResponse<VendorResponse>> reviewVendor(
             Authentication auth,
@@ -77,13 +104,13 @@ public class VendorController {
     }
 
     private Long extractUserId(Authentication auth) {
-        if (auth == null || auth.getName() == null) {
-            return 1L;
+        if (auth == null || auth.getName() == null || "anonymousUser".equalsIgnoreCase(auth.getName())) {
+            throw new IllegalArgumentException("Vui lòng đăng nhập trước khi thực hiện thao tác");
         }
         String principal = auth.getName();
         return userRepository.findByEmail(principal)
                 .or(() -> userRepository.findByPhone(principal))
                 .map(User::getId)
-                .orElse(1L);
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy thông tin tài khoản người dùng: " + principal));
     }
 }

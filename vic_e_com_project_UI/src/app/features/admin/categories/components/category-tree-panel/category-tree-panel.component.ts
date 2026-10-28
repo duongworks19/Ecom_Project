@@ -29,7 +29,8 @@ export class CategoryTreePanelComponent {
     if (this.expandedIds().size === 0 && val?.length) {
       const initialExpand = new Set<number>();
       for (const item of val) {
-        if (item.childCount > 0 && item.level <= 2) {
+        const hasChildren = (item.childCount > 0) || val.some((c) => c.parentId === item.id);
+        if (hasChildren && item.level <= 2) {
           initialExpand.add(item.id);
         }
       }
@@ -45,8 +46,9 @@ export class CategoryTreePanelComponent {
   readonly expandedIds = signal<Set<number>>(new Set<number>());
 
   readonly parentCategoryIds = computed(() => {
-    return this._items()
-      .filter((item) => item.childCount > 0)
+    const items = this._items();
+    return items
+      .filter((item) => (item.childCount > 0) || items.some((c) => c.parentId === item.id))
       .map((item) => item.id);
   });
 

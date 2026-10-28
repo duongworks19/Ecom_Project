@@ -32,6 +32,15 @@ export const SELLER_ONBOARDING_ROUTES: Routes = [
     title: 'Trạng thái hồ sơ người bán — VIC MART',
   },
   {
+    path: 'revision',
+    canActivate: [requireLoginForOnboardingGuard],
+    loadComponent: () =>
+      import('./pages/seller-revision/seller-revision.component').then(
+        (m) => m.SellerRevisionComponent
+      ),
+    title: 'Bổ sung thông tin hồ sơ — VIC MART',
+  },
+  {
     path: 'dashboard',
     canActivate: [sellerGatekeeperGuard],
     loadChildren: () =>
