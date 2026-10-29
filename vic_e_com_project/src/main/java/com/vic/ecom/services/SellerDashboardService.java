@@ -298,8 +298,16 @@ public class SellerDashboardService {
                 .map(this::toPromotionDto)
                 .collect(Collectors.toList());
 
-        List<SellerReviewQuestionDto> reviews = dbReviews.stream()
+        List<SellerReviewQuestionDto> allReviewQuestionDtos = dbReviews.stream()
                 .map(this::toReviewDto)
+                .collect(Collectors.toList());
+
+        List<SellerReviewQuestionDto> reviews = allReviewQuestionDtos.stream()
+                .filter(r -> !"QA".equalsIgnoreCase(r.getType()) && (r.getRating() == null || r.getRating() > 0))
+                .collect(Collectors.toList());
+
+        List<SellerReviewQuestionDto> questions = allReviewQuestionDtos.stream()
+                .filter(r -> "QA".equalsIgnoreCase(r.getType()) || (r.getRating() != null && r.getRating() == 0))
                 .collect(Collectors.toList());
 
         SellerShopProfileDto shopProfile = SellerShopProfileDto.builder()
@@ -382,6 +390,7 @@ public class SellerDashboardService {
                 .vouchers(vouchers)
                 .promotions(promotions)
                 .reviews(reviews)
+                .questions(questions)
                 .shopProfile(shopProfile)
                 .build();
     }
@@ -535,6 +544,78 @@ public class SellerDashboardService {
                 .email(saved.getEmail())
                 .pickupAddress(saved.getPickupAddress())
                 .businessHours(saved.getBusinessHours())
+                .build();
+    }
+
+    public Shop resolveShop(Long userId) {
+        if (userId != null) {
+            Optional<Vendor> vendorOpt = vendorRepository.findByUserId(userId);
+            if (vendorOpt.isPresent() && vendorOpt.get().getShop() != null) {
+                return vendorOpt.get().getShop();
+            }
+        }
+        return getOrCreateInitializedShop(userId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<SellerRecentOrderDto> getOrders(Long userId) {
+        Shop shop = resolveShop(userId);
+        if (shop == null) return Collections.emptyList();
+        List<Order> dbOrders = orderRepository.findByShopIdOrderByCreatedAtDescIdDesc(shop.getId());
+        return dbOrders.stream().map(this::toOrderDto).collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<SellerLowStockDto> getInventory(Long userId) {
+        Shop shop = resolveShop(userId);
+        if (shop == null) return Collections.emptyList();
+        List<Product> dbProducts = productRepository.findByShopIdOrderByIdDesc(shop.getId());
+        List<SellerLowStockDto> list = new ArrayList<>();
+        for (Product p : dbProducts) {
+            if (p.getVariants() != null) {
+                for (ProductVariant v : p.getVariants()) {
+                    list.add(toLowStockDto(p, v));
+                }
+            }
+        }
+        return list;
+    }
+
+    @Transactional(readOnly = true)
+    public List<SellerReviewQuestionDto> getReviews(Long userId) {
+        Shop shop = resolveShop(userId);
+        if (shop == null) return Collections.emptyList();
+        List<ShopReview> dbReviews = shopReviewRepository.findByShopIdOrderByIdDesc(shop.getId());
+        return dbReviews.stream()
+                .filter(r -> !"QA".equalsIgnoreCase(r.getType()) && (r.getRating() == null || r.getRating() > 0))
+                .map(this::toReviewDto)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<SellerReviewQuestionDto> getQuestions(Long userId) {
+        Shop shop = resolveShop(userId);
+        if (shop == null) return Collections.emptyList();
+        List<ShopReview> dbReviews = shopReviewRepository.findByShopIdOrderByIdDesc(shop.getId());
+        return dbReviews.stream()
+                .filter(r -> "QA".equalsIgnoreCase(r.getType()) || (r.getRating() != null && r.getRating() == 0))
+                .map(this::toReviewDto)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public SellerShopProfileDto getShopProfile(Long userId) {
+        Shop shop = resolveShop(userId);
+        if (shop == null) return new SellerShopProfileDto();
+        String shopName = (shop.getName() != null && !shop.getName().isBlank()) ? shop.getName() : "Lumi Home Decor";
+        return SellerShopProfileDto.builder()
+                .shopName(shopName)
+                .tagline(shop.getTagline() != null ? shop.getTagline() : "Minimalist & Cozy Scandinavian Living")
+                .description(shop.getDescription() != null ? shop.getDescription() : "")
+                .phone(shop.getPhone() != null ? shop.getPhone() : "0987 654 321")
+                .email(shop.getEmail() != null ? shop.getEmail() : "hello@lumihomedecor.vn")
+                .pickupAddress(shop.getPickupAddress() != null ? shop.getPickupAddress() : "")
+                .businessHours(shop.getBusinessHours() != null ? shop.getBusinessHours() : "08:30 - 21:00 (Thứ 2 - Chủ Nhật)")
                 .build();
     }
 
