@@ -27,17 +27,20 @@ import { ExportDataCardComponent } from './components/export-data-card/export-da
 export class AdminReportsComponent implements OnInit {
   private reportsService = inject(AdminReportsService);
   readonly reportsData = signal<AdminReportsData | null>(null);
+  readonly filters = signal<{ vendors: {id:number;name:string}[]; categories:{id:number;name:string}[] }>({ vendors: [], categories: [] });
 
   ngOnInit(): void {
     this.loadData('7days');
+    this.reportsService.getFilters().subscribe(filters => this.filters.set(filters));
   }
 
   onPeriodChanged(period: string): void {
     this.loadData(period);
   }
+  onFilterChanged(filter: { vendorId?: number; categoryId?: number }): void { this.loadData('7days', filter.vendorId); }
 
-  private loadData(period: string): void {
-    this.reportsService.getReportsData(period).subscribe({
+  private loadData(period: string, vendorId?: number): void {
+    this.reportsService.getReportsData(period, vendorId).subscribe({
       next: (data) => this.reportsData.set(data),
     });
   }
