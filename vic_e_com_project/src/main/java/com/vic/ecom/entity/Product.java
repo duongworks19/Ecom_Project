@@ -31,11 +31,11 @@ public class Product {
     @Column(nullable = false, length = 255)
     private String name;
 
+    @Column(name = "category_id", nullable = false)
+    private Long categoryId;
+
     @Column(length = 100)
     private String category;
-
-    @Column(name = "category_id")
-    private Long categoryId;
 
     @org.hibernate.annotations.NotFound(action = org.hibernate.annotations.NotFoundAction.IGNORE)
     @ManyToOne(fetch = FetchType.LAZY)

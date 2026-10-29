@@ -6,6 +6,10 @@ import com.vic.ecom.dto.seller.product.SellerProductVariantDto;
 import com.vic.ecom.entity.Product;
 import com.vic.ecom.entity.ProductVariant;
 import com.vic.ecom.entity.Shop;
+import com.vic.ecom.entity.ProductMedia;
+import com.vic.ecom.enums.ProductMediaType;
+import com.vic.ecom.repository.CategoryRepository;
+import com.vic.ecom.repository.ProductMediaRepository;
 import com.vic.ecom.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
@@ -23,6 +27,8 @@ public class SellerProductCreateService {
 
     private final ProductRepository productRepository;
     private final SellerShopResolverService shopResolverService;
+    private final CategoryRepository categoryRepository;
+    private final ProductMediaRepository mediaRepository;
 
     @Transactional
     public SellerProductDetailDto createProduct(Authentication auth, Long userId, SellerProductCreateRequest req) {
@@ -61,6 +67,9 @@ public class SellerProductCreateService {
         product.setDescription(description);
         product.setStatus(status);
         product.setImageUrl(imageUrl);
+        if (req.getCategoryId() != null) {
+            categoryRepository.findById(req.getCategoryId()).ifPresent(c -> product.setCategoryId(c.getId()));
+        }
 
         for (SellerProductVariantDto v : variants) {
             ProductVariant pv = new ProductVariant();
@@ -75,6 +84,7 @@ public class SellerProductCreateService {
         }
 
         Product saved = productRepository.save(product);
+        saveMedia(saved.getId(), req.getMedia(), imageUrl);
 
         List<SellerProductVariantDto> savedVariants = saved.getVariants().stream()
                 .map(v -> SellerProductVariantDto.builder()
@@ -96,5 +106,10 @@ public class SellerProductCreateService {
                 .imageUrl(saved.getImageUrl())
                 .v(savedVariants)
                 .build();
+    }
+    private void saveMedia(Long productId, List<com.vic.ecom.dto.seller.product.SellerProductMediaDto> media, String fallback) {
+        if (media != null && !media.isEmpty()) {
+            int order=0; for (var item: media) { if (item.getUrl()==null || item.getUrl().isBlank()) continue; ProductMedia m=new ProductMedia(); m.setProductId(productId); m.setUrl(item.getUrl().trim()); m.setType(item.getType()==null?ProductMediaType.IMAGE:item.getType()); m.setSortOrder(item.getSortOrder()==null?order++:item.getSortOrder()); mediaRepository.save(m); }
+        } else if (fallback != null && !fallback.isBlank()) { ProductMedia m=new ProductMedia(); m.setProductId(productId); m.setUrl(fallback); m.setType(ProductMediaType.IMAGE); m.setSortOrder(0); mediaRepository.save(m); }
     }
 }

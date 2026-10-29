@@ -19,6 +19,8 @@ export interface SellerProduct {
   s: 'VISIBLE' | 'HIDDEN' | 'DRAFT' | 'DELETED'; // Trạng thái
   sold: number; // Đã bán
   imageUrl?: string;
+  categoryId?: number;
+  media?: { url: string; type: 'IMAGE' | 'VIDEO'; sortOrder: number }[];
   v: ProductVariant[]; // Biến thể
 }
 
