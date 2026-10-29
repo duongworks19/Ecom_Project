@@ -11,7 +11,8 @@ import {
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router, RouterLink, NavigationEnd, ActivatedRoute } from '@angular/router';
+import { filter } from 'rxjs/operators';
 import { AuthService } from '../../../../core/services/auth.service';
 import {
   ProductVariant,
@@ -99,6 +100,7 @@ export class SellerDashboardComponent implements OnInit {
   private readonly dashboardService = inject(SellerDashboardService);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly http = inject(HttpClient);
   private readonly cdr = inject(ChangeDetectorRef);
 
@@ -131,19 +133,139 @@ export class SellerDashboardComponent implements OnInit {
       void this.router.navigateByUrl('/admin');
       return;
     }
-    this.loadProducts();
-    this.loadCategories();
     this.detectApprovedRole();
+    this.syncViewFromUrl();
+
+    this.router.events
+      .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
+      .subscribe((e) => {
+        this.syncViewFromUrl(e.urlAfterRedirects || e.url);
+      });
+
+    this.loadProducts();
     this.loadCurrentShopInfo();
     this.loadVouchers();
     this.loadReviewsAndQuestions();
   }
 
-  private loadCategories(): void {
-    this.http.get<any>('http://localhost:9090/api/categories').subscribe({ next: (res) => {
-      const items = res?.data?.items || res?.items || [];
-      if (Array.isArray(items)) this.categoryItems.set(items);
-    }});
+  syncViewFromUrl(url: string = this.router.url): void {
+    let target = 'dash';
+    if (url.includes('/seller/orders') || url.includes('/seller/dashboard/orders')) target = 'orders';
+    else if (url.includes('/seller/returns') || url.includes('/seller/dashboard/returns')) target = 'returns';
+    else if (url.includes('/seller/products') || url.includes('/seller/dashboard/products')) target = 'products';
+    else if (url.includes('/seller/inventory') || url.includes('/seller/dashboard/inventory') || url.includes('/seller/inv') || url.includes('/seller/dashboard/inv')) target = 'inv';
+    else if (url.includes('/seller/vouchers') || url.includes('/seller/dashboard/vouchers')) target = 'vouchers';
+    else if (url.includes('/seller/campaigns') || url.includes('/seller/dashboard/campaigns') || url.includes('/seller/camps') || url.includes('/seller/dashboard/camps')) target = 'camps';
+    else if (url.includes('/seller/reviews') || url.includes('/seller/dashboard/reviews')) target = 'reviews';
+    else if (url.includes('/seller/qa') || url.includes('/seller/dashboard/qa')) target = 'qa';
+    else if (url.includes('/seller/profile') || url.includes('/seller/dashboard/profile')) target = 'profile';
+    else target = 'dash';
+
+    if (this.currentView() !== target) {
+      this.currentView.set(target);
+    }
+    this.fetchDataForView(target);
+    this.cdr.markForCheck();
+  }
+
+  fetchDataForView(view: string): void {
+    if (view === 'dash') {
+      this.http.get<any>('http://localhost:9090/api/seller/dashboard').subscribe({
+        next: (res) => {
+          const data = res?.data || res;
+          if (data) {
+            this.cdr.markForCheck();
+          }
+        },
+        error: () => { },
+      });
+    } else if (view === 'orders') {
+      this.http.get<any>('http://localhost:9090/api/seller/orders').subscribe({
+        next: (res) => {
+          const list = res?.data || res;
+          if (Array.isArray(list) && list.length > 0) {
+            const apiOrders: OrderItem[] = list.map((item: any) => ({
+              c: item.orderCode || item.c || '',
+              n: item.customerName || item.n || 'Khách hàng',
+              k: item.itemCount || item.k || 1,
+              t: item.totalAmount || item.t || 0,
+              s: item.status || item.s || 'PENDING',
+              h: item.createdAt || item.h || 'Hôm nay',
+              d: item.daysAgo != null ? item.daysAgo : (item.d != null ? item.d : 0),
+            }));
+            this.orders.set(apiOrders);
+            this.cdr.markForCheck();
+          }
+        },
+        error: () => { },
+      });
+    } else if (view === 'inv') {
+      this.http.get<any>('http://localhost:9090/api/seller/inventory').subscribe({
+        next: () => {
+          this.loadProducts();
+          this.cdr.markForCheck();
+        },
+        error: () => { },
+      });
+    } else if (view === 'reviews') {
+      this.http.get<any>('http://localhost:9090/api/seller/reviews').subscribe({
+        next: (res) => {
+          const data = res?.data || res;
+          if (Array.isArray(data) && data.length > 0) {
+            const apiReviews: ReviewItem[] = data.map((item: any) => ({
+              id: item.id,
+              p: item.productName || 'Sản phẩm',
+              who: item.customerName || 'Khách hàng',
+              st: item.rating || 5,
+              x: item.comment || '',
+              re: item.reply,
+            }));
+            this.reviews.set(apiReviews);
+            this.cdr.markForCheck();
+          }
+        },
+        error: () => { },
+      });
+    } else if (view === 'qa') {
+      this.http.get<any>('http://localhost:9090/api/seller/questions').subscribe({
+        next: (res) => {
+          const data = res?.data || res;
+          if (Array.isArray(data) && data.length > 0) {
+            const apiQuestions: QuestionItem[] = data.map((item: any) => ({
+              id: item.id,
+              p: item.productName || 'Sản phẩm',
+              who: item.customerName || 'Khách hàng',
+              x: item.comment || '',
+              a: item.reply,
+            }));
+            this.questions.set(apiQuestions);
+            this.cdr.markForCheck();
+          }
+        },
+        error: () => { },
+      });
+    } else if (view === 'vouchers') {
+      this.loadVouchers();
+    } else if (view === 'products') {
+      this.loadProducts();
+    } else if (view === 'profile') {
+      this.http.get<any>('http://localhost:9090/api/seller/profile').subscribe({
+        next: (res) => {
+          const p = res?.data || res;
+          if (p && p.shopName) {
+            this.syncProfileData({
+              n: p.shopName,
+              d: p.description || '',
+              ph: p.phone || '',
+              em: p.email || '',
+              ad: p.pickupAddress || '',
+              hr: p.businessHours || '08:00 – 21:00',
+            });
+          }
+        },
+        error: () => this.loadCurrentShopInfo(),
+      });
+    }
   }
 
   loadCurrentShopInfo(): void {
@@ -154,7 +276,7 @@ export class SellerDashboardComponent implements OnInit {
         if (parsed && parsed.n) {
           this.syncProfileData(parsed);
         }
-      } catch {}
+      } catch { }
     }
 
     this.http.get<any>('http://localhost:9090/api/shops/current').subscribe({
@@ -174,7 +296,7 @@ export class SellerDashboardComponent implements OnInit {
           localStorage.setItem('vic_seller_shop_profile', JSON.stringify(data));
         }
       },
-      error: () => {},
+      error: () => { },
     });
   }
 
@@ -199,7 +321,7 @@ export class SellerDashboardComponent implements OnInit {
           this.vouchers.set(mapped);
         }
       },
-      error: () => {},
+      error: () => { },
     });
   }
 
@@ -219,7 +341,7 @@ export class SellerDashboardComponent implements OnInit {
                 this.dashboardService.loadShopProductsFromStorage();
                 return;
               }
-            } catch {}
+            } catch { }
           }
           this.products.set([]);
           this.syncToStorageAndStorefront([]);
@@ -235,7 +357,7 @@ export class SellerDashboardComponent implements OnInit {
               this.dashboardService.loadShopProductsFromStorage();
               return;
             }
-          } catch {}
+          } catch { }
         }
         this.products.set([]);
         this.syncToStorageAndStorefront([]);
@@ -303,7 +425,6 @@ export class SellerDashboardComponent implements OnInit {
   readonly editingProductId = signal<number | null>(null);
   readonly formProductName = signal<string>('');
   readonly formCategory = signal<string>('Nhà cửa & Đời sống');
-  readonly formCategoryId = signal<number | null>(null);
   readonly formStatus = signal<string>('VISIBLE');
   readonly formDescription = signal<string>('');
   readonly formImageUrl = signal<string>('');
@@ -358,7 +479,7 @@ export class SellerDashboardComponent implements OnInit {
         if (draft.contactInfo?.representativeName?.trim()) {
           return draft.contactInfo.representativeName.trim();
         }
-      } catch {}
+      } catch { }
     }
     const fullName = localStorage.getItem('fullName');
     if (fullName && fullName !== 'Thành viên' && fullName !== 'null' && fullName !== 'undefined') {
@@ -384,7 +505,7 @@ export class SellerDashboardComponent implements OnInit {
         if (savedProf?.n?.trim()) {
           return savedProf.n.trim();
         }
-      } catch {}
+      } catch { }
     }
     const draftRaw = localStorage.getItem('vic_seller_onboarding_draft');
     if (draftRaw) {
@@ -393,7 +514,7 @@ export class SellerDashboardComponent implements OnInit {
         if (draft.shopInfo?.shopName?.trim()) {
           return draft.shopInfo.shopName.trim();
         }
-      } catch {}
+      } catch { }
     }
     return 'VICMART Shop';
   });
@@ -415,7 +536,6 @@ export class SellerDashboardComponent implements OnInit {
   ];
 
   // Danh sách sản phẩm (Quản lý thêm sửa xóa qua API, ban đầu trống)
-  readonly categoryItems = signal<{ id: number; name: string }[]>([]);
   readonly products = signal<SellerProduct[]>([]);
 
   // Đơn hàng
@@ -554,7 +674,7 @@ export class SellerDashboardComponent implements OnInit {
         if (parsed && parsed.n) {
           this.syncProfileData(parsed);
         }
-      } catch {}
+      } catch { }
     }
 
     if (draftRaw) {
@@ -581,7 +701,7 @@ export class SellerDashboardComponent implements OnInit {
             this.syncProfileData(draftData);
           }
         }
-      } catch {}
+      } catch { }
     }
   }
 
@@ -591,8 +711,23 @@ export class SellerDashboardComponent implements OnInit {
       this.openCreateProductModal();
       return;
     }
+    const routeMap: Record<string, string> = {
+      dash: '/seller/dashboard',
+      orders: '/seller/orders',
+      returns: '/seller/returns',
+      products: '/seller/products',
+      inv: '/seller/inventory',
+      vouchers: '/seller/vouchers',
+      camps: '/seller/campaigns',
+      reviews: '/seller/reviews',
+      qa: '/seller/qa',
+      profile: '/seller/profile',
+    };
+    const targetUrl = routeMap[v] || `/seller/${v}`;
     this.currentView.set(v);
+    this.fetchDataForView(v);
     this.searchQuery.set('');
+    void this.router.navigateByUrl(targetUrl);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -627,12 +762,12 @@ export class SellerDashboardComponent implements OnInit {
     const initialMedia: { url: string; type: 'IMAGE' | 'VIDEO'; sortOrder: number }[] =
       p.media && p.media.length > 0
         ? structuredClone(p.media)
-            .map((m, idx) => ({
-              url: m.url,
-              type: (m.type === 'VIDEO' ? 'VIDEO' : 'IMAGE') as 'IMAGE' | 'VIDEO',
-              sortOrder: m.sortOrder ?? idx,
-            }))
-            .sort((a, b) => a.sortOrder - b.sortOrder)
+          .map((m, idx) => ({
+            url: m.url,
+            type: (m.type === 'VIDEO' ? 'VIDEO' : 'IMAGE') as 'IMAGE' | 'VIDEO',
+            sortOrder: m.sortOrder ?? idx,
+          }))
+          .sort((a, b) => a.sortOrder - b.sortOrder)
         : (p.imageUrl ? [{ url: p.imageUrl, type: 'IMAGE' as const, sortOrder: 0 }] : []);
     this.formMedia.set(initialMedia);
     this.selectedMediaIndex.set(0);
@@ -682,13 +817,12 @@ export class SellerDashboardComponent implements OnInit {
       this.modalError.set('Ảnh tải lên không được vượt quá 5MB.');
       return;
     }
-    const data = new FormData();
-    data.append('file', file);
-    this.mediaUploading.set(true);
-    this.http.post<any>('http://localhost:9090/api/seller/products/media/upload', data).subscribe({
-      next: (res) => { const media = res?.data || res; this.formImageUrl.set(media.url); this.formMediaType.set(media.type === 'VIDEO' ? 'VIDEO' : 'IMAGE'); this.modalError.set(''); this.mediaUploading.set(false); this.cdr.markForCheck(); },
-      error: () => { this.modalError.set('Không thể upload file lên Cloudinary. Vui lòng thử lại.'); this.mediaUploading.set(false); this.cdr.markForCheck(); },
-    });
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.formImageUrl.set(reader.result as string);
+      this.modalError.set('');
+    };
+    reader.readAsDataURL(file);
   }
 
   onImageError(): void {
@@ -698,11 +832,13 @@ export class SellerDashboardComponent implements OnInit {
   onMultipleMediaSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (!input.files?.length) return;
-    const files = Array.from(input.files); this.mediaUploading.set(true); let done=0;
-    files.forEach(file => { const data=new FormData(); data.append('file',file); this.http.post<any>('http://localhost:9090/api/seller/products/media/upload',data).subscribe({
-      next: res => { const m=res?.data||res; const wasEmpty = this.formMedia().length === 0; this.formMedia.update(list=>[...list,{url:m.url,type:m.type==='VIDEO'?'VIDEO':'IMAGE',sortOrder:list.length}]); if(!this.formImageUrl())this.formImageUrl.set(m.url); if(wasEmpty)this.selectedMediaIndex.set(0); if(++done===files.length)this.mediaUploading.set(false); this.cdr.markForCheck(); },
-      error: () => { this.modalError.set('Không thể upload một hoặc nhiều file lên Cloudinary.'); if(++done===files.length)this.mediaUploading.set(false); this.cdr.markForCheck(); }
-    }); }); input.value='';
+    const files = Array.from(input.files); this.mediaUploading.set(true); let done = 0;
+    files.forEach(file => {
+      const data = new FormData(); data.append('file', file); this.http.post<any>('http://localhost:9090/api/seller/products/media/upload', data).subscribe({
+        next: res => { const m = res?.data || res; const wasEmpty = this.formMedia().length === 0; this.formMedia.update(list => [...list, { url: m.url, type: m.type === 'VIDEO' ? 'VIDEO' : 'IMAGE', sortOrder: list.length }]); if (!this.formImageUrl()) this.formImageUrl.set(m.url); if (wasEmpty) this.selectedMediaIndex.set(0); if (++done === files.length) this.mediaUploading.set(false); this.cdr.markForCheck(); },
+        error: () => { this.modalError.set('Không thể upload một hoặc nhiều file lên Cloudinary.'); if (++done === files.length) this.mediaUploading.set(false); this.cdr.markForCheck(); }
+      });
+    }); input.value = '';
   }
   selectMedia(index: number): void {
     this.selectedMediaIndex.set(index);
@@ -992,10 +1128,16 @@ export class SellerDashboardComponent implements OnInit {
     this.orders.update((list) =>
       list.map((o) => (o.c === code ? { ...o, s: 'PREPARING' } : o))
     );
+    this.http.post<any>(`http://localhost:9090/api/seller/orders/${encodeURIComponent(code)}/action`, { action: 'CONFIRM' }).subscribe({
+      next: () => { },
+      error: () => { },
+    });
     this.showToast(`Đã xác nhận ${code}. Đơn chuyển sang Đang chuẩn bị.`);
   }
 
   nextOrderStatus(code: string): void {
+    const current = this.orders().find((o) => o.c === code);
+    const action = current?.s === 'PREPARING' ? 'MARK_PACKED' : 'START_SHIPPING';
     this.orders.update((list) =>
       list.map((o) => {
         if (o.c === code) {
@@ -1005,6 +1147,10 @@ export class SellerDashboardComponent implements OnInit {
         return o;
       })
     );
+    this.http.post<any>(`http://localhost:9090/api/seller/orders/${encodeURIComponent(code)}/action`, { action }).subscribe({
+      next: () => { },
+      error: () => { },
+    });
     const updated = this.orders().find((o) => o.c === code);
     if (updated?.s === 'PACKED') {
       this.showToast(`Đã đóng gói ${code}.`);
@@ -1032,6 +1178,10 @@ export class SellerDashboardComponent implements OnInit {
     }
     const code = this.rejectTargetCode();
     this.orders.update((list) => list.filter((o) => o.c !== code));
+    this.http.post<any>(`http://localhost:9090/api/seller/orders/${encodeURIComponent(code)}/action`, { action: 'CANCEL', reason: r }).subscribe({
+      next: () => { },
+      error: () => { },
+    });
     this.closeRejectModal();
     this.showToast(`Đã từ chối đơn ${code}. Lý do đã gửi cho khách.`);
   }
@@ -1249,7 +1399,7 @@ export class SellerDashboardComponent implements OnInit {
         draft.contactInfo.email = updatedProfile.em;
         draft.contactInfo.detailedAddress = ad;
         localStorage.setItem('vic_seller_onboarding_draft', JSON.stringify(draft));
-      } catch {}
+      } catch { }
     }
 
     this.dashboardService.shopProfile.set({
@@ -1358,7 +1508,7 @@ export class SellerDashboardComponent implements OnInit {
         if (Array.isArray(parsed) && parsed.length > 0) {
           this.reviews.set(parsed);
         }
-      } catch {}
+      } catch { }
     }
 
     const savedQuestions = localStorage.getItem('vic_seller_questions');
@@ -1368,49 +1518,46 @@ export class SellerDashboardComponent implements OnInit {
         if (Array.isArray(parsed) && parsed.length > 0) {
           this.questions.set(parsed);
         }
-      } catch {}
+      } catch { }
     }
 
-    this.http.get<any>('http://localhost:9090/api/seller/dashboard').subscribe({
+    this.http.get<any>('http://localhost:9090/api/seller/reviews').subscribe({
       next: (res) => {
-        const data = res?.data || res;
-        if (data && Array.isArray(data.reviews) && data.reviews.length > 0) {
-          const apiReviews: ReviewItem[] = [];
-          const apiQuestions: QuestionItem[] = [];
-
-          for (const item of data.reviews) {
-            if (item.type === 'QA' || item.rating === 0) {
-              apiQuestions.push({
-                id: item.id,
-                p: item.productName || 'Sản phẩm',
-                who: item.customerName || 'Khách hàng',
-                x: item.comment || '',
-                a: item.reply,
-              });
-            } else {
-              apiReviews.push({
-                id: item.id,
-                p: item.productName || 'Sản phẩm',
-                who: item.customerName || 'Khách hàng',
-                st: item.rating || 5,
-                x: item.comment || '',
-                re: item.reply,
-              });
-            }
-          }
-
-          if (apiReviews.length > 0) {
-            this.reviews.set(apiReviews);
-            localStorage.setItem('vic_seller_reviews', JSON.stringify(apiReviews));
-          }
-          if (apiQuestions.length > 0) {
-            this.questions.set(apiQuestions);
-            localStorage.setItem('vic_seller_questions', JSON.stringify(apiQuestions));
-          }
+        const list = res?.data || res;
+        if (Array.isArray(list) && list.length > 0) {
+          const apiReviews: ReviewItem[] = list.map((item: any) => ({
+            id: item.id,
+            p: item.productName || 'Sản phẩm',
+            who: item.customerName || 'Khách hàng',
+            st: item.rating || 5,
+            x: item.comment || '',
+            re: item.reply,
+          }));
+          this.reviews.set(apiReviews);
+          localStorage.setItem('vic_seller_reviews', JSON.stringify(apiReviews));
           this.cdr.markForCheck();
         }
       },
-      error: () => {},
+      error: () => { },
+    });
+
+    this.http.get<any>('http://localhost:9090/api/seller/questions').subscribe({
+      next: (res) => {
+        const list = res?.data || res;
+        if (Array.isArray(list) && list.length > 0) {
+          const apiQuestions: QuestionItem[] = list.map((item: any) => ({
+            id: item.id,
+            p: item.productName || 'Sản phẩm',
+            who: item.customerName || 'Khách hàng',
+            x: item.comment || '',
+            a: item.reply,
+          }));
+          this.questions.set(apiQuestions);
+          localStorage.setItem('vic_seller_questions', JSON.stringify(apiQuestions));
+          this.cdr.markForCheck();
+        }
+      },
+      error: () => { },
     });
   }
 
@@ -1428,7 +1575,7 @@ export class SellerDashboardComponent implements OnInit {
     this.syncReviewReplyToProductStorage(review.id, review.p, replyText);
 
     if (review.id) {
-      this.http.post<any>(`http://localhost:9090/api/seller/dashboard/reviews/${review.id}/reply`, { reply: replyText }).subscribe({
+      this.http.post<any>(`http://localhost:9090/api/seller/reviews/${review.id}/reply`, { reply: replyText }).subscribe({
         next: () => this.showToast('✨ Đã gửi phản hồi đánh giá thành công!'),
         error: () => this.showToast('✨ Đã lưu phản hồi.'),
       });
@@ -1449,7 +1596,7 @@ export class SellerDashboardComponent implements OnInit {
     this.syncQuestionAnswerToProductStorage(question.id, question.p, answerText);
 
     if (question.id) {
-      this.http.post<any>(`http://localhost:9090/api/seller/dashboard/questions/${question.id}/reply`, { reply: answerText }).subscribe({
+      this.http.post<any>(`http://localhost:9090/api/seller/questions/${question.id}/reply`, { reply: answerText }).subscribe({
         next: () => this.showToast('✨ Đã gửi câu trả lời thành công!'),
         error: () => this.showToast('✨ Đã lưu câu trả lời.'),
       });
@@ -1474,7 +1621,7 @@ export class SellerDashboardComponent implements OnInit {
               localStorage.setItem(key, JSON.stringify(list));
             }
           }
-        } catch {}
+        } catch { }
       }
     }
   }
@@ -1497,7 +1644,7 @@ export class SellerDashboardComponent implements OnInit {
               localStorage.setItem(key, JSON.stringify(list));
             }
           }
-        } catch {}
+        } catch { }
       }
     }
   }

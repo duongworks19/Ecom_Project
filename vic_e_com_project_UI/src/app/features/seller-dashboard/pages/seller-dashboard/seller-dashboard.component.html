@@ -58,18 +58,18 @@
   <!-- Side navigation -->
   <nav class="side" aria-label="Menu người bán">
     <h6>TỔNG QUAN</h6>
-    <a (click)="setView('dash')" [class.on]="currentView() === 'dash'">
+    <a routerLink="/seller/dashboard" (click)="setView('dash')" [class.on]="currentView() === 'dash'">
       <span>Tổng quan</span>
     </a>
 
     <h6>ĐƠN HÀNG</h6>
-    <a (click)="setView('orders')" [class.on]="currentView() === 'orders'">
+    <a routerLink="/seller/orders" (click)="setView('orders')" [class.on]="currentView() === 'orders'">
       <span>Tất cả đơn</span>
       @if (openOrdersCount() > 0) {
       <em>{{ openOrdersCount() }}</em>
       }
     </a>
-    <a (click)="setView('returns')" [class.on]="currentView() === 'returns'">
+    <a routerLink="/seller/returns" (click)="setView('returns')" [class.on]="currentView() === 'returns'">
       <span>Đổi trả / Hoàn tiền</span>
       @if (pendingReturnCount() > 0) {
       <em>{{ pendingReturnCount() }}</em>
@@ -77,10 +77,10 @@
     </a>
 
     <h6>SẢN PHẨM</h6>
-    <a (click)="setView('products')" [class.on]="currentView() === 'products'">
+    <a routerLink="/seller/products" (click)="setView('products')" [class.on]="currentView() === 'products'">
       <span>Danh sách sản phẩm</span>
     </a>
-    <a (click)="setView('inv')" [class.on]="currentView() === 'inv'">
+    <a routerLink="/seller/inventory" (click)="setView('inv')" [class.on]="currentView() === 'inv'">
       <span>Kho hàng</span>
       @if (lowStockItems().length > 0) {
       <em>{{ lowStockItems().length }}</em>
@@ -88,21 +88,21 @@
     </a>
 
     <h6>MARKETING</h6>
-    <a (click)="setView('vouchers')" [class.on]="currentView() === 'vouchers'">
+    <a routerLink="/seller/vouchers" (click)="setView('vouchers')" [class.on]="currentView() === 'vouchers'">
       <span>Voucher của shop</span>
     </a>
-    <a (click)="setView('camps')" [class.on]="currentView() === 'camps'">
+    <a routerLink="/seller/campaigns" (click)="setView('camps')" [class.on]="currentView() === 'camps'">
       <span>Chương trình giảm giá</span>
     </a>
 
     <h6>CHĂM SÓC KHÁCH HÀNG</h6>
-    <a (click)="setView('reviews')" [class.on]="currentView() === 'reviews'">
+    <a routerLink="/seller/reviews" (click)="setView('reviews')" [class.on]="currentView() === 'reviews'">
       <span>Đánh giá</span>
       @if (unrepliedReviewCount() > 0) {
       <em>{{ unrepliedReviewCount() }}</em>
       }
     </a>
-    <a (click)="setView('qa')" [class.on]="currentView() === 'qa'">
+    <a routerLink="/seller/qa" (click)="setView('qa')" [class.on]="currentView() === 'qa'">
       <span>Hỏi đáp</span>
       @if (unrepliedQuestionCount() > 0) {
       <em>{{ unrepliedQuestionCount() }}</em>
@@ -113,7 +113,7 @@
     <a routerLink="/account/profile">
       <span>Hồ sơ tài khoản ({{ userAccountName() }})</span>
     </a>
-    <a (click)="setView('profile')" [class.on]="currentView() === 'profile'">
+    <a routerLink="/seller/profile" (click)="setView('profile')" [class.on]="currentView() === 'profile'">
       <span>Hồ sơ gian hàng ({{ shopName() }})</span>
     </a>
   </nav>
@@ -799,9 +799,9 @@
     <div class="g2">
       <label style="display: block; margin-top: 12px; font-size: 13px; font-weight: 600;">
         Danh mục *
-        <select class="inp" [ngModel]="formCategoryId()" (ngModelChange)="formCategoryId.set(+$event); formCategory.set(categoryItems().find(c => c.id === +$event)?.name || '')">
-          @for (cat of categoryItems(); track cat.id) {
-            <option [value]="cat.id">{{ cat.name }}</option>
+        <select class="inp" [ngModel]="formCategory()" (ngModelChange)="formCategory.set($event)">
+          @for (cat of categories; track cat) {
+          <option [value]="cat">{{ cat }}</option>
           }
         </select>
       </label>

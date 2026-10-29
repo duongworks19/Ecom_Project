@@ -37,5 +37,6 @@ public class SellerDashboardResponse {
     private List<VoucherDtos.Response> vouchers;
     private List<SellerPromotionDto> promotions;
     private List<SellerReviewQuestionDto> reviews;
+    private List<SellerReviewQuestionDto> questions;
     private SellerShopProfileDto shopProfile;
 }
