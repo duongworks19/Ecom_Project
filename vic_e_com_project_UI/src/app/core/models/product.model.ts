@@ -30,4 +30,5 @@ export interface Product {
   image: string;
   aspectRatio: 'square' | 'portrait-standard' | 'portrait-tall';
   seller: ProductSeller;
+  shopId?: number;
 }

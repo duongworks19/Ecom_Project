@@ -50,17 +50,44 @@ public class SellerProductUpdateService {
 
         List<SellerProductVariantDto> variants = req.resolveVariants();
         if (!variants.isEmpty()) {
-            product.getVariants().clear();
-            for (SellerProductVariantDto v : variants) {
-                ProductVariant pv = new ProductVariant();
-                pv.setVariantName(v.getA() != null && !v.getA().isBlank() ? v.getA().trim() : "Mặc định");
-                pv.setSku(v.getSku() != null && !v.getSku().isBlank() ? v.getSku().trim() : "SKU-" + System.currentTimeMillis() % 10000);
-                pv.setPrice(v.getP() != null ? v.getP() : BigDecimal.ZERO);
-                pv.setStockQty(v.getQ() != null ? v.getQ() : 0);
-                pv.setLowStockThreshold(v.getL() != null ? v.getL() : 5);
-                pv.setSoldCount(0);
-                pv.setImageUrl(product.getImageUrl());
-                product.addVariant(pv);
+            if (product.getVariants().size() == 1 && variants.size() == 1) {
+                ProductVariant pv = product.getVariants().get(0);
+                SellerProductVariantDto v = variants.get(0);
+                if (v.getA() != null && !v.getA().isBlank()) pv.setVariantName(v.getA().trim());
+                if (v.getSku() != null && !v.getSku().isBlank()) pv.setSku(v.getSku().trim());
+                if (v.getP() != null) pv.setPrice(v.getP());
+                if (v.getQ() != null) pv.setStockQty(v.getQ());
+                if (v.getL() != null) pv.setLowStockThreshold(v.getL());
+            } else {
+                java.util.Map<String, ProductVariant> existingBySku = product.getVariants().stream()
+                        .filter(pv -> pv.getSku() != null && !pv.getSku().isBlank())
+                        .collect(Collectors.toMap(ProductVariant::getSku, pv -> pv, (a, b) -> a));
+
+                java.util.Set<String> incomingSkus = new java.util.HashSet<>();
+                for (SellerProductVariantDto v : variants) {
+                    String sku = (v.getSku() != null && !v.getSku().isBlank()) ? v.getSku().trim() : null;
+                    if (sku != null) incomingSkus.add(sku);
+                    ProductVariant pv = (sku != null) ? existingBySku.get(sku) : null;
+                    if (pv != null) {
+                        if (v.getA() != null && !v.getA().isBlank()) pv.setVariantName(v.getA().trim());
+                        if (v.getP() != null) pv.setPrice(v.getP());
+                        if (v.getQ() != null) pv.setStockQty(v.getQ());
+                        if (v.getL() != null) pv.setLowStockThreshold(v.getL());
+                    } else {
+                        ProductVariant newPv = new ProductVariant();
+                        newPv.setVariantName(v.getA() != null && !v.getA().isBlank() ? v.getA().trim() : "Mặc định");
+                        newPv.setSku(sku != null ? sku : "SKU-" + System.currentTimeMillis() % 10000);
+                        newPv.setPrice(v.getP() != null ? v.getP() : BigDecimal.ZERO);
+                        newPv.setStockQty(v.getQ() != null ? v.getQ() : 0);
+                        newPv.setLowStockThreshold(v.getL() != null ? v.getL() : 5);
+                        newPv.setSoldCount(0);
+                        newPv.setImageUrl(product.getImageUrl());
+                        product.addVariant(newPv);
+                    }
+                }
+                if (!incomingSkus.isEmpty()) {
+                    product.getVariants().removeIf(pv -> pv.getSku() != null && !incomingSkus.contains(pv.getSku()));
+                }
             }
         }
 

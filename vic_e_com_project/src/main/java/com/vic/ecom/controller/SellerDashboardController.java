@@ -68,6 +68,16 @@ public class SellerDashboardController {
         return ResponseEntity.ok(ApiResponse.ok("Phản hồi khách hàng thành công", result));
     }
 
+    @PostMapping("/questions/{questionId}/reply")
+    public ResponseEntity<ApiResponse<SellerReviewQuestionDto>> replyQuestion(
+            @PathVariable Long questionId,
+            @RequestBody java.util.Map<String, String> payload
+    ) {
+        String reply = payload != null ? payload.getOrDefault("reply", "") : "";
+        SellerReviewQuestionDto result = sellerDashboardService.replyReview(questionId, reply);
+        return ResponseEntity.ok(ApiResponse.ok("Trả lời câu hỏi thành công", result));
+    }
+
     @PutMapping("/profile")
     public ResponseEntity<ApiResponse<SellerShopProfileDto>> updateProfile(
             @RequestBody SellerShopProfileDto request

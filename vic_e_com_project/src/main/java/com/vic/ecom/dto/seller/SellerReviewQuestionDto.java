@@ -17,5 +17,10 @@ public class SellerReviewQuestionDto {
     private Integer rating;
     private String comment;
     private String createdAt;
+    private Long productId;
+    private String type;
+    private String reviewImage;
+    private Integer helpfulCount;
+    private Boolean verifiedPurchase;
     private String reply;
 }

@@ -30,28 +30,110 @@
     </div>
 
     <div class="nav-center">
-      <div class="search-bar" [class.focused]="isSearchFocused()">
-        <span class="search-icon">
-          <svg viewBox="0 0 24 24" width="17" height="17" stroke="currentColor" stroke-width="2.5" fill="none">
-            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
-        </span>
-        <input
-          type="text"
-          placeholder="Tìm sản phẩm, thương hiệu, tên shop..."
-          [ngModel]="searchQuery()"
-          (ngModelChange)="onSearchInput($event)"
-          (focus)="isSearchFocused.set(true)"
-          (blur)="isSearchFocused.set(false)"
-          aria-label="Tìm kiếm sản phẩm"
-          id="input-main-search"
-        />
-        @if (searchQuery()) {
-          <button type="button" class="clear-btn" (click)="clearSearch()" aria-label="Xóa từ khóa">
-            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none">
-              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      <div class="search-bar-wrap">
+        <div class="search-bar" [class.focused]="isSearchFocused() || isSearchDropdownOpen()">
+          <span class="search-icon" (click)="onSearchSubmit()" style="cursor: pointer;">
+            <svg viewBox="0 0 24 24" width="17" height="17" stroke="currentColor" stroke-width="2.5" fill="none">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
             </svg>
-          </button>
+          </span>
+          <input
+            type="text"
+            placeholder="Tìm sản phẩm, thương hiệu, tên shop..."
+            [ngModel]="searchQuery()"
+            (ngModelChange)="onSearchInput($event)"
+            (focus)="onSearchFocus()"
+            (keydown.enter)="onSearchSubmit()"
+            aria-label="Tìm kiếm sản phẩm, thương hiệu, tên shop"
+            id="input-main-search"
+            autocomplete="off"
+          />
+          @if (searchQuery()) {
+            <button type="button" class="clear-btn" (click)="clearSearch()" aria-label="Xóa từ khóa">
+              <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          }
+        </div>
+
+        <!-- Live Search Dropdown -->
+        @if (isSearchDropdownOpen() && searchQuery().trim()) {
+          <div class="search-results-dropdown" role="listbox">
+            @if (isSearching()) {
+              <div class="search-loading">
+                <span class="spinner-sm"></span>
+                <span>Đang tìm kiếm trong hệ thống...</span>
+              </div>
+            } @else {
+              <!-- 1. Danh sách Gian hàng (Shops) -->
+              @if (searchResults().shops.length > 0) {
+                <div class="dropdown-group">
+                  <div class="group-title">
+                    <span>🏪 GIAN HÀNG ({{ searchResults().shops.length }})</span>
+                  </div>
+                  @for (shop of searchResults().shops; track shop.id) {
+                    <div class="search-item shop-item" (click)="selectShop(shop)">
+                      <div class="shop-badge-av">
+                        {{ shop.name.charAt(0).toUpperCase() }}
+                      </div>
+                      <div class="item-text">
+                        <div class="item-name">
+                          <strong>{{ shop.name }}</strong>
+                          <span class="verified-tag">✓ Chính hãng</span>
+                        </div>
+                        <div class="item-sub">
+                          <span>★ {{ shop.ratingAvg || 5.0 }}</span>
+                          @if (shop.description) {
+                            <span>· {{ shop.description }}</span>
+                          }
+                        </div>
+                      </div>
+                      <span class="goto-arrow">Đến shop →</span>
+                    </div>
+                  }
+                </div>
+              }
+
+              <!-- 2. Danh sách Sản phẩm (Products) -->
+              @if (searchResults().products.length > 0) {
+                <div class="dropdown-group">
+                  <div class="group-title">
+                    <span>📦 SẢN PHẨM ({{ searchResults().products.length }})</span>
+                  </div>
+                  @for (prod of searchResults().products; track prod.id) {
+                    <div class="search-item product-item" (click)="selectProduct(prod)">
+                      <div class="prod-thumb">
+                        @if (prod.imageUrl) {
+                          <img [src]="prod.imageUrl" [alt]="prod.name" />
+                        } @else {
+                          <span class="box-icon">🛍️</span>
+                        }
+                      </div>
+                      <div class="item-text">
+                        <div class="item-name">{{ prod.name }}</div>
+                        <div class="item-sub">
+                          <strong class="item-price">{{ prod.price | number:'1.0-0' }}₫</strong>
+                          @if (prod.shopName) {
+                            <span class="seller-tag">· Bán bởi <b>{{ prod.shopName }}</b></span>
+                          }
+                        </div>
+                      </div>
+                      <span class="goto-arrow">Xem hàng →</span>
+                    </div>
+                  }
+                </div>
+              }
+
+              <!-- 3. Không có kết quả -->
+              @if (searchResults().shops.length === 0 && searchResults().products.length === 0) {
+                <div class="search-empty">
+                  <span>🔍</span>
+                  <p>Không tìm thấy sản phẩm hoặc gian hàng nào khớp với "<b>{{ searchQuery() }}</b>"</p>
+                </div>
+              }
+            }
+          </div>
         }
       </div>
     </div>

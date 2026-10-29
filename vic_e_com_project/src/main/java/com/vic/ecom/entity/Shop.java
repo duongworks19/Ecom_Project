@@ -60,6 +60,9 @@ public class Shop {
     @OneToMany(mappedBy = "shop", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ShopReview> reviews = new ArrayList<>();
 
+    @OneToMany(mappedBy = "shop", fetch = FetchType.LAZY)
+    private List<Product> products = new ArrayList<>();
+
     public Shop() {
     }
 }

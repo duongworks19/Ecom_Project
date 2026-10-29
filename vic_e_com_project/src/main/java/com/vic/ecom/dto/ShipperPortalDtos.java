@@ -2,6 +2,8 @@ package com.vic.ecom.dto;
 
 import com.vic.ecom.enums.ShipmentStatus;
 import com.vic.ecom.enums.ShipperWorkStatus;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -23,4 +25,9 @@ public final class ShipperPortalDtos {
     public record Event(Long id, Long shipmentId, ShipmentStatus eventType, LocalDateTime time,
                         String title, String notes) { }
     public record Failure(Long id, Long shipmentId, String failureReason, String notes, LocalDateTime reportedAt) { }
+
+    // Request bodies
+    public record DeliveredRequest(BigDecimal collectedCod) { }
+    public record FailureReportRequest(@NotBlank String reason, String notes) { }
+    public record WorkStatusRequest(@NotNull Boolean isAvailable) { }
 }

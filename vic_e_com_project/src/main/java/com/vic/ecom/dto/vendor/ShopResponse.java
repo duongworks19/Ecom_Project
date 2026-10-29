@@ -19,6 +19,7 @@ public class ShopResponse {
     private String pickupAddress;
     private String phone;
     private String email;
+    private String businessHours;
     private ShopStatus status;
     private BigDecimal ratingAvg;
 
@@ -34,6 +35,7 @@ public class ShopResponse {
         res.setPickupAddress(shop.getPickupAddress());
         res.setPhone(shop.getPhone());
         res.setEmail(shop.getEmail());
+        res.setBusinessHours(shop.getBusinessHours());
         res.setStatus(shop.getStatus());
         res.setRatingAvg(shop.getRatingAvg());
         return res;

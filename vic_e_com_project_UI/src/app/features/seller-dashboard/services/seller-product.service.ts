@@ -92,4 +92,17 @@ export class SellerProductService {
       map((res) => res.data)
     );
   }
+
+  /**
+   * API 6: Cập nhật tồn kho sản phẩm
+   * PATCH /api/seller/products/{id}/stock
+   */
+  updateStock(productId: number, payload: { sku?: string; q?: number; l?: number; variants?: ProductVariant[] }): Observable<any> {
+    return this.http.patch<ApiResponse<any>>(`${this.baseUrl}/${productId}/stock`, payload).pipe(
+      map((res) => res.data),
+      catchError(() => {
+        return this.updateProduct(productId, { v: payload.variants });
+      })
+    );
+  }
 }

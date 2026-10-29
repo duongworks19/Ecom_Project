@@ -42,6 +42,21 @@ public class ShopReview {
     @Column(columnDefinition = "TEXT")
     private String reply;
 
+    @Column(name = "product_id")
+    private Long productId;
+
+    @Column(name = "type", length = 20)
+    private String type = "REVIEW"; // "REVIEW" or "QA"
+
+    @Column(name = "review_image", length = 500)
+    private String reviewImage;
+
+    @Column(name = "helpful_count")
+    private Integer helpfulCount = 0;
+
+    @Column(name = "verified_purchase")
+    private Boolean verifiedPurchase = true;
+
     @Column(name = "created_at_label", length = 100)
     private String createdAtLabel;
 

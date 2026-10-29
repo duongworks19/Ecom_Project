@@ -705,6 +705,11 @@ public class SellerDashboardService {
                 .rating(r.getRating() != null ? r.getRating() : 5)
                 .comment(r.getComment())
                 .createdAt(r.getCreatedAtLabel() != null ? r.getCreatedAtLabel() : "Vừa xong")
+                .productId(r.getProductId())
+                .type(r.getType() != null ? r.getType() : "REVIEW")
+                .reviewImage(r.getReviewImage())
+                .helpfulCount(r.getHelpfulCount() != null ? r.getHelpfulCount() : 0)
+                .verifiedPurchase(r.getVerifiedPurchase() != null ? r.getVerifiedPurchase() : true)
                 .reply(r.getReply())
                 .build();
     }

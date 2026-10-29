@@ -36,6 +36,33 @@ public class ShopService {
                 .orElse(null);
     }
 
+    @Transactional
+    public Shop updateShop(Shop shop, com.vic.ecom.dto.vendor.UpdateShopRequest req) {
+        if (shop == null || req == null) return shop;
+        if (req.getName() != null && !req.getName().isBlank()) {
+            shop.setName(req.getName().trim());
+            if (shop.getVendor() != null) {
+                shop.getVendor().setBusinessName(req.getName().trim());
+            }
+        }
+        if (req.getPhone() != null && !req.getPhone().isBlank()) {
+            shop.setPhone(req.getPhone().trim());
+        }
+        if (req.getEmail() != null) {
+            shop.setEmail(req.getEmail().trim());
+        }
+        if (req.getDescription() != null) {
+            shop.setDescription(req.getDescription().trim());
+        }
+        if (req.getPickupAddress() != null && !req.getPickupAddress().isBlank()) {
+            shop.setPickupAddress(req.getPickupAddress().trim());
+        }
+        if (req.getBusinessHours() != null) {
+            shop.setBusinessHours(req.getBusinessHours().trim());
+        }
+        return shopRepository.save(shop);
+    }
+
     @Transactional(readOnly = true)
     public ShopResponse getShopByVendorId(Long vendorId) {
         return shopRepository.findByVendorId(vendorId)
