@@ -132,10 +132,18 @@ export class SellerDashboardComponent implements OnInit {
       return;
     }
     this.loadProducts();
+    this.loadCategories();
     this.detectApprovedRole();
     this.loadCurrentShopInfo();
     this.loadVouchers();
     this.loadReviewsAndQuestions();
+  }
+
+  private loadCategories(): void {
+    this.http.get<any>('http://localhost:9090/api/categories').subscribe({ next: (res) => {
+      const items = res?.data?.items || res?.items || [];
+      if (Array.isArray(items)) this.categoryItems.set(items);
+    }});
   }
 
   loadCurrentShopInfo(): void {
@@ -295,9 +303,13 @@ export class SellerDashboardComponent implements OnInit {
   readonly editingProductId = signal<number | null>(null);
   readonly formProductName = signal<string>('');
   readonly formCategory = signal<string>('Nhà cửa & Đời sống');
+  readonly formCategoryId = signal<number | null>(null);
   readonly formStatus = signal<string>('VISIBLE');
   readonly formDescription = signal<string>('');
   readonly formImageUrl = signal<string>('');
+  readonly formMediaType = signal<'IMAGE' | 'VIDEO'>('IMAGE');
+  readonly mediaUploading = signal<boolean>(false);
+  readonly formMedia = signal<{ url: string; type: 'IMAGE' | 'VIDEO'; sortOrder: number }[]>([]);
 
   readonly formVariants = signal<ProductVariant[]>([
     { sku: 'DN-NAU', a: 'Nâu', p: 389000, q: 2, l: 5 },
@@ -401,6 +413,7 @@ export class SellerDashboardComponent implements OnInit {
   ];
 
   // Danh sách sản phẩm (Quản lý thêm sửa xóa qua API, ban đầu trống)
+  readonly categoryItems = signal<{ id: number; name: string }[]>([]);
   readonly products = signal<SellerProduct[]>([]);
 
   // Đơn hàng
@@ -589,6 +602,7 @@ export class SellerDashboardComponent implements OnInit {
     this.formStatus.set('VISIBLE');
     this.formDescription.set('');
     this.formImageUrl.set('');
+    this.formMedia.set([]);
     this.formVariants.set([
       { sku: 'SP-' + Math.floor(1000 + Math.random() * 9000), a: 'Tiêu chuẩn', p: 199000, q: 20, l: 5 },
     ]);
@@ -636,17 +650,30 @@ export class SellerDashboardComponent implements OnInit {
       this.modalError.set('Ảnh tải lên không được vượt quá 5MB.');
       return;
     }
-    const reader = new FileReader();
-    reader.onload = () => {
-      this.formImageUrl.set(reader.result as string);
-      this.modalError.set('');
-    };
-    reader.readAsDataURL(file);
+    const data = new FormData();
+    data.append('file', file);
+    this.mediaUploading.set(true);
+    this.http.post<any>('http://localhost:9090/api/seller/products/media/upload', data).subscribe({
+      next: (res) => { const media = res?.data || res; this.formImageUrl.set(media.url); this.formMediaType.set(media.type === 'VIDEO' ? 'VIDEO' : 'IMAGE'); this.modalError.set(''); this.mediaUploading.set(false); this.cdr.markForCheck(); },
+      error: () => { this.modalError.set('Không thể upload file lên Cloudinary. Vui lòng thử lại.'); this.mediaUploading.set(false); this.cdr.markForCheck(); },
+    });
   }
 
   onImageError(): void {
     // Không làm gãy giao diện khi link ảnh ngoại tuyến
   }
+
+  onMultipleMediaSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files?.length) return;
+    const files = Array.from(input.files); this.mediaUploading.set(true); let done=0;
+    files.forEach(file => { const data=new FormData(); data.append('file',file); this.http.post<any>('http://localhost:9090/api/seller/products/media/upload',data).subscribe({
+      next: res => { const m=res?.data||res; this.formMedia.update(list=>[...list,{url:m.url,type:m.type==='VIDEO'?'VIDEO':'IMAGE',sortOrder:list.length}]); if(!this.formImageUrl())this.formImageUrl.set(m.url); if(++done===files.length)this.mediaUploading.set(false); this.cdr.markForCheck(); },
+      error: () => { this.modalError.set('Không thể upload một hoặc nhiều file lên Cloudinary.'); if(++done===files.length)this.mediaUploading.set(false); this.cdr.markForCheck(); }
+    }); }); input.value='';
+  }
+  removeMedia(index:number):void { this.formMedia.update(list=>list.filter((_,i)=>i!==index).map((m,i)=>({...m,sortOrder:i}))); this.formImageUrl.set(this.formMedia()[0]?.url||''); }
+  moveMedia(index:number,direction:-1|1):void { const next=index+direction,list=[...this.formMedia()]; if(next<0||next>=list.length)return; [list[index],list[next]]=[list[next],list[index]]; this.formMedia.set(list.map((m,i)=>({...m,sortOrder:i}))); this.formImageUrl.set(this.formMedia()[0]?.url||''); }
 
   saveProduct(): void {
     const name = this.formProductName().trim();
@@ -674,6 +701,7 @@ export class SellerDashboardComponent implements OnInit {
       s: this.formStatus() as any,
       imageUrl: img || 'https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=600&q=80',
       v: variants,
+      media: img ? [{ url: img, type: this.formMediaType(), sortOrder: 0 }] : [],
     };
 
     const editId = this.editingProductId();

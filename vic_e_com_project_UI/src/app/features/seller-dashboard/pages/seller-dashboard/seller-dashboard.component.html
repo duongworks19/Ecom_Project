@@ -799,9 +799,9 @@
     <div class="g2">
       <label style="display: block; margin-top: 12px; font-size: 13px; font-weight: 600;">
         Danh mục *
-        <select class="inp" [ngModel]="formCategory()" (ngModelChange)="formCategory.set($event)">
-          @for (cat of categories; track cat) {
-          <option [value]="cat">{{ cat }}</option>
+        <select class="inp" [ngModel]="formCategoryId()" (ngModelChange)="formCategoryId.set(+$event); formCategory.set(categoryItems().find(c => c.id === +$event)?.name || '')">
+          @for (cat of categoryItems(); track cat.id) {
+            <option [value]="cat.id">{{ cat.name }}</option>
           }
         </select>
       </label>
@@ -837,6 +837,18 @@
         </button>
       </div>
       }
+      @if (formMedia().length > 0) {
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+        @for (media of formMedia(); track media.url; let i = $index) {
+        <div style="position:relative;width:90px;height:70px;border:1px solid #ddd;border-radius:8px;overflow:hidden;">
+          @if (media.type === 'VIDEO') { <video [src]="media.url" muted></video> } @else { <img [src]="media.url" alt="Media sản phẩm" /> }
+          <button type="button" (click)="removeMedia(i)" style="position:absolute;right:2px;top:2px;">×</button>
+          <button type="button" (click)="moveMedia(i,-1)" [disabled]="i===0">←</button>
+          <button type="button" (click)="moveMedia(i,1)" [disabled]="i===formMedia().length-1">→</button>
+        </div>
+        }
+      </div>
+      }
 
       <!-- Nhập link ảnh URL -->
       <div style="display: flex; gap: 8px; align-items: center; margin-top: 8px;">
@@ -851,7 +863,7 @@
       <div style="margin-top: 10px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
         <label class="btn sm upload-btn" style="cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
           <span>📁</span> Chọn ảnh từ máy tính
-          <input type="file" accept="image/*" (change)="onImageFileSelected($event)" style="display: none;" />
+          <input type="file" accept="image/*,video/*" multiple (change)="onMultipleMediaSelected($event)" style="display: none;" />
         </label>
         <span style="font-size: 12px; color: var(--mute);">Hỗ trợ link online hoặc tải file từ máy</span>
       </div>

@@ -6,6 +6,10 @@ import com.vic.ecom.dto.seller.product.SellerProductVariantDto;
 import com.vic.ecom.entity.Product;
 import com.vic.ecom.entity.ProductVariant;
 import com.vic.ecom.entity.Shop;
+import com.vic.ecom.entity.ProductMedia;
+import com.vic.ecom.enums.ProductMediaType;
+import com.vic.ecom.repository.ProductMediaRepository;
+import com.vic.ecom.repository.CategoryRepository;
 import com.vic.ecom.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
@@ -24,6 +28,8 @@ public class SellerProductUpdateService {
 
     private final ProductRepository productRepository;
     private final SellerShopResolverService shopResolverService;
+    private final ProductMediaRepository mediaRepository;
+    private final CategoryRepository categoryRepository;
 
     @Transactional
     public SellerProductDetailDto updateProduct(Authentication auth, Long userId, Long productId, SellerProductUpdateRequest req) {
@@ -41,6 +47,7 @@ public class SellerProductUpdateService {
         }
 
         product.setCategory(req.resolveCategory());
+        if (req.getCategoryId() != null) categoryRepository.findById(req.getCategoryId()).ifPresent(c -> product.setCategoryId(c.getId()));
         product.setDescription(req.resolveDescription());
         product.setStatus(req.resolveStatus());
         product.setUpdatedAt(LocalDateTime.now());
@@ -92,6 +99,10 @@ public class SellerProductUpdateService {
         }
 
         Product saved = productRepository.save(product);
+        if (req.getMedia() != null && !req.getMedia().isEmpty()) {
+            mediaRepository.deleteByProductId(saved.getId()); int order=0;
+            for (var item:req.getMedia()) { if(item.getUrl()==null || item.getUrl().isBlank()) continue; ProductMedia m=new ProductMedia(); m.setProductId(saved.getId()); m.setUrl(item.getUrl().trim()); m.setType(item.getType()==null?ProductMediaType.IMAGE:item.getType()); m.setSortOrder(item.getSortOrder()==null?order++:item.getSortOrder()); mediaRepository.save(m); }
+        }
 
         List<SellerProductVariantDto> savedVariants = saved.getVariants().stream()
                 .map(v -> SellerProductVariantDto.builder()

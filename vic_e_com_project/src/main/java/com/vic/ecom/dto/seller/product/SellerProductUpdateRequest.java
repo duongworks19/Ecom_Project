@@ -22,6 +22,7 @@ public class SellerProductUpdateRequest {
 
     private String c;
     private String category;
+    private Long categoryId;
 
     private String d;
     private String description;
@@ -30,6 +31,7 @@ public class SellerProductUpdateRequest {
     private String status;
 
     private String imageUrl;
+    private List<SellerProductMediaDto> media = new ArrayList<>();
 
     @Builder.Default
     private List<SellerProductVariantDto> v = new ArrayList<>();

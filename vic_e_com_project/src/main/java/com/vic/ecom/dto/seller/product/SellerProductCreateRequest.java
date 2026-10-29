@@ -23,6 +23,7 @@ public class SellerProductCreateRequest {
 
     private String c; // category
     private String category;
+    private Long categoryId;
 
     private String d; // description
     private String description;
@@ -31,6 +32,7 @@ public class SellerProductCreateRequest {
     private String status;
 
     private String imageUrl;
+    private List<SellerProductMediaDto> media = new ArrayList<>();
 
     @Builder.Default
     private List<SellerProductVariantDto> v = new ArrayList<>();
