@@ -15,6 +15,7 @@ public class Category {
     @Column(name = "parent_id")
     private Long parentId;
 
+    @org.hibernate.annotations.NotFound(action = org.hibernate.annotations.NotFoundAction.IGNORE)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id", insertable = false, updatable = false, foreignKey = @ForeignKey(name = "fk_categories_parent"))
     private Category parent;
@@ -25,7 +26,7 @@ public class Category {
     @Column(nullable = false, length = 150, unique = true)
     private String slug;
 
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = com.vic.ecom.enums.CategoryStatusConverter.class)
     @Column(nullable = false, length = 20)
     private CategoryStatus status = CategoryStatus.VISIBLE;
 }

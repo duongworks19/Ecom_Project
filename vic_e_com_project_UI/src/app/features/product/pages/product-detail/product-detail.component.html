@@ -1,0 +1,440 @@
+<div class="product-page-container">
+  <!-- 1. Top Header Bar -->
+  <header class="detail-header">
+    <div class="header-inner">
+      <a routerLink="/" class="logo-link">
+        <div class="logo-icon">P</div>
+        <span class="logo-text">VIC<span>MART</span></span>
+      </a>
+
+      <div class="header-actions">
+        <a routerLink="/" class="action-btn text-btn">
+          <span>Yêu thích</span>
+        </a>
+        <a routerLink="/cart" class="action-btn cart-pill-btn">
+          <span>Giỏ hàng</span>
+          @if (cartState.count() > 0) {
+            <span class="badge-count">{{ cartState.count() }}</span>
+          }
+        </a>
+      </div>
+    </div>
+  </header>
+
+  @if (isLoading()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Đang tải thông tin sản phẩm...</p>
+    </div>
+  } @else if (product(); as prod) {
+    <!-- 2. Breadcrumb -->
+    <nav class="breadcrumb-nav" aria-label="Breadcrumb">
+      <div class="breadcrumb-inner">
+        <a routerLink="/">Trang chủ</a>
+        <span class="sep">&gt;</span>
+        <span>{{ prod.category }}</span>
+        <span class="sep">&gt;</span>
+        <span class="current">{{ prod.name }}</span>
+      </div>
+    </nav>
+
+    <main class="detail-main-content">
+      <!-- 3. Primary Product Showcase Card -->
+      <section class="card product-hero-card">
+        <div class="hero-grid">
+          <!-- Left: Image Gallery & Badges -->
+          <div class="hero-image-col">
+            <div class="image-wrapper">
+              <img [src]="prod.imageUrl" [alt]="prod.name" class="main-prod-img" />
+              @if (currentStock() <= 10 && currentStock() > 0) {
+                <span class="stock-alert-badge">Chỉ còn {{ currentStock() }}</span>
+              } @else if (currentStock() === 0) {
+                <span class="stock-alert-badge out-of-stock">Tạm hết hàng</span>
+              }
+            </div>
+          </div>
+
+          <!-- Right: Info & Buying Options -->
+          <div class="hero-info-col">
+            <div class="cat-sku-row">
+              <span>{{ prod.category }}</span>
+              <span class="bullet">·</span>
+              <span>SKU {{ currentSku() }}</span>
+            </div>
+
+            <h1 class="product-title">{{ prod.name }}</h1>
+
+            <!-- Rating & Stats Summary -->
+            <div class="rating-summary-row">
+              <div class="stars-gold">
+                <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+              </div>
+              <strong class="rating-num">{{ averageRating() }}</strong>
+              <span class="bullet">·</span>
+              <span class="stat-link" (click)="scrollToSection('reviews-section')">
+                {{ totalReviews() }} đánh giá
+              </span>
+              <span class="bullet">·</span>
+              <span class="stat-link" (click)="scrollToSection('qa-section')">
+                {{ allQuestions().length }} bình luận
+              </span>
+            </div>
+
+            <!-- Price -->
+            <div class="price-box">
+              <span class="current-price">{{ currentPrice() | number:'1.0-0' }}₫</span>
+            </div>
+
+            <!-- Phân loại (Variants) -->
+            <div class="variants-section">
+              <span class="option-label">Phân loại</span>
+              <div class="variants-list">
+                @for (v of prod.variants; track $index) {
+                  <button
+                    type="button"
+                    class="variant-btn"
+                    [class.active]="selectedVariantIndex() === $index"
+                    [disabled]="!v.available"
+                    (click)="selectVariant($index)"
+                  >
+                    {{ v.label }}
+                  </button>
+                }
+              </div>
+            </div>
+
+            <!-- Số lượng -->
+            <div class="quantity-section">
+              <span class="option-label">Số lượng</span>
+              <div class="stepper-row">
+                <div class="stepper">
+                  <button type="button" class="step-btn" (click)="decreaseQty()" [disabled]="quantity() <= 1">-</button>
+                  <span class="qty-display">{{ quantity() }}</span>
+                  <button type="button" class="step-btn" (click)="increaseQty()" [disabled]="quantity() >= currentStock()">+</button>
+                </div>
+                <span class="stock-note">Còn {{ currentStock() }} sản phẩm</span>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="actions-row">
+              <button
+                type="button"
+                class="btn-add-cart"
+                (click)="addToCart()"
+                [disabled]="isAddingToCart() || currentStock() === 0"
+              >
+                + Giỏ hàng
+              </button>
+
+              <button
+                type="button"
+                class="btn-buy-now"
+                (click)="buyNow()"
+                [disabled]="currentStock() === 0"
+              >
+                Mua ngay
+              </button>
+
+              <button
+                type="button"
+                class="btn-wishlist"
+                [class.active]="isWishlisted()"
+                (click)="toggleWishlist()"
+                title="Lưu yêu thích"
+              >
+                <svg viewBox="0 0 24 24" width="20" height="20" [attr.fill]="isWishlisted() ? '#e11d48' : 'none'" [attr.stroke]="isWishlisted() ? '#e11d48' : '#374151'" stroke-width="2">
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. Đánh giá sản phẩm Section -->
+      <section class="card reviews-card" id="reviews-section">
+        <h2 class="card-heading">Đánh giá sản phẩm</h2>
+
+        <div class="reviews-top-grid">
+          <!-- Left: Big Rating & Breakdown bars -->
+          <div class="score-overview-col">
+            <div class="big-score">
+              <span class="score-num">{{ averageRating() }}</span>
+              <span class="score-base">/ 5</span>
+            </div>
+
+            <div class="stars-gold-big">
+              <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+            </div>
+
+            <div class="review-count-total">{{ totalReviews() }} đánh giá</div>
+
+            <div class="rating-bars-list">
+              @for (star of [5, 4, 3, 2, 1]; track star) {
+                <div class="bar-row">
+                  <span class="star-label">{{ star }} ★</span>
+                  <div class="bar-track">
+                    <div class="bar-fill" [style.width.%]="getStarPercent(star)"></div>
+                  </div>
+                  <span class="star-count">{{ ratingCounts()[star] || 0 }}</span>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Right: Viết đánh giá của bạn Box -->
+          <div class="write-review-col">
+            <div class="write-box">
+              <h3 class="write-title">Viết đánh giá của bạn</h3>
+              <p class="star-prompt">Bạn chấm mấy sao?</p>
+
+              <!-- Interactive Stars -->
+              <div class="interactive-stars">
+                @for (s of [1, 2, 3, 4, 5]; track s) {
+                  <button
+                    type="button"
+                    class="star-btn"
+                    [class.active]="newReviewRating() >= s"
+                    (click)="setRatingStars(s)"
+                    title="{{ s }} sao"
+                  >
+                    ★
+                  </button>
+                }
+              </div>
+
+              <label class="comment-label">Nhận xét</label>
+              <textarea
+                class="comment-textarea"
+                rows="3"
+                [ngModel]="newReviewComment()"
+                (ngModelChange)="newReviewComment.set($event)"
+                placeholder="Chia sẻ cảm nhận về chất lượng, form giày, độ êm..."
+              ></textarea>
+
+              <!-- Image preview if attached -->
+              @if (newReviewImage()) {
+                <div class="preview-img-box">
+                  <img [src]="newReviewImage()" alt="Xem trước ảnh đánh giá" />
+                  <button type="button" class="btn-remove-img" (click)="removeReviewImage()">✕</button>
+                </div>
+              }
+
+              <div class="write-footer-row">
+                <label class="btn-add-img">
+                  <span>+ Thêm hình ảnh</span>
+                  <input type="file" accept="image/*" (change)="onReviewImageSelected($event)" style="display: none;" />
+                </label>
+
+                <button
+                  type="button"
+                  class="btn-submit-review"
+                  (click)="submitReview()"
+                  [disabled]="isSubmittingReview()"
+                >
+                  Gửi đánh giá
+                </button>
+              </div>
+
+              <p class="terms-note">Chỉ khách đã mua sản phẩm này mới có thể đánh giá.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filter Chips Row -->
+        <div class="filter-chips-row">
+          <button
+            type="button"
+            class="chip-btn"
+            [class.active]="activeReviewFilter() === 'ALL'"
+            (click)="setReviewFilter('ALL')"
+          >
+            Tất cả
+          </button>
+          <button
+            type="button"
+            class="chip-btn"
+            [class.active]="activeReviewFilter() === 'IMAGE'"
+            (click)="setReviewFilter('IMAGE')"
+          >
+            Có hình ảnh
+          </button>
+          <button
+            type="button"
+            class="chip-btn"
+            [class.active]="activeReviewFilter() === '5'"
+            (click)="setReviewFilter('5')"
+          >
+            5 sao
+          </button>
+          <button
+            type="button"
+            class="chip-btn"
+            [class.active]="activeReviewFilter() === '4'"
+            (click)="setReviewFilter('4')"
+          >
+            4 sao
+          </button>
+          <button
+            type="button"
+            class="chip-btn"
+            [class.active]="activeReviewFilter() === 'LOW'"
+            (click)="setReviewFilter('LOW')"
+          >
+            Thấp hơn
+          </button>
+        </div>
+
+        <!-- Reviews List -->
+        <div class="reviews-list">
+          @for (rev of displayedReviews(); track rev.id) {
+            <article class="review-item">
+              <div class="review-header">
+                <div class="avatar-circle">
+                  {{ rev.customerName.charAt(0).toUpperCase() }}
+                </div>
+                <div class="customer-meta">
+                  <div class="name-badge-row">
+                    <strong class="cust-name">{{ rev.customerName }}</strong>
+                    @if (rev.verifiedPurchase) {
+                      <span class="badge-bought">Đã mua hàng</span>
+                    }
+                    <span class="rev-date">{{ rev.createdAt }}</span>
+                  </div>
+                  <div class="stars-gold-sm">
+                    @for (s of [1,2,3,4,5]; track s) {
+                      <span [class.active]="rev.rating >= s">★</span>
+                    }
+                  </div>
+                </div>
+              </div>
+
+              <div class="review-body">
+                <p class="review-text">{{ rev.comment }}</p>
+
+                @if (rev.reviewImage) {
+                  <div class="review-img-wrap">
+                    <img [src]="rev.reviewImage" alt="Ảnh đánh giá của khách" />
+                  </div>
+                }
+
+                <!-- Seller Reply Box -->
+                @if (rev.reply) {
+                  <div class="seller-reply-box">
+                    <div class="reply-header">
+                      <strong>Phản hồi từ {{ rev.shopName || prod.shopName }}</strong>
+                    </div>
+                    <p class="reply-text">{{ rev.reply }}</p>
+                  </div>
+                }
+
+                <div class="review-actions-row">
+                  <button
+                    type="button"
+                    class="btn-action-ghost"
+                    [class.voted]="rev.hasVotedHelpful"
+                    (click)="voteHelpful(rev)"
+                  >
+                    Hữu ích {{ rev.helpfulCount ? '(' + rev.helpfulCount + ')' : '' }}
+                  </button>
+                  <button type="button" class="btn-action-ghost">
+                    Báo cáo
+                  </button>
+                </div>
+              </div>
+            </article>
+          } @empty {
+            <div class="empty-reviews">
+              <p>Chưa có đánh giá nào cho bộ lọc này.</p>
+            </div>
+          }
+
+          @if (filteredReviews().length > visibleReviewLimit()) {
+            <div class="load-more-wrap">
+              <button type="button" class="btn-more-reviews" (click)="showMoreReviews()">
+                Xem thêm đánh giá
+              </button>
+            </div>
+          }
+        </div>
+      </section>
+
+      <!-- 5. Bình luận & hỏi đáp Section -->
+      <section class="card qa-card" id="qa-section">
+        <h2 class="card-heading">Bình luận & hỏi đáp</h2>
+
+        <!-- Question Input Form -->
+        <div class="question-form-wrap">
+          @if (!authService.isLoggedIn()) {
+            <div class="guest-input-row">
+              <input
+                type="text"
+                class="guest-author-input"
+                [ngModel]="guestAuthorName()"
+                (ngModelChange)="guestAuthorName.set($event)"
+                placeholder="Tên của bạn (tùy chọn, mặc định: Khách hàng)"
+                maxlength="50"
+              />
+            </div>
+          } @else {
+            <div class="author-logged-badge">
+              <span>Đang hỏi đáp với tên: <b>{{ authService.currentUserNameSignal() || 'Thành viên' }}</b></span>
+            </div>
+          }
+          <textarea
+            class="question-textarea"
+            rows="2"
+            [ngModel]="newQuestionText()"
+            (ngModelChange)="newQuestionText.set($event)"
+            placeholder="Đặt câu hỏi cho người bán về kích cỡ, chất liệu, cách bảo quản..."
+          ></textarea>
+          <div class="submit-q-row">
+            <span class="qa-public-note">Bình luận & câu hỏi được hiển thị công khai cho tất cả mọi người</span>
+            <button
+              type="button"
+              class="btn-submit-q"
+              (click)="submitQuestion()"
+              [disabled]="isSubmittingQuestion()"
+            >
+              Gửi câu hỏi
+            </button>
+          </div>
+        </div>
+
+        <!-- Questions List -->
+        <div class="questions-list">
+          @for (q of allQuestions(); track q.id) {
+            <div class="qa-item">
+              <div class="qa-user-row">
+                <strong>{{ q.customerName }}</strong>
+                <span class="qa-date">{{ q.createdAt }}</span>
+              </div>
+              <p class="qa-text">{{ q.question }}</p>
+
+              @if (q.answer) {
+                <div class="seller-reply-box">
+                  <div class="reply-header">
+                    <strong>Trả lời từ {{ q.shopName || prod.shopName }}</strong>
+                  </div>
+                  <p class="reply-text">{{ q.answer }}</p>
+                </div>
+              }
+            </div>
+          } @empty {
+            <div class="empty-reviews">
+              <p>Chưa có câu hỏi nào. Hãy đặt câu hỏi nếu bạn cần tư vấn về sản phẩm này!</p>
+            </div>
+          }
+        </div>
+      </section>
+    </main>
+  }
+
+  <!-- Toast Floating Notification -->
+  @if (toastMessage(); as msg) {
+    <div class="toast-floating" role="status">
+      <span>{{ msg }}</span>
+    </div>
+  }
+</div>

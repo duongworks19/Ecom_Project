@@ -234,7 +234,10 @@ export class ShopStorefrontComponent implements OnInit {
   });
 
   readonly products = computed(() => {
-    return this.shopProducts();
+    // Chỉ hiển thị các sản phẩm đang công khai (VISIBLE / ACTIVE), ẩn hoàn toàn các sản phẩm có trạng thái HIDDEN hoặc DELETED
+    return this.shopProducts().filter(
+      (p: any) => p.status !== 'HIDDEN' && p.s !== 'HIDDEN' && p.status !== 'DELETED' && p.s !== 'DELETED'
+    );
   });
 
   readonly categories = computed(() => {

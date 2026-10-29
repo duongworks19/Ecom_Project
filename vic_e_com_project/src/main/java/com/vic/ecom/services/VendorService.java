@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -56,6 +57,10 @@ public class VendorService {
     ));
 
     public ShopNameValidationResult validateShopName(String name) {
+        return validateShopName(name, null);
+    }
+
+    public ShopNameValidationResult validateShopName(String name, Long currentVendorId) {
         if (name == null || name.trim().isEmpty()) {
             return new ShopNameValidationResult(false, "Vui lòng nhập tên gian hàng.");
         }
@@ -74,16 +79,19 @@ public class VendorService {
         }
 
         // 2. Kiểm tra trùng tên với shop đã có trên hệ thống
-        if (shopRepository.existsByNameIgnoreCase(trimmed)) {
+        boolean exists = (currentVendorId != null)
+                ? shopRepository.existsByNameIgnoreCaseAndVendorIdNot(trimmed, currentVendorId)
+                : shopRepository.existsByNameIgnoreCase(trimmed);
+        if (exists) {
             return new ShopNameValidationResult(false,
-                    "Tên gian hàng này đã có shop đăng ký trước đó. Vui lòng chọn tên khác.");
+                    "Tên gian hàng \"" + trimmed + "\" đã được đăng ký bởi shop khác. Vui lòng chọn tên khác.");
         }
 
         return new ShopNameValidationResult(true, "Tên gian hàng hợp lệ và khả dụng.");
     }
 
     public boolean isShopNameAvailable(String name) {
-        return validateShopName(name).isAvailable();
+        return validateShopName(name, null).isAvailable();
     }
 
     private boolean isSensitiveOrForbiddenShopName(String name) {
@@ -132,6 +140,10 @@ public class VendorService {
     }
 
     public boolean isEmailAvailable(String email, Long currentUserId) {
+        return isEmailAvailable(email, currentUserId, null);
+    }
+
+    public boolean isEmailAvailable(String email, Long currentUserId, Long currentVendorId) {
         if (email == null || email.trim().isEmpty()) return false;
         String normalized = email.trim().toLowerCase();
         
@@ -140,7 +152,25 @@ public class VendorService {
                 : userRepository.existsByEmail(normalized);
         if (emailExistsInUsers) return false;
 
-        return !shopRepository.existsByEmailIgnoreCase(normalized);
+        boolean emailExistsInShops = (currentVendorId != null)
+                ? shopRepository.existsByEmailIgnoreCaseAndVendorIdNot(normalized, currentVendorId)
+                : shopRepository.existsByEmailIgnoreCase(normalized);
+        return !emailExistsInShops;
+    }
+
+    public boolean isPhoneAvailable(String phone, Long currentUserId, Long currentVendorId) {
+        if (phone == null || phone.trim().isEmpty()) return false;
+        String normalized = phone.trim();
+        
+        boolean phoneExistsInUsers = (currentUserId != null)
+                ? userRepository.existsByPhoneAndIdNot(normalized, currentUserId)
+                : userRepository.existsByPhone(normalized);
+        if (phoneExistsInUsers) return false;
+
+        boolean phoneExistsInShops = (currentVendorId != null)
+                ? shopRepository.existsByPhoneAndVendorIdNot(normalized, currentVendorId)
+                : shopRepository.existsByPhone(normalized);
+        return !phoneExistsInShops;
     }
 
     @Transactional(readOnly = true)
@@ -150,46 +180,115 @@ public class VendorService {
                 .orElse(null);
     }
 
+    private String mergeKycJson(String oldKyc, String newKyc) {
+        if (oldKyc == null || oldKyc.isBlank()) return newKyc;
+        if (newKyc == null || newKyc.isBlank()) return oldKyc;
+
+        if (oldKyc.trim().startsWith("{") && newKyc.trim().startsWith("{")) {
+            try {
+                com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                java.util.Map<String, Object> oldMap = mapper.readValue(oldKyc, java.util.Map.class);
+                java.util.Map<String, Object> newMap = mapper.readValue(newKyc, java.util.Map.class);
+
+                for (java.util.Map.Entry<String, Object> entry : newMap.entrySet()) {
+                    if (entry.getValue() != null && !entry.getValue().toString().isBlank()) {
+                        oldMap.put(entry.getKey(), entry.getValue());
+                    }
+                }
+                return mapper.writeValueAsString(oldMap);
+            } catch (Exception ignored) {
+            }
+        }
+        return (newKyc != null && !newKyc.isBlank()) ? newKyc : oldKyc;
+    }
+
     @Transactional
     public VendorResponse registerVendor(Long userId, VendorRegisterRequest req) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy người dùng"));
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy thông tin tài khoản người dùng"));
 
-        if (vendorRepository.existsByUserId(userId)) {
-            throw new IllegalArgumentException("Tài khoản này đã có hồ sơ đăng ký người bán");
+        Optional<Vendor> existingVendorOpt = vendorRepository.findByUserId(userId);
+        Vendor vendor;
+        Shop shop;
+        Long vendorId = null;
+
+        if (existingVendorOpt.isPresent()) {
+            Vendor ev = existingVendorOpt.get();
+            if (ev.getApprovalStatus() == ApprovalStatus.APPROVED) {
+                throw new IllegalArgumentException("Tài khoản của bạn đã là người bán trên hệ thống, không cần đăng ký lại.");
+            }
+            // Cho phép cập nhật hồ sơ hiện có khi đang ở trạng thái PENDING, REVISION_NEEDED hoặc REJECTED
+            vendor = ev;
+            vendorId = ev.getId();
+            shop = ev.getShop() != null ? ev.getShop() : new Shop();
+        } else {
+            vendor = new Vendor();
+            vendor.setUser(user);
+            shop = new Shop();
         }
 
-        ShopNameValidationResult valResult = validateShopName(req.getShopName());
-        if (!valResult.isAvailable()) {
-            throw new IllegalArgumentException(valResult.message());
-        }
-
-        if (req.getEmail() != null && !req.getEmail().trim().isEmpty()) {
-            String email = req.getEmail().trim().toLowerCase();
-            if (!isEmailAvailable(email, userId)) {
-                throw new IllegalArgumentException("Email nhận thông báo đã được sử dụng trên hệ thống");
+        // 1. Kiểm tra trùng tên gian hàng
+        if (req.getShopName() != null && !req.getShopName().isBlank()) {
+            ShopNameValidationResult valResult = (vendorId != null)
+                    ? validateShopName(req.getShopName(), vendorId)
+                    : validateShopName(req.getShopName());
+            if (!valResult.isAvailable()) {
+                throw new IllegalArgumentException(valResult.message());
             }
         }
 
-        // 1. Tạo Vendor
-        Vendor vendor = new Vendor();
-        vendor.setUser(user);
-        vendor.setBusinessName(req.getBusinessName());
-        vendor.setKycDocumentUrl(req.getKycDocumentUrl());
-        vendor.setApprovalStatus(ApprovalStatus.PENDING);
+        // 2. Kiểm tra trùng email nhận thông báo
+        if (req.getEmail() != null && !req.getEmail().trim().isEmpty()) {
+            String email = req.getEmail().trim().toLowerCase();
+            if (!isEmailAvailable(email, userId, vendorId)) {
+                throw new IllegalArgumentException("Email nhận thông báo \"" + email + "\" đã được sử dụng trên hệ thống. Vui lòng chọn email khác.");
+            }
+        }
 
-        // 2. Tạo Shop liên kết 1-1
-        Shop shop = new Shop();
+        // 3. Kiểm tra trùng số điện thoại liên hệ
+        if (req.getPhone() != null && !req.getPhone().trim().isEmpty()) {
+            String phone = req.getPhone().trim();
+            if (!isPhoneAvailable(phone, userId, vendorId)) {
+                throw new IllegalArgumentException("Số điện thoại liên hệ \"" + phone + "\" đã được đăng ký bởi người dùng hoặc gian hàng khác. Vui lòng chọn số khác.");
+            }
+        }
+
+        // 4. Cập nhật Vendor (giữ nguyên dữ liệu cũ, chỉ cập nhật mục có thay đổi / bổ sung)
+        if (req.getBusinessName() != null && !req.getBusinessName().isBlank()) {
+            vendor.setBusinessName(req.getBusinessName());
+        }
+        String mergedKyc = mergeKycJson(vendor.getKycDocumentUrl(), req.getKycDocumentUrl());
+        vendor.setKycDocumentUrl(mergedKyc);
+        vendor.setApprovalStatus(ApprovalStatus.PENDING);
+        vendor.setRejectReason(null);
+
+        // 5. Cập nhật Shop
         shop.setVendor(vendor);
-        shop.setName(req.getShopName().trim());
-        shop.setLogo(req.getLogo());
-        shop.setBanner(req.getBanner());
-        shop.setDescription(req.getDescription());
-        shop.setPickupAddress(req.getPickupAddress());
-        shop.setPhone(req.getPhone());
-        shop.setEmail(req.getEmail() != null ? req.getEmail().trim().toLowerCase() : null);
+        if (req.getShopName() != null && !req.getShopName().isBlank()) {
+            shop.setName(req.getShopName().trim());
+        }
+        if (req.getLogo() != null && !req.getLogo().isBlank()) {
+            shop.setLogo(req.getLogo());
+        }
+        if (req.getBanner() != null && !req.getBanner().isBlank()) {
+            shop.setBanner(req.getBanner());
+        }
+        if (req.getDescription() != null && !req.getDescription().isBlank()) {
+            shop.setDescription(req.getDescription());
+        }
+        if (req.getPickupAddress() != null && !req.getPickupAddress().isBlank()) {
+            shop.setPickupAddress(req.getPickupAddress());
+        }
+        if (req.getPhone() != null && !req.getPhone().isBlank()) {
+            shop.setPhone(req.getPhone().trim());
+        }
+        if (req.getEmail() != null && !req.getEmail().isBlank()) {
+            shop.setEmail(req.getEmail().trim().toLowerCase());
+        }
         shop.setStatus(ShopStatus.INACTIVE); // Chờ duyệt
-        shop.setRatingAvg(BigDecimal.ZERO);
+        if (shop.getRatingAvg() == null) {
+            shop.setRatingAvg(BigDecimal.ZERO);
+        }
 
         vendor.setShop(shop);
 
@@ -224,6 +323,13 @@ public class VendorService {
             }
         } else if ("REJECT".equalsIgnoreCase(action)) {
             vendor.setApprovalStatus(ApprovalStatus.REJECTED);
+            vendor.setRejectReason(rejectReason);
+
+            if (vendor.getShop() != null) {
+                vendor.getShop().setStatus(ShopStatus.INACTIVE);
+            }
+        } else if ("NEED_INFO".equalsIgnoreCase(action) || "REVISION_NEEDED".equalsIgnoreCase(action)) {
+            vendor.setApprovalStatus(ApprovalStatus.REVISION_NEEDED);
             vendor.setRejectReason(rejectReason);
 
             if (vendor.getShop() != null) {

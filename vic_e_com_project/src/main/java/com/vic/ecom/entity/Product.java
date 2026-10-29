@@ -37,6 +37,7 @@ public class Product {
     @Column(name = "category_id")
     private Long categoryId;
 
+    @org.hibernate.annotations.NotFound(action = org.hibernate.annotations.NotFoundAction.IGNORE)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", insertable = false, updatable = false, foreignKey = @ForeignKey(name = "fk_products_category"))
     private Category categoryEntity;

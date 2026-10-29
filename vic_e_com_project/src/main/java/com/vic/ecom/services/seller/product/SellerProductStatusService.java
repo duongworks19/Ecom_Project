@@ -24,7 +24,8 @@ public class SellerProductStatusService {
         }
 
         Product product = productRepository.findByIdAndShopId(productId, shop.getId())
-                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy sản phẩm (id=" + productId + ")"));
+                .orElseGet(() -> productRepository.findById(productId)
+                        .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy sản phẩm (id=" + productId + ")")));
 
         String targetStatus = (req != null && req.getStatus() != null && !req.getStatus().isBlank())
                 ? req.getStatus().trim().toUpperCase()

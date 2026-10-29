@@ -37,10 +37,10 @@
         (click)="onSelectNode(node)"
         role="treeitem"
         [attr.aria-selected]="node.id === selectedId"
-        [attr.aria-expanded]="node.childCount > 0 ? node.expanded : null"
+        [attr.aria-expanded]="(node.childCount > 0 || node.children.length > 0) ? node.expanded : null"
       >
         <div class="row-left">
-          @if (node.childCount > 0) {
+          @if (node.childCount > 0 || node.children.length > 0) {
             <button
               type="button"
               class="chevron-toggle"
@@ -74,7 +74,7 @@
       </div>
     } @empty {
       <div class="tree-empty">
-        <p>Không tìm thấy danh mục nào phù hợp.</p>
+        <p>Chưa có danh mục nào. Bấm <strong>+ Thêm danh mục</strong> ở góc trên để tạo danh mục mới.</p>
       </div>
     }
   </div>

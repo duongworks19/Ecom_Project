@@ -13,6 +13,8 @@ import { VendorApplicationData } from '../../models/seller-onboarding.model';
 export class StepReviewComponent {
   @Input({ required: true }) data!: VendorApplicationData;
   @Input() isSubmitting = false;
+  @Input() errorMessage: string | null = null;
+  @Input() errorStepToFix: number | null = null;
   @Output() jumpToStep = new EventEmitter<number>();
   @Output() submitApplication = new EventEmitter<void>();
   @Output() back = new EventEmitter<void>();

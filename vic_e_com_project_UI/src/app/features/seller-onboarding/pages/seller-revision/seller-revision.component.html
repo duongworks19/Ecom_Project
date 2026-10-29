@@ -1,0 +1,411 @@
+<div class="revision-page-layout">
+  <!-- Minimal Header -->
+  <header class="revision-header">
+    <div class="header-inner">
+      <a routerLink="/seller/status" class="brand-link">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+            <path
+              d="M12 2C6.48 2 2 6.48 2 12c0 4.24 2.63 7.87 6.4 9.28-.09-.79-.17-2 .03-2.86.19-.78 1.21-5.14 1.21-5.14s-.31-.62-.31-1.53c0-1.43.83-2.51 1.87-2.51.88 0 1.31.66 1.31 1.45 0 .89-.57 2.21-.86 3.44-.24 1.03.52 1.88 1.54 1.88 1.84 0 3.27-1.94 3.27-4.75 0-2.49-1.79-4.22-4.33-4.22-2.95 0-4.69 2.21-4.69 4.5 0 .89.34 1.84.78 2.37.09.1.1.19.07.3-.09.34-.28 1.12-.31 1.28-.04.2-.17.24-.38.14-1.42-.66-2.31-2.74-2.31-4.42 0-3.6 2.61-6.91 7.54-6.91 3.96 0 7.03 2.82 7.03 6.59 0 3.93-2.48 7.1-5.92 7.1-1.16 0-2.24-.6-2.62-1.31l-.71 2.72c-.26.99-.96 2.22-1.42 2.99 1.14.35 2.35.55 3.61.55 5.52 0 10-4.48 10-10S17.52 2 12 2z" />
+          </svg>
+        </div>
+        <span class="brand-text">VIC<span>MART</span> <span class="badge-revision">BỔ SUNG THÔNG TIN HỒ SƠ</span></span>
+      </a>
+
+      <a routerLink="/seller/status" class="link-back">
+        <span>← Quay lại theo dõi trạng thái</span>
+      </a>
+    </div>
+  </header>
+
+  <main class="revision-main">
+    <div class="revision-container">
+      <!-- Admin Request Callout Banner -->
+      <section class="admin-callout-card">
+        <div class="callout-header">
+          <div class="callout-badge-icon">⚠️</div>
+          <div>
+            <h1 class="callout-title">Bổ sung thông tin hồ sơ theo yêu cầu</h1>
+            <p class="callout-sub">
+              Ban quản trị VIC MART đã kiểm duyệt hồ sơ gian hàng <strong>{{ shopInfo.shopName || applicationData().shopInfo.shopName }}</strong>.
+              Bạn chỉ cần chỉnh sửa/tải lại các mục có đánh dấu <span class="highlight-tag">⚠️ Cần bổ sung</span> bên dưới. Các thông tin khác đã đạt chuẩn và được giữ nguyên.
+            </p>
+          </div>
+        </div>
+
+        <!-- Admin Note Quote -->
+        <div class="admin-quote-box">
+          <div class="quote-header">
+            <span class="quote-icon">💬</span>
+            <span class="quote-author">Yêu cầu từ Quản trị viên VIC MART:</span>
+          </div>
+          <p class="quote-text">
+            "{{ applicationData().adminFeedback || 'Vui lòng bổ sung đầy đủ giấy tờ định danh và thông tin kho hàng.' }}"
+          </p>
+        </div>
+
+        <!-- Requested Items Pill Tags -->
+        @if (applicationData().req && applicationData().req!.length > 0) {
+          <div class="req-tags-wrapper">
+            <span class="req-label">Danh mục được yêu cầu:</span>
+            <div class="req-pills">
+              @for (item of applicationData().req; track item) {
+                <span class="req-pill-item">
+                  <span class="pill-dot"></span> {{ item }}
+                </span>
+              }
+            </div>
+          </div>
+        }
+      </section>
+
+      <!-- Error Alert if any -->
+      @if (errorMessage()) {
+        <div class="error-banner">
+          <span class="err-icon">❌</span>
+          <span class="err-text">{{ errorMessage() }}</span>
+        </div>
+      }
+
+      <!-- Form Section 1: Giấy tờ xác minh danh tính KYC -->
+      <section class="form-card" [class.highlight-card]="hasKycIssues">
+        <div class="card-header">
+          <div class="card-header-left">
+            <span class="card-icon">🪪</span>
+            <div>
+              <h2 class="card-title">1. Giấy tờ xác thực danh tính (KYC) & Pháp lý</h2>
+              <p class="card-desc">Căn cước công dân và giấy phép kinh doanh phục vụ xác minh thương mại điện tử.</p>
+            </div>
+          </div>
+          <span class="section-status-badge" [class.warn]="hasKycIssues" [class.ok]="!hasKycIssues">
+            {{ hasKycIssues ? '⚠️ Cần bổ sung / Sửa đổi' : '✅ Đã đạt chuẩn' }}
+          </span>
+        </div>
+
+        <div class="card-body">
+          <div class="form-row-2">
+            <!-- Mặt trước CCCD -->
+            <div class="upload-field-box" [class.field-warn]="isFrontIdRequested">
+              <div class="field-top">
+                <label class="field-label required">CCCD Mặt trước</label>
+                @if (isFrontIdRequested) {
+                  <span class="field-tag-warn">⚠️ Admin yêu cầu chụp lại</span>
+                }
+              </div>
+              <label for="front-id-upload" class="upload-dropzone" [class.has-file]="!!kycInfo.idCardFrontUrl">
+                @if (kycInfo.idCardFrontUrl) {
+                  <img [src]="kycInfo.idCardFrontUrl" alt="CCCD Mặt trước" class="preview-img" />
+                  <span class="btn-change-img">📷 Tải ảnh mới thay thế</span>
+                } @else {
+                  <div class="empty-upload">
+                    <span class="empty-icon">📷</span>
+                    <span class="empty-text">Chọn ảnh CCCD mặt trước</span>
+                    <span class="empty-hint">Ảnh rõ nét, đủ 4 góc, không lóa</span>
+                  </div>
+                }
+                <input
+                  type="file"
+                  id="front-id-upload"
+                  class="hidden-file-input"
+                  accept="image/*"
+                  (change)="onFrontImageUpload($event)"
+                />
+              </label>
+            </div>
+
+            <!-- Mặt sau CCCD -->
+            <div class="upload-field-box" [class.field-warn]="isBackIdRequested">
+              <div class="field-top">
+                <label class="field-label required">CCCD Mặt sau</label>
+                @if (isBackIdRequested) {
+                  <span class="field-tag-warn">⚠️ Admin yêu cầu chụp lại</span>
+                }
+              </div>
+              <label for="back-id-upload" class="upload-dropzone" [class.has-file]="!!kycInfo.idCardBackUrl">
+                @if (kycInfo.idCardBackUrl) {
+                  <img [src]="kycInfo.idCardBackUrl" alt="CCCD Mặt sau" class="preview-img" />
+                  <span class="btn-change-img">📷 Tải ảnh mới thay thế</span>
+                } @else {
+                  <div class="empty-upload">
+                    <span class="empty-icon">📷</span>
+                    <span class="empty-text">Chọn ảnh CCCD mặt sau</span>
+                    <span class="empty-hint">Rõ vân tay, quốc huy và chữ số</span>
+                  </div>
+                }
+                <input
+                  type="file"
+                  id="back-id-upload"
+                  class="hidden-file-input"
+                  accept="image/*"
+                  (change)="onBackImageUpload($event)"
+                />
+              </label>
+            </div>
+          </div>
+
+          <!-- Số CCCD & Giấy phép kinh doanh -->
+          <div class="form-row-2" style="margin-top: 18px;">
+            <div class="form-group">
+              <label class="form-label" for="rev-id-num">Số CCCD / Hộ chiếu</label>
+              <input
+                id="rev-id-num"
+                type="text"
+                class="form-input"
+                placeholder="001201004567"
+                maxlength="12"
+                [(ngModel)]="kycInfo.idCardNumber"
+                name="idCardNumber"
+              />
+            </div>
+
+            <div class="upload-field-box" [class.field-warn]="isLicenseRequested">
+              <div class="field-top">
+                <label class="field-label">Giấy phép kinh doanh (Nếu có)</label>
+                @if (isLicenseRequested) {
+                  <span class="field-tag-warn">⚠️ Admin yêu cầu bổ sung</span>
+                }
+              </div>
+              <label for="license-upload" class="upload-dropzone license-zone" [class.has-file]="!!kycInfo.businessLicenseUrl">
+                @if (kycInfo.businessLicenseUrl) {
+                  <img [src]="kycInfo.businessLicenseUrl" alt="Giấy phép kinh doanh" class="preview-img license-img" />
+                  <span class="btn-change-img">Tải tài liệu mới</span>
+                } @else {
+                  <div class="empty-upload compact">
+                    <span class="empty-icon">📄</span>
+                    <span class="empty-text">Tải ảnh/file Giấy phép kinh doanh</span>
+                  </div>
+                }
+                <input
+                  type="file"
+                  id="license-upload"
+                  class="hidden-file-input"
+                  accept="image/*,.pdf"
+                  (change)="onLicenseUpload($event)"
+                />
+              </label>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Form Section 2: Thông tin Gian hàng -->
+      <section class="form-card" [class.highlight-card]="hasShopIssues">
+        <div class="card-header">
+          <div class="card-header-left">
+            <span class="card-icon">🏬</span>
+            <div>
+              <h2 class="card-title">2. Thông tin Gian hàng & Nhận diện</h2>
+              <p class="card-desc">Tên thương hiệu, mô tả và hình ảnh logo đại diện cho shop.</p>
+            </div>
+          </div>
+          <span class="section-status-badge" [class.warn]="hasShopIssues" [class.ok]="!hasShopIssues">
+            {{ hasShopIssues ? '⚠️ Cần sửa đổi' : '✅ Đã đạt chuẩn' }}
+          </span>
+        </div>
+
+        <div class="card-body">
+          <div class="form-group" [class.field-warn]="isShopNameRequested">
+            <div class="field-top">
+              <label class="form-label required" for="rev-shop-name">Tên gian hàng</label>
+              @if (isShopNameRequested) {
+                <span class="field-tag-warn">⚠️ Admin yêu cầu đổi tên hợp lệ</span>
+              }
+            </div>
+            <input
+              id="rev-shop-name"
+              type="text"
+              class="form-input"
+              placeholder="Ví dụ: Lumi Home Decor, Thời Trang Trẻ Em..."
+              [(ngModel)]="shopInfo.shopName"
+              name="shopName"
+              required
+            />
+          </div>
+
+          <div class="form-group" style="margin-top: 16px;">
+            <label class="form-label" for="rev-shop-desc">Giới thiệu về gian hàng</label>
+            <textarea
+              id="rev-shop-desc"
+              rows="3"
+              class="form-textarea"
+              placeholder="Mô tả các sản phẩm kinh doanh chính của shop..."
+              [(ngModel)]="shopInfo.description"
+              name="description"
+            ></textarea>
+          </div>
+        </div>
+      </section>
+
+      <!-- Form Section 3: Kho hàng & Liên hệ -->
+      <section class="form-card" [class.highlight-card]="hasContactIssues">
+        <div class="card-header">
+          <div class="card-header-left">
+            <span class="card-icon">📍</span>
+            <div>
+              <h2 class="card-title">3. Kho lấy hàng & Thông tin liên hệ</h2>
+              <p class="card-desc">Địa chỉ để đơn vị vận chuyển đến nhận bưu kiện giao cho khách hàng.</p>
+            </div>
+          </div>
+          <span class="section-status-badge" [class.warn]="hasContactIssues" [class.ok]="!hasContactIssues">
+            {{ hasContactIssues ? '⚠️ Cần sửa đổi' : '✅ Đã đạt chuẩn' }}
+          </span>
+        </div>
+
+        <div class="card-body">
+          <div class="form-row-3">
+            <div class="form-group">
+              <label class="form-label required" for="rev-owner">Người đại diện</label>
+              <input
+                id="rev-owner"
+                type="text"
+                class="form-input"
+                [(ngModel)]="contactInfo.representativeName"
+                name="representativeName"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label required" for="rev-phone">Số điện thoại liên hệ</label>
+              <input
+                id="rev-phone"
+                type="tel"
+                class="form-input"
+                [(ngModel)]="contactInfo.phone"
+                name="phone"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label required" for="rev-email">Email nhận thông báo</label>
+              <input
+                id="rev-email"
+                type="email"
+                class="form-input"
+                [(ngModel)]="contactInfo.email"
+                name="email"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-top: 16px;" [class.field-warn]="isPickupRequested">
+            <div class="field-top">
+              <label class="form-label required" for="rev-address">Địa chỉ kho lấy hàng chi tiết</label>
+              @if (isPickupRequested) {
+                <span class="field-tag-warn">⚠️ Admin yêu cầu cập nhật lại địa chỉ kho</span>
+              }
+            </div>
+            <input
+              id="rev-address"
+              type="text"
+              class="form-input"
+              placeholder="Số nhà, ngõ/ngách, tên đường hoặc thôn/xóm..."
+              [(ngModel)]="contactInfo.detailedAddress"
+              name="detailedAddress"
+              required
+            />
+          </div>
+
+          <div class="form-row-3" style="margin-top: 16px;">
+            <div class="form-group">
+              <label class="form-label" for="rev-province">Tỉnh / Thành phố</label>
+              <select
+                id="rev-province"
+                class="form-select"
+                [(ngModel)]="contactInfo.province"
+                (ngModelChange)="onProvinceChange()"
+                name="province"
+              >
+                <option value="">-- Chọn Tỉnh / Thành --</option>
+                @for (p of provinces; track p) {
+                  <option [value]="p">{{ p }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="rev-district">Quận / Huyện</label>
+              <select
+                id="rev-district"
+                class="form-select"
+                [(ngModel)]="contactInfo.district"
+                (ngModelChange)="onDistrictChange()"
+                name="district"
+                [disabled]="!contactInfo.province"
+              >
+                <option value="">-- Chọn Quận / Huyện --</option>
+                @for (d of districtsMap[contactInfo.province] || []; track d) {
+                  <option [value]="d">{{ d }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="rev-ward">Phường / Xã</label>
+              <select
+                id="rev-ward"
+                class="form-select"
+                [(ngModel)]="contactInfo.ward"
+                name="ward"
+                [disabled]="!contactInfo.district"
+              >
+                <option value="">-- Chọn Phường / Xã --</option>
+                @for (w of wardsMap[contactInfo.district] || []; track w) {
+                  <option [value]="w">{{ w }}</option>
+                }
+              </select>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Form Section 4: Lời nhắn giải trình cho Admin -->
+      <section class="form-card feedback-vendor-card">
+        <div class="card-header">
+          <div class="card-header-left">
+            <span class="card-icon">✍️</span>
+            <div>
+              <h2 class="card-title">4. Lời nhắn giải trình gửi Ban quản trị (Tùy chọn)</h2>
+              <p class="card-desc">Ghi chú tóm tắt nội dung bạn đã sửa đổi để Admin kiểm tra nhanh hơn.</p>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <textarea
+            rows="2"
+            class="form-textarea"
+            placeholder="Ví dụ: Em đã chụp lại ảnh CCCD mặt sau rõ nét dưới ánh sáng tự nhiên và cập nhật lại địa chỉ kho chính xác..."
+            [(ngModel)]="vendorNote"
+            name="vendorNote"
+          ></textarea>
+        </div>
+      </section>
+
+      <!-- Sticky Submission Footer -->
+      <div class="revision-footer-sticky">
+        <div class="footer-inner">
+          <div class="footer-hint">
+            <span class="hint-icon">💡</span>
+            <span>Hồ sơ sau khi gửi sẽ được Ban quản trị ưu tiên xét duyệt lại trong thời gian sớm nhất.</span>
+          </div>
+          <div class="footer-actions">
+            <button type="button" class="btn-cancel" (click)="onCancel()" [disabled]="isSubmitting()">
+              Hủy bỏ & Xem lại trạng thái
+            </button>
+            <button type="button" class="btn-submit-pill" (click)="onSubmitRevision()" [disabled]="isSubmitting()">
+              @if (isSubmitting()) {
+                <span class="spinner-inline"></span>
+                <span>Đang gửi lại hồ sơ...</span>
+              } @else {
+                <span>Cập nhật & Gửi lại cho Admin xét duyệt</span>
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+              }
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

@@ -56,7 +56,10 @@ export function buildCategoryTree(
   for (const item of items) {
     const node = nodeMap.get(item.id)!;
     if (item.parentId && nodeMap.has(item.parentId)) {
-      nodeMap.get(item.parentId)!.children.push(node);
+      const parent = nodeMap.get(item.parentId)!;
+      parent.children.push(node);
+      parent.isLeaf = false;
+      parent.childCount = Math.max(parent.childCount || 0, parent.children.length);
     } else {
       rootNodes.push(node);
     }

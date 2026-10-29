@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, of } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 import { environment } from '../../../../../environments/environment';
 import {
   CategoryOverviewResponse,
@@ -19,12 +19,23 @@ interface BackendApiResponse<T> {
   data: T;
 }
 
+const STORAGE_KEY = 'vic_admin_categories_cache';
+
 @Injectable({
   providedIn: 'root',
 })
 export class AdminCategoryService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiUrl}/admin/categories`;
+
+  constructor() {
+    // Xóa bộ nhớ đệm cũ để đảm bảo không hiển thị danh mục mẫu có sẵn
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      // ignore
+    }
+  }
 
   private unwrap<T>() {
     return map((res: BackendApiResponse<T> | T) => {
@@ -36,7 +47,7 @@ export class AdminCategoryService {
   }
 
   /**
-   * 1. Lấy tổng quan cây danh mục và thống kê KPI
+   * 1. Lấy tổng quan cây danh mục từ cơ sở dữ liệu
    */
   getOverview(params: { keyword?: string; status?: CategoryStatus } = {}): Observable<CategoryOverviewResponse> {
     let httpParams = new HttpParams();
@@ -49,25 +60,49 @@ export class AdminCategoryService {
 
     return this.http
       .get<BackendApiResponse<CategoryOverviewResponse>>(this.baseUrl, { params: httpParams })
-      .pipe(this.unwrap<CategoryOverviewResponse>());
+      .pipe(
+        this.unwrap<CategoryOverviewResponse>(),
+        catchError((err) => {
+          console.error('[AdminCategoryService] Lỗi khi tải danh mục từ backend:', err);
+          return of({
+            summary: {
+              totalCategories: 0,
+              visibleCategories: 0,
+              hiddenCategories: 0,
+            },
+            maxDepth: 3,
+            items: [],
+          });
+        })
+      );
   }
 
   /**
    * 2. Kiểm tra trùng Slug thời gian thực
    */
   checkSlug(slug: string, excludeId?: number | null): Observable<SlugCheckResponse> {
-    let httpParams = new HttpParams().set('slug', slug.trim());
+    const trimmed = slug.trim();
+    let httpParams = new HttpParams().set('slug', trimmed);
     if (excludeId !== null && excludeId !== undefined) {
       httpParams = httpParams.set('excludeId', String(excludeId));
     }
 
     return this.http
       .get<BackendApiResponse<SlugCheckResponse>>(`${this.baseUrl}/check-slug`, { params: httpParams })
-      .pipe(this.unwrap<SlugCheckResponse>());
+      .pipe(
+        this.unwrap<SlugCheckResponse>(),
+        catchError(() => {
+          return of({
+            slug: trimmed,
+            available: true,
+            suggestedSlug: null,
+          });
+        })
+      );
   }
 
   /**
-   * 3. Tạo mới danh mục
+   * 3. Tạo mới danh mục và lưu vào cơ sở dữ liệu
    */
   createCategory(payload: UpsertCategoryRequest): Observable<CategoryItem> {
     return this.http
@@ -76,7 +111,7 @@ export class AdminCategoryService {
   }
 
   /**
-   * 4. Cập nhật danh mục
+   * 4. Cập nhật danh mục trong cơ sở dữ liệu
    */
   updateCategory(id: number, payload: UpsertCategoryRequest): Observable<CategoryItem> {
     return this.http

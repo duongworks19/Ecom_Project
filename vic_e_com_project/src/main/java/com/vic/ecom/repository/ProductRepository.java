@@ -19,6 +19,9 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     List<Product> findAllByStatusNot(String status);
 
+    @Query("SELECT p.categoryId, COUNT(p) FROM Product p WHERE p.categoryId IS NOT NULL AND (p.status IS NULL OR p.status <> 'DELETED') GROUP BY p.categoryId")
+    List<Object[]> countActiveGroupByCategory();
+
     List<Product> findByShopIdOrderByIdDesc(Long shopId);
 
     List<Product> findByShopIdAndStatusNotOrderByIdDesc(Long shopId, String status);

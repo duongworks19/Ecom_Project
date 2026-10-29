@@ -128,6 +128,8 @@
             <app-step-review
               [data]="applicationData()"
               [isSubmitting]="isSubmitting()"
+              [errorMessage]="submissionError()?.message || null"
+              [errorStepToFix]="submissionError()?.stepToFix || null"
               (jumpToStep)="goToStep($event)"
               (back)="goToStep(3)"
               (submitApplication)="onSubmitApplication()"

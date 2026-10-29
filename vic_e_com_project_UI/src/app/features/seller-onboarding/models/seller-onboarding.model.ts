@@ -47,6 +47,7 @@ export interface VendorApplicationData {
   kycInfo: KycInfo;
   status: ApplicationStatus;
   adminFeedback?: string;
+  req?: string[];
   createdAt?: string;
   updatedAt?: string;
 }

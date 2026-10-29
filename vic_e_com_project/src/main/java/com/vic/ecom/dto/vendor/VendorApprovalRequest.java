@@ -7,7 +7,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class VendorApprovalRequest {
-    @NotBlank(message = "Hành động duyệt (APPROVE/REJECT) là bắt buộc")
+    @NotBlank(message = "Hành động duyệt (APPROVE/REJECT/NEED_INFO) là bắt buộc")
     private String action;
 
     private String rejectReason;
