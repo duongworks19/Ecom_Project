@@ -53,6 +53,7 @@
     .product-count-badge {
       font-size: 14px;
       color: var(--color-mute);
+
       strong {
         color: var(--color-ink);
       }
@@ -84,7 +85,9 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .masonry-grid {
@@ -94,10 +97,12 @@
   @media (max-width: 1100px) {
     column-count: 3;
   }
+
   @media (max-width: 768px) {
     column-count: 2;
     column-gap: 8px;
   }
+
   @media (max-width: 480px) {
     column-count: 1;
   }
@@ -147,9 +152,11 @@
 .pin-card.square .pin-media-wrapper .pin-image {
   aspect-ratio: 1 / 1;
 }
+
 .pin-card.portrait-standard .pin-media-wrapper .pin-image {
   aspect-ratio: 3 / 4;
 }
+
 .pin-card.portrait-tall .pin-media-wrapper .pin-image {
   aspect-ratio: 4 / 5.5;
 }
@@ -225,6 +232,13 @@
     align-items: center;
     gap: 6px;
     margin-bottom: 6px;
+    cursor: pointer;
+    width: fit-content;
+
+    &:hover .seller-name {
+      color: var(--color-primary);
+      text-decoration: underline;
+    }
 
     .seller-avatar {
       width: 22px;
@@ -240,6 +254,7 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      transition: color 0.15s ease;
     }
 
     .verified-badge {
@@ -295,10 +310,12 @@
       .star-icon {
         color: #f59e0b;
       }
+
       .rating-val {
         font-weight: 700;
         color: var(--color-ink);
       }
+
       .sold-count {
         color: var(--color-mute);
       }
@@ -314,9 +331,20 @@
   max-width: 500px;
   margin: 32px auto;
 
-  .empty-icon { font-size: 44px; margin-bottom: 12px; }
-  h3 { font-size: 20px; margin-bottom: 6px; }
-  p { color: var(--color-mute); margin-bottom: 20px; }
+  .empty-icon {
+    font-size: 44px;
+    margin-bottom: 12px;
+  }
+
+  h3 {
+    font-size: 20px;
+    margin-bottom: 6px;
+  }
+
+  p {
+    color: var(--color-mute);
+    margin-bottom: 20px;
+  }
 }
 
 .btn-primary {
@@ -328,7 +356,9 @@
   border-radius: var(--rounded-full);
   transition: background-color var(--transition-fast);
 
-  &:hover { background-color: var(--color-primary-pressed); }
+  &:hover {
+    background-color: var(--color-primary-pressed);
+  }
 }
 
 .load-more-row {

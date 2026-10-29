@@ -59,6 +59,14 @@ export const routes: Routes = [
     pathMatch: 'full',
   },
   {
+    path: 'product/:id',
+    loadComponent: () =>
+      import('./features/product/pages/product-detail/product-detail.component').then(
+        (m) => m.ProductDetailComponent
+      ),
+    title: 'Chi tiết sản phẩm — VIC MART',
+  },
+  {
     path: 'shop/:id',
     loadComponent: () =>
       import('./features/seller-dashboard/pages/shop-storefront/shop-storefront.component').then(

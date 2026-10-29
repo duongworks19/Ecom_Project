@@ -1,13 +1,14 @@
 package com.vic.ecom.controller;
 
 import com.vic.ecom.dto.ApiResponse;
+import com.vic.ecom.dto.search.SearchProductItem;
+import com.vic.ecom.dto.search.SearchResultResponse;
+import com.vic.ecom.dto.search.SearchShopItem;
 import com.vic.ecom.entity.Product;
 import com.vic.ecom.entity.Shop;
 import com.vic.ecom.enums.ShopStatus;
 import com.vic.ecom.repository.ProductRepository;
 import com.vic.ecom.repository.ShopRepository;
-import lombok.Builder;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,41 +25,6 @@ public class SearchController {
 
     private final ShopRepository shopRepository;
     private final ProductRepository productRepository;
-
-    @Data
-    @Builder
-    public static class SearchShopItem {
-        private Long id;
-        private String name;
-        private String logo;
-        private String description;
-        private String pickupAddress;
-        private BigDecimal ratingAvg;
-        private int productCount;
-    }
-
-    @Data
-    @Builder
-    public static class SearchProductItem {
-        private Long id;
-        private String name;
-        private String category;
-        private String description;
-        private String imageUrl;
-        private BigDecimal price;
-        private Long shopId;
-        private String shopName;
-        private BigDecimal ratingAvg;
-        private int soldCount;
-    }
-
-    @Data
-    @Builder
-    public static class SearchResultResponse {
-        private String query;
-        private List<SearchShopItem> shops;
-        private List<SearchProductItem> products;
-    }
 
     @GetMapping
     public ResponseEntity<ApiResponse<SearchResultResponse>> search(

@@ -8,7 +8,7 @@ import {
 } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { SellerDashboardService } from '../../services/seller-dashboard.service';
 import { SellerProduct, SellerVoucher } from '../../models/seller-dashboard.model';
@@ -48,6 +48,7 @@ import { WishlistHeartButtonComponent } from '../../../wishlist/components/wishl
 })
 export class ShopStorefrontComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly http = inject(HttpClient);
   readonly dashboardService = inject(SellerDashboardService);
   readonly authService = inject(AuthService);
@@ -80,6 +81,10 @@ export class ShopStorefrontComponent implements OnInit {
       } else {
         this.loadCurrentShop();
       }
+    });
+
+    this.route.queryParamMap.subscribe(() => {
+      this.checkAndOpenProductQueryParam();
     });
   }
 
@@ -136,6 +141,7 @@ export class ShopStorefrontComponent implements OnInit {
         const prods = res?.data || res;
         if (Array.isArray(prods)) {
           this.shopProducts.set(prods);
+          this.checkAndOpenProductQueryParam();
         } else {
           this.shopProducts.set([]);
         }
@@ -145,6 +151,46 @@ export class ShopStorefrontComponent implements OnInit {
         this.shopProducts.set([]);
       },
     });
+  }
+
+  private checkAndOpenProductQueryParam(): void {
+    const prodParam = this.route.snapshot.queryParamMap.get('product') || this.route.snapshot.queryParamMap.get('productId');
+    if (!prodParam) return;
+
+    const pId = Number(prodParam);
+    const found = this.shopProducts().find((p) => p.id === pId || (p.name && p.name.toLowerCase().includes(prodParam.toLowerCase())));
+    if (found) {
+      this.selectedProduct.set(found);
+      return;
+    }
+
+    if (!isNaN(pId)) {
+      this.http.get<any>('http://localhost:9090/api/products').subscribe({
+        next: (res) => {
+          const list = res?.data || res;
+          if (Array.isArray(list)) {
+            const item = list.find((p: any) => p.id === pId);
+            if (item) {
+              const sp: SellerProduct = {
+                id: item.id,
+                name: item.name,
+                variant: 'Mặc định',
+                sku: 'SP-' + item.id,
+                category: item.category || 'Thời trang',
+                price: Number(item.price) || 0,
+                stock: 99,
+                soldCount: item.soldCount || 0,
+                thumbnailColor: '#3b82f6',
+                imageUrl: item.imageUrl || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=600&q=80',
+                status: 'ACTIVE',
+              };
+              this.selectedProduct.set(sp);
+            }
+          }
+        },
+        error: () => {},
+      });
+    }
   }
 
   loadVouchersForShop(shopId: number): void {
@@ -194,6 +240,7 @@ export class ShopStorefrontComponent implements OnInit {
     this.isLoading.set(false);
     this.dashboardService.loadShopProductsFromStorage();
     this.shopProducts.set(this.dashboardService.products());
+    this.checkAndOpenProductQueryParam();
     const fallback = this.dashboardService.vouchers().filter(
       (v) => v.active && v.status === 'ACTIVE' && v.displayStatus !== 'PAUSED' && v.displayStatus !== 'EXPIRED'
     );
@@ -277,7 +324,7 @@ export class ShopStorefrontComponent implements OnInit {
   }
 
   openProductDetail(product: SellerProduct): void {
-    this.selectedProduct.set(product);
+    this.router.navigate(['/product', product.id]);
   }
 
   buyNow(product: SellerProduct, event?: Event): void {

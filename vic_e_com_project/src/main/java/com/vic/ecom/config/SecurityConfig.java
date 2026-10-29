@@ -49,9 +49,9 @@ public class SecurityConfig {
             )
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/change-password").authenticated()
-                .requestMatchers("/api/auth/**", "/api/vendors/check-name", "/api/vendors/check-email", "/api/vendors/check-phone", "/api/shops/**", "/api/categories", "/api/products/*/variants").permitAll()
+                .requestMatchers("/api/auth/**", "/api/vendors/check-name", "/api/vendors/check-email", "/api/vendors/check-phone", "/api/shops/**", "/api/categories", "/api/products/**", "/api/search/**").permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                .requestMatchers("/api/seller/**").hasRole("VENDOR")
+                .requestMatchers("/api/seller/**").hasAnyRole("VENDOR", "ADMIN")
                 .requestMatchers("/api/customer/profile/**").hasAnyRole("CUSTOMER", "VENDOR", "ADMIN")
                 .requestMatchers("/api/customer/**").hasAnyRole("CUSTOMER", "VENDOR", "ADMIN")
                 .requestMatchers("/uploads/avatars/**").authenticated()

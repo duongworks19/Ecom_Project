@@ -3,12 +3,12 @@ package com.vic.ecom.controller.seller.product;
 import com.vic.ecom.dto.ApiResponse;
 import com.vic.ecom.dto.seller.product.SellerProductDetailDto;
 import com.vic.ecom.dto.seller.product.SellerProductVariantDto;
+import com.vic.ecom.dto.seller.product.StockUpdateRequest;
 import com.vic.ecom.entity.Product;
 import com.vic.ecom.entity.ProductVariant;
 import com.vic.ecom.entity.Shop;
 import com.vic.ecom.repository.ProductRepository;
 import com.vic.ecom.services.seller.product.SellerShopResolverService;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -27,16 +27,6 @@ public class SellerProductStockController {
 
     private final ProductRepository productRepository;
     private final SellerShopResolverService shopResolverService;
-
-    @Data
-    public static class StockUpdateRequest {
-        private String sku;
-        private Integer q;
-        private Integer stock;
-        private Integer l;
-        private Integer threshold;
-        private List<SellerProductVariantDto> variants;
-    }
 
     @PatchMapping
     @PutMapping

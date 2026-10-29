@@ -36,6 +36,16 @@ public class ShopController {
         return ResponseEntity.ok(ApiResponse.ok("Thông tin shop hiện tại", ShopResponse.fromEntity(shop)));
     }
 
+    @PutMapping("/current")
+    public ResponseEntity<ApiResponse<ShopResponse>> updateCurrentShop(Authentication auth, @RequestBody com.vic.ecom.dto.vendor.UpdateShopRequest req) {
+        Shop shop = shopResolverService.resolveCurrentShop(auth, null);
+        if (shop == null) {
+            return ResponseEntity.notFound().build();
+        }
+        shop = shopService.updateShop(shop, req);
+        return ResponseEntity.ok(ApiResponse.ok("Cập nhật thông tin gian hàng thành công", ShopResponse.fromEntity(shop)));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<ShopResponse>> getShopById(@PathVariable Long id) {
         ShopResponse shop = shopService.getShopById(id);

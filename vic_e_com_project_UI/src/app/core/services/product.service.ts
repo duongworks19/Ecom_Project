@@ -1,4 +1,5 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { Product } from '../models/product.model';
 import { CategoryItem } from '../models/category.model';
 import { ProductApiService } from './product-api.service';
@@ -16,6 +17,7 @@ export interface ProductFilterState {
 })
 export class ProductService {
   private readonly productApi = inject(ProductApiService);
+  private readonly http = inject(HttpClient);
 
   readonly categories = signal<CategoryItem[]>([]);
   readonly allProducts = signal<Product[]>(INITIAL_PRODUCTS);
@@ -93,6 +95,33 @@ export class ProductService {
         this.isLoading.set(false);
       },
       error: () => this.isLoading.set(false),
+    });
+
+    this.http.get<any>('http://localhost:9090/api/products').subscribe({
+      next: (res) => {
+        const dbProducts = res?.data || res;
+        if (Array.isArray(dbProducts) && dbProducts.length > 0) {
+          const mapped: Product[] = dbProducts.map((p: any) => ({
+            id: String(p.id),
+            name: p.name,
+            category: 'fashion',
+            categoryLabel: p.category || 'Thời trang & Phụ kiện',
+            price: Number(p.price) || 0,
+            soldCount: p.soldCount || 0,
+            rating: p.ratingAvg ? Number(p.ratingAvg) : 5.0,
+            image: p.imageUrl || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=600&q=80',
+            aspectRatio: 'square',
+            seller: {
+              name: p.shopName || 'VICMART Shop',
+              avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&h=100&q=80',
+              verified: true,
+            },
+            shopId: p.shopId || 1,
+          }));
+          this.allProducts.set([...mapped, ...INITIAL_PRODUCTS]);
+        }
+      },
+      error: () => {},
     });
   }
 

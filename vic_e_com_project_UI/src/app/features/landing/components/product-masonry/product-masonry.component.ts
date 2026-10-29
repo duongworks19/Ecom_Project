@@ -3,6 +3,7 @@ import {
   computed, inject, signal,
 } from '@angular/core';
 import { NgClass } from '@angular/common';
+import { Router } from '@angular/router';
 import { Product } from '../../../../core/models/product.model';
 import { CategoryItem } from '../../../../core/models/category.model';
 import { StoreConfigService } from '../../../../core/services/store-config.service';
@@ -20,6 +21,7 @@ const PAGE_SIZE = 12;
 })
 export class ProductMasonryComponent implements OnChanges {
   private readonly storeConfig = inject(StoreConfigService);
+  private readonly router = inject(Router);
   readonly authService = inject(AuthService);
 
   @Input({ required: true }) products: Product[] = [];
@@ -53,6 +55,16 @@ export class ProductMasonryComponent implements OnChanges {
   }
 
   onResetCategory(): void { this.resetCategory.emit(); }
+
+  goToProduct(product: Product): void {
+    this.router.navigate(['/product', product.id]);
+  }
+
+  goToSeller(product: Product, event: MouseEvent): void {
+    event.stopPropagation();
+    const sId = product.shopId || 1;
+    this.router.navigate(['/shop', sId]);
+  }
 
   formatVND(value: number): string {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);

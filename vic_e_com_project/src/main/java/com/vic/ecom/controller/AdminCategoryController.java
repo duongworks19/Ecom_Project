@@ -32,7 +32,7 @@ public class AdminCategoryController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<CategoryItem>> update(@PathVariable Long id,@RequestBody UpsertCategoryRequest req) {
+    public ResponseEntity<ApiResponse<CategoryItem>>    update(@PathVariable Long id,@RequestBody UpsertCategoryRequest req) {
         return ResponseEntity.ok(ApiResponse.ok("Cập nhật danh mục thành công",service.update(id,req)));
     }
 

@@ -4,7 +4,6 @@ import com.vic.ecom.dto.ApiResponse;
 import com.vic.ecom.dto.ShipperPortalDtos;
 import com.vic.ecom.services.ShipperPortalQueryService;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -51,10 +50,8 @@ public class ShipperPortalController {
 
     @PutMapping("/profile/work-status")
     public ResponseEntity<ApiResponse<ShipperPortalDtos.Profile>> workStatus(Authentication auth,
-            @Valid @RequestBody WorkStatus request) {
+            @Valid @RequestBody ShipperPortalDtos.WorkStatusRequest request) {
         service.setWorkStatus(auth, request.isAvailable());
         return ResponseEntity.ok(ApiResponse.ok("Đã cập nhật trạng thái", service.profile(auth)));
     }
-
-    public record WorkStatus(@NotNull Boolean isAvailable) { }
 }

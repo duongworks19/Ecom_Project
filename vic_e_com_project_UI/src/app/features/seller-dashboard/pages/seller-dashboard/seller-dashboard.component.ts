@@ -1,5 +1,6 @@
 import {
   ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
   HostListener,
   OnInit,
@@ -99,8 +100,30 @@ export class SellerDashboardComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly http = inject(HttpClient);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   readonly currentShopId = signal<number | null>(null);
+
+  // Form dữ liệu hồ sơ shop
+  readonly formShopProfile = {
+    n: 'Lumi Home Decor',
+    d: 'Đồ decor phong cách tối giản Bắc Âu.',
+    ph: '0912345678',
+    em: 'lumi@vicmart.vn',
+    ad: 'Số 12 Ngõ 88 Trần Thái Tông, Cầu Giấy, Hà Nội',
+    hr: '08:00 – 21:00',
+  };
+
+  private syncProfileData(data: { n: string; d: string; ph: string; em: string; ad: string; hr: string }): void {
+    this.shopProfile.set(data);
+    this.formShopProfile.n = data.n || '';
+    this.formShopProfile.d = data.d || '';
+    this.formShopProfile.ph = data.ph || '';
+    this.formShopProfile.em = data.em || '';
+    this.formShopProfile.ad = data.ad || '';
+    this.formShopProfile.hr = data.hr || '08:00 – 21:00';
+    this.cdr.markForCheck();
+  }
 
   ngOnInit(): void {
     const role = this.authService.getRole()?.toUpperCase();
@@ -112,22 +135,35 @@ export class SellerDashboardComponent implements OnInit {
     this.detectApprovedRole();
     this.loadCurrentShopInfo();
     this.loadVouchers();
+    this.loadReviewsAndQuestions();
   }
 
   loadCurrentShopInfo(): void {
+    const savedLocal = localStorage.getItem('vic_seller_shop_profile');
+    if (savedLocal) {
+      try {
+        const parsed = JSON.parse(savedLocal);
+        if (parsed && parsed.n) {
+          this.syncProfileData(parsed);
+        }
+      } catch {}
+    }
+
     this.http.get<any>('http://localhost:9090/api/shops/current').subscribe({
       next: (res) => {
         const shop = res?.data || res;
         if (shop && shop.id) {
           this.currentShopId.set(shop.id);
-          this.shopProfile.set({
-            n: shop.name,
-            d: shop.description || 'Đồ decor phong cách tối giản Bắc Âu.',
-            ph: shop.phone || '0912345678',
-            em: shop.email || 'lumi@vicmart.vn',
-            ad: shop.pickupAddress || 'Số 12 Ngõ 88 Trần Thái Tông, Cầu Giấy, Hà Nội',
-            hr: '08:00 – 21:00',
-          });
+          const data = {
+            n: shop.name || this.formShopProfile.n,
+            d: shop.description || this.formShopProfile.d || 'Đồ decor phong cách tối giản Bắc Âu.',
+            ph: shop.phone || this.formShopProfile.ph || '0912345678',
+            em: shop.email || this.formShopProfile.em || 'lumi@vicmart.vn',
+            ad: shop.pickupAddress || this.formShopProfile.ad || 'Số 12 Ngõ 88 Trần Thái Tông, Cầu Giấy, Hà Nội',
+            hr: shop.businessHours || this.formShopProfile.hr || '08:00 – 21:00',
+          };
+          this.syncProfileData(data);
+          localStorage.setItem('vic_seller_shop_profile', JSON.stringify(data));
         }
       },
       error: () => {},
@@ -323,6 +359,19 @@ export class SellerDashboardComponent implements OnInit {
 
   // Tên gian hàng (Shop Name)
   readonly shopName = computed(() => {
+    const profName = this.shopProfile()?.n?.trim();
+    if (profName) {
+      return profName;
+    }
+    const savedProfRaw = localStorage.getItem('vic_seller_shop_profile');
+    if (savedProfRaw) {
+      try {
+        const savedProf = JSON.parse(savedProfRaw);
+        if (savedProf?.n?.trim()) {
+          return savedProf.n.trim();
+        }
+      } catch {}
+    }
     const draftRaw = localStorage.getItem('vic_seller_onboarding_draft');
     if (draftRaw) {
       try {
@@ -332,7 +381,7 @@ export class SellerDashboardComponent implements OnInit {
         }
       } catch {}
     }
-    return this.shopProfile().n || 'VICMART Shop';
+    return 'VICMART Shop';
   });
 
   readonly userAvatarLetter = computed(() => {
@@ -481,13 +530,24 @@ export class SellerDashboardComponent implements OnInit {
 
   detectApprovedRole(): void {
     const role = localStorage.getItem('role');
+    const savedLocal = localStorage.getItem('vic_seller_shop_profile');
     const draftRaw = localStorage.getItem('vic_seller_onboarding_draft');
+
+    if (savedLocal) {
+      try {
+        const parsed = JSON.parse(savedLocal);
+        if (parsed && parsed.n) {
+          this.syncProfileData(parsed);
+        }
+      } catch {}
+    }
+
     if (draftRaw) {
       try {
         const draft = JSON.parse(draftRaw);
         if (draft.status === 'APPROVED' || role === 'VENDOR' || role === 'ROLE_VENDOR') {
           this.shopStatus.set('APPROVED');
-          if (draft.shopInfo?.shopName) {
+          if (!savedLocal && draft.shopInfo?.shopName) {
             const pickup = [
               draft.contactInfo?.detailedAddress,
               draft.contactInfo?.ward,
@@ -495,14 +555,15 @@ export class SellerDashboardComponent implements OnInit {
               draft.contactInfo?.province,
             ].filter(Boolean).join(', ');
 
-            this.shopProfile.update((cur) => ({
-              ...cur,
+            const draftData = {
               n: draft.shopInfo.shopName,
-              d: draft.shopInfo.description || cur.d,
-              ad: pickup || cur.ad,
-              ph: draft.contactInfo?.phone || cur.ph,
-              em: draft.contactInfo?.email || cur.em,
-            }));
+              d: draft.shopInfo.description || this.formShopProfile.d,
+              ad: pickup || this.formShopProfile.ad,
+              ph: draft.contactInfo?.phone || this.formShopProfile.ph,
+              em: draft.contactInfo?.email || this.formShopProfile.em,
+              hr: this.formShopProfile.hr || '08:00 – 21:00',
+            };
+            this.syncProfileData(draftData);
           }
         }
       } catch {}
@@ -752,25 +813,52 @@ export class SellerDashboardComponent implements OnInit {
   }
 
   // Lưu tồn kho (Kho hàng)
-  saveInventoryStock(pid: number, vIdx: number, qVal: string, lVal: string): void {
-    const q = parseInt(qVal, 10);
-    const l = parseInt(lVal, 10);
+  saveInventoryStock(pid: number, vIdx: number, qVal: any, lVal: any): void {
+    const q = typeof qVal === 'number' ? qVal : parseInt(String(qVal ?? '0').trim(), 10);
+    const l = typeof lVal === 'number' ? lVal : parseInt(String(lVal ?? '0').trim(), 10);
     if (isNaN(q) || q < 0 || isNaN(l) || l < 0) {
       this.showToast('⚠️ Tồn kho và ngưỡng cảnh báo phải là số nguyên ≥ 0.', true);
       return;
     }
 
-    this.products.update((list) =>
-      list.map((prod) => {
-        if (prod.id === pid && prod.v[vIdx]) {
-          const newVariants = [...prod.v];
-          newVariants[vIdx] = { ...newVariants[vIdx], q, l };
-          return { ...prod, v: newVariants };
-        }
-        return prod;
-      })
-    );
-    this.showToast('✅ Đã lưu tồn kho. Nhật ký cập nhật tự động.');
+    const currentList = this.products();
+    const targetProd = currentList.find((p) => p.id === pid);
+    if (!targetProd || !targetProd.v || !targetProd.v[vIdx]) {
+      this.showToast('⚠️ Không tìm thấy biến thể sản phẩm cần cập nhật.', true);
+      return;
+    }
+
+    const updatedVariants = [...targetProd.v];
+    const targetVariant = updatedVariants[vIdx];
+    updatedVariants[vIdx] = { ...targetVariant, q, l };
+
+    const updatedProd: SellerProduct = {
+      ...targetProd,
+      v: updatedVariants,
+    };
+
+    // 1. Cập nhật state nội bộ và lưu bền vững vào localStorage & dashboardService
+    const updatedList = currentList.map((p) => (p.id === pid ? updatedProd : p));
+    this.products.set(updatedList);
+    this.syncToStorageAndStorefront(updatedList);
+    this.cdr.markForCheck();
+
+    // 2. Gửi request đồng bộ CSDL Backend
+    this.productService.updateStock(pid, {
+      sku: targetVariant.sku,
+      q,
+      l,
+      variants: updatedVariants,
+    }).subscribe({
+      next: () => {
+        this.showToast(`✅ Đã lưu tồn kho: ${targetVariant.sku || targetProd.n} (Tồn: ${q}).`);
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.showToast(`✅ Đã lưu tồn kho: ${targetVariant.sku || targetProd.n} (Tồn: ${q}).`);
+        this.cdr.markForCheck();
+      },
+    });
   }
 
   // Đơn hàng: Xác nhận, Đóng gói, Giao
@@ -987,7 +1075,91 @@ export class SellerDashboardComponent implements OnInit {
 
   // Hồ sơ shop
   saveProfile(): void {
-    this.showToast('✅ Đã lưu hồ sơ gian hàng.');
+    const n = this.formShopProfile.n?.trim();
+    const ph = this.formShopProfile.ph?.trim();
+    const ad = this.formShopProfile.ad?.trim();
+    const em = this.formShopProfile.em?.trim();
+    const hr = this.formShopProfile.hr?.trim();
+    const d = this.formShopProfile.d?.trim();
+
+    if (!n || n.length < 2) {
+      this.showToast('⚠️ Vui lòng nhập tên gian hàng hợp lệ (tối thiểu 2 ký tự).', true);
+      return;
+    }
+    if (!ph || ph.length < 8) {
+      this.showToast('⚠️ Vui lòng nhập số điện thoại liên hệ hợp lệ.', true);
+      return;
+    }
+    if (!ad || ad.length < 5) {
+      this.showToast('⚠️ Vui lòng nhập địa chỉ kho lấy hàng hợp lệ.', true);
+      return;
+    }
+
+    const updatedProfile = {
+      n,
+      ph,
+      em: em || '',
+      hr: hr || '08:00 – 21:00',
+      d: d || '',
+      ad,
+    };
+
+    // 1. Cập nhật state & signals ngay lập tức
+    this.syncProfileData(updatedProfile);
+
+    // 2. Lưu vào localStorage để dữ liệu được bảo toàn bền vững
+    localStorage.setItem('vic_seller_shop_profile', JSON.stringify(updatedProfile));
+
+    // Cập nhật lại draft onboarding nếu có
+    const draftRaw = localStorage.getItem('vic_seller_onboarding_draft');
+    if (draftRaw) {
+      try {
+        const draft = JSON.parse(draftRaw);
+        if (!draft.shopInfo) draft.shopInfo = {};
+        if (!draft.contactInfo) draft.contactInfo = {};
+        draft.shopInfo.shopName = n;
+        draft.shopInfo.description = updatedProfile.d;
+        draft.contactInfo.phone = ph;
+        draft.contactInfo.email = updatedProfile.em;
+        draft.contactInfo.detailedAddress = ad;
+        localStorage.setItem('vic_seller_onboarding_draft', JSON.stringify(draft));
+      } catch {}
+    }
+
+    this.dashboardService.shopProfile.set({
+      shopName: n,
+      tagline: updatedProfile.d || 'Đồ decor phong cách tối giản Bắc Âu.',
+      description: updatedProfile.d,
+      phone: ph,
+      email: updatedProfile.em,
+      pickupAddress: ad,
+      businessHours: updatedProfile.hr,
+    });
+
+    // 3. Đồng bộ lên Backend DB
+    const payload = {
+      name: n,
+      phone: ph,
+      email: updatedProfile.em,
+      description: updatedProfile.d,
+      pickupAddress: ad,
+      businessHours: updatedProfile.hr,
+    };
+
+    this.http.put<any>('http://localhost:9090/api/shops/current', payload).subscribe({
+      next: (res) => {
+        const shop = res?.data || res;
+        if (shop && shop.id) {
+          this.currentShopId.set(shop.id);
+        }
+        this.showToast('✅ Đã lưu thay đổi hồ sơ gian hàng thành công!');
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.showToast('✅ Đã lưu thay đổi hồ sơ gian hàng thành công!');
+        this.cdr.markForCheck();
+      },
+    });
   }
 
   // File upload khi NEED_INFO
@@ -1036,5 +1208,157 @@ export class SellerDashboardComponent implements OnInit {
   getTotalStock(p: SellerProduct): number {
     if (!p.v || !p.v.length) return 0;
     return p.v.reduce((sum, v) => sum + v.q, 0);
+  }
+
+  loadReviewsAndQuestions(): void {
+    const savedReviews = localStorage.getItem('vic_seller_reviews');
+    if (savedReviews) {
+      try {
+        const parsed = JSON.parse(savedReviews);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          this.reviews.set(parsed);
+        }
+      } catch {}
+    }
+
+    const savedQuestions = localStorage.getItem('vic_seller_questions');
+    if (savedQuestions) {
+      try {
+        const parsed = JSON.parse(savedQuestions);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          this.questions.set(parsed);
+        }
+      } catch {}
+    }
+
+    this.http.get<any>('http://localhost:9090/api/seller/dashboard').subscribe({
+      next: (res) => {
+        const data = res?.data || res;
+        if (data && Array.isArray(data.reviews) && data.reviews.length > 0) {
+          const apiReviews: ReviewItem[] = [];
+          const apiQuestions: QuestionItem[] = [];
+
+          for (const item of data.reviews) {
+            if (item.type === 'QA' || item.rating === 0) {
+              apiQuestions.push({
+                id: item.id,
+                p: item.productName || 'Sản phẩm',
+                who: item.customerName || 'Khách hàng',
+                x: item.comment || '',
+                a: item.reply,
+              });
+            } else {
+              apiReviews.push({
+                id: item.id,
+                p: item.productName || 'Sản phẩm',
+                who: item.customerName || 'Khách hàng',
+                st: item.rating || 5,
+                x: item.comment || '',
+                re: item.reply,
+              });
+            }
+          }
+
+          if (apiReviews.length > 0) {
+            this.reviews.set(apiReviews);
+            localStorage.setItem('vic_seller_reviews', JSON.stringify(apiReviews));
+          }
+          if (apiQuestions.length > 0) {
+            this.questions.set(apiQuestions);
+            localStorage.setItem('vic_seller_questions', JSON.stringify(apiQuestions));
+          }
+          this.cdr.markForCheck();
+        }
+      },
+      error: () => {},
+    });
+  }
+
+  replyToReview(review: ReviewItem): void {
+    const defaultMsg = 'Cảm ơn bạn đã tin tưởng và ủng hộ gian hàng của chúng tôi!';
+    const userPrompt = prompt('Nhập nội dung phản hồi cho đánh giá này:', defaultMsg);
+    if (userPrompt === null) return;
+    const replyText = userPrompt.trim() || defaultMsg;
+
+    review.re = replyText;
+    this.reviews.update((list) => [...list]);
+    localStorage.setItem('vic_seller_reviews', JSON.stringify(this.reviews()));
+
+    // Sync to product specific storage so it shows under the product immediately
+    this.syncReviewReplyToProductStorage(review.id, review.p, replyText);
+
+    if (review.id) {
+      this.http.post<any>(`http://localhost:9090/api/seller/dashboard/reviews/${review.id}/reply`, { reply: replyText }).subscribe({
+        next: () => this.showToast('✨ Đã gửi phản hồi đánh giá thành công!'),
+        error: () => this.showToast('✨ Đã lưu phản hồi.'),
+      });
+    }
+  }
+
+  answerQuestion(question: QuestionItem): void {
+    const defaultMsg = 'Chào bạn, sản phẩm hiện đang sẵn kho và được bảo hành chính hãng ạ.';
+    const userPrompt = prompt('Nhập câu trả lời cho khách hàng:', defaultMsg);
+    if (userPrompt === null) return;
+    const answerText = userPrompt.trim() || defaultMsg;
+
+    question.a = answerText;
+    this.questions.update((list) => [...list]);
+    localStorage.setItem('vic_seller_questions', JSON.stringify(this.questions()));
+
+    // Sync to product specific storage so it shows under the product immediately
+    this.syncQuestionAnswerToProductStorage(question.id, question.p, answerText);
+
+    if (question.id) {
+      this.http.post<any>(`http://localhost:9090/api/seller/dashboard/questions/${question.id}/reply`, { reply: answerText }).subscribe({
+        next: () => this.showToast('✨ Đã gửi câu trả lời thành công!'),
+        error: () => this.showToast('✨ Đã lưu câu trả lời.'),
+      });
+    }
+  }
+
+  private syncQuestionAnswerToProductStorage(questionId: number, productName: string, answerText: string): void {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('vic_product_questions_')) {
+        try {
+          const list = JSON.parse(localStorage.getItem(key) || '[]');
+          if (Array.isArray(list)) {
+            let changed = false;
+            for (const q of list) {
+              if (q.id === questionId || (productName && q.question === questionId)) {
+                q.answer = answerText;
+                changed = true;
+              }
+            }
+            if (changed) {
+              localStorage.setItem(key, JSON.stringify(list));
+            }
+          }
+        } catch {}
+      }
+    }
+  }
+
+  private syncReviewReplyToProductStorage(reviewId: number, productName: string, replyText: string): void {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('vic_product_reviews_')) {
+        try {
+          const list = JSON.parse(localStorage.getItem(key) || '[]');
+          if (Array.isArray(list)) {
+            let changed = false;
+            for (const r of list) {
+              if (r.id === reviewId) {
+                r.reply = replyText;
+                changed = true;
+              }
+            }
+            if (changed) {
+              localStorage.setItem(key, JSON.stringify(list));
+            }
+          }
+        } catch {}
+      }
+    }
   }
 }

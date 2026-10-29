@@ -31,10 +31,10 @@
         <span class="item-icon">🏪</span>
         <span>Xem shop như khách</span>
       </a>
-      <a class="user-dropdown-item" (click)="setView('shop'); closeUserMenu()">
+      <!-- <a class="user-dropdown-item" (click)="setView('shop'); closeUserMenu()">
         <span class="item-icon">⚙️</span>
         <span>Hồ sơ gian hàng</span>
-      </a>
+      </a> -->
       <a class="user-dropdown-item" routerLink="/" (click)="closeUserMenu()">
         <span class="item-icon">🛍️</span>
         <span>Trang mua sắm</span>
@@ -600,8 +600,7 @@
         @if (r.re) {
         <span class="tag ok">Đã phản hồi</span>
         } @else {
-        <button class="btn sm" (click)="r.re = 'Cảm ơn bạn đã tin tưởng và ủng hộ gian hàng của Lumi!'">Phản
-          hồi</button>
+        <button class="btn sm" (click)="replyToReview(r)">Phản hồi</button>
         }
       </div>
       }
@@ -628,11 +627,9 @@
           }
         </div>
         @if (q.a) {
-        <span class="tag ok">Đã trả lời</span>
+          <span class="tag ok">Đã trả lời</span>
         } @else {
-        <button class="btn sm"
-          (click)="q.a = 'Chào bạn, sản phẩm hiện đang sẵn kho và được bảo hành chính hãng 12 tháng ạ.'">Trả
-          lời</button>
+          <button class="btn sm" (click)="answerQuestion(q)">Trả lời</button>
         }
       </div>
       }
@@ -653,33 +650,33 @@
       <div class="g2">
         <label style="display: block; margin-top: 12px; font-size: 13px; font-weight: 600;">
           Tên gian hàng *
-          <input class="inp" type="text" [(ngModel)]="shopProfile().n" />
+          <input class="inp" type="text" [(ngModel)]="formShopProfile.n" />
         </label>
 
         <label style="display: block; margin-top: 12px; font-size: 13px; font-weight: 600;">
           Số điện thoại liên hệ *
-          <input class="inp" type="tel" [(ngModel)]="shopProfile().ph" />
+          <input class="inp" type="tel" [(ngModel)]="formShopProfile.ph" />
         </label>
 
         <label style="display: block; margin-top: 12px; font-size: 13px; font-weight: 600;">
           Email
-          <input class="inp" type="email" [(ngModel)]="shopProfile().em" />
+          <input class="inp" type="email" [(ngModel)]="formShopProfile.em" />
         </label>
 
         <label style="display: block; margin-top: 12px; font-size: 13px; font-weight: 600;">
           Giờ hoạt động
-          <input class="inp" type="text" [(ngModel)]="shopProfile().hr" />
+          <input class="inp" type="text" [(ngModel)]="formShopProfile.hr" />
         </label>
       </div>
 
       <label style="display: block; margin-top: 12px; font-size: 13px; font-weight: 600;">
         Giới thiệu shop
-        <textarea [(ngModel)]="shopProfile().d"></textarea>
+        <textarea [(ngModel)]="formShopProfile.d"></textarea>
       </label>
 
       <label style="display: block; margin-top: 12px; font-size: 13px; font-weight: 600;">
         Địa chỉ kho lấy hàng *
-        <input class="inp" type="text" [(ngModel)]="shopProfile().ad" />
+        <input class="inp" type="text" [(ngModel)]="formShopProfile.ad" />
       </label>
 
       <div style="margin-top: 18px;">

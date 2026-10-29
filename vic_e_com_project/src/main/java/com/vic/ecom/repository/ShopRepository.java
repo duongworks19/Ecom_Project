@@ -16,4 +16,7 @@ public interface ShopRepository extends JpaRepository<Shop, Long> {
     boolean existsByPhone(String phone);
     boolean existsByPhoneAndVendorIdNot(String phone, Long vendorId);
     List<Shop> findByStatus(ShopStatus status);
+
+    @org.springframework.data.jpa.repository.Query("SELECT s FROM Shop s WHERE s.status = 'ACTIVE' AND (LOWER(s.name) LIKE LOWER(CONCAT('%', :kw, '%')) OR LOWER(s.description) LIKE LOWER(CONCAT('%', :kw, '%')) OR LOWER(s.tagline) LIKE LOWER(CONCAT('%', :kw, '%')))")
+    List<Shop> searchActiveShops(@org.springframework.data.repository.query.Param("kw") String keyword);
 }

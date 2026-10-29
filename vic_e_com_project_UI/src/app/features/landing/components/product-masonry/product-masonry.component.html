@@ -42,7 +42,7 @@
   } @else {
     <div class="masonry-grid">
       @for (product of visibleProducts(); track product.id) {
-        <article class="pin-card" [ngClass]="product.aspectRatio">
+        <article class="pin-card" [ngClass]="product.aspectRatio" (click)="goToProduct(product)" style="cursor: pointer;">
           <div class="pin-media-wrapper">
             <img [src]="product.image" [alt]="product.name" loading="lazy" class="pin-image" />
 
@@ -54,13 +54,13 @@
               <div class="pin-discount-pill">-{{ product.discountPercent }}%</div>
             }
 
-            <div class="pin-hover-actions">
+            <div class="pin-hover-actions" (click)="$event.stopPropagation()">
               <app-wishlist-heart-button [productId]="+product.id" />
             </div>
           </div>
 
           <div class="pin-details">
-            <div class="pin-seller-row">
+            <div class="pin-seller-row" (click)="goToSeller(product, $event)" title="Xem gian hàng">
               <img [src]="product.seller.avatar" [alt]="product.seller.name" class="seller-avatar" />
               <span class="seller-name">{{ product.seller.name }}</span>
               @if (product.seller.verified) {
