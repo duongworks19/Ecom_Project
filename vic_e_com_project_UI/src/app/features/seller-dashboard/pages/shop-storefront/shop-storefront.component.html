@@ -1,4 +1,4 @@
-@if (toastMessage(); as msg) {
+﻿@if (toastMessage(); as msg) {
 <div class="store-toast" role="status">
   <span>✓</span>
   <span>{{ msg }}</span>
@@ -107,7 +107,7 @@
       <article class="product-card" tabindex="0" (click)="openProductDetail(prod)"
         (keydown.enter)="openProductDetail(prod)">
         <div class="img-wrap" [style.background]="prod.thumbnailColor">
-          <img [src]="prod.imageUrl" [alt]="prod.name" loading="lazy" />
+          <img [src]="getProductImageUrl(prod)" [alt]="prod.name" loading="lazy" />
           @if (prod.stock <= 10) { <span class="stock-badge">Chỉ còn {{ prod.stock }}</span>
             }
           <div class="heart-pos" (click)="$event.stopPropagation()">

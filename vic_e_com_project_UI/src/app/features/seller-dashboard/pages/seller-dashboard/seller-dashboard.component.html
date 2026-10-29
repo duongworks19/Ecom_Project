@@ -824,50 +824,147 @@
 
     <!-- Hình ảnh sản phẩm -->
     <div class="image-uploader-section" style="margin-top: 14px;">
-      <label style="display: block; font-size: 13px; font-weight: 700; margin-bottom: 6px; color: var(--ink);">
-        Ảnh đại diện sản phẩm
-      </label>
-
-      <!-- Preview ảnh trực quan nếu có -->
-      @if (formImageUrl()) {
-      <div class="img-preview-box">
-        <img [src]="formImageUrl()" alt="Xem trước sản phẩm" (error)="onImageError()" />
-        <button type="button" class="btn-clear-img" (click)="clearImage()" title="Gỡ ảnh">
-          ✕
-        </button>
-      </div>
-      }
-      @if (formMedia().length > 0) {
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
-        @for (media of formMedia(); track media.url; let i = $index) {
-        <div style="position:relative;width:90px;height:70px;border:1px solid #ddd;border-radius:8px;overflow:hidden;">
-          @if (media.type === 'VIDEO') { <video [src]="media.url" muted></video> } @else { <img [src]="media.url" alt="Media sản phẩm" /> }
-          <button type="button" (click)="removeMedia(i)" style="position:absolute;right:2px;top:2px;">×</button>
-          <button type="button" (click)="moveMedia(i,-1)" [disabled]="i===0">←</button>
-          <button type="button" (click)="moveMedia(i,1)" [disabled]="i===formMedia().length-1">→</button>
-        </div>
+      <div class="section-header-row">
+        <label class="section-title">
+          Ảnh đại diện & Media sản phẩm
+        </label>
+        @if (formMedia().length > 0 || formImageUrl()) {
+          <button type="button" class="btn-clear-all" (click)="clearImage()">
+            Gỡ tất cả
+          </button>
         }
       </div>
+
+      <!-- Ảnh chính đang được chọn -->
+      @if (formMedia().length > 0 && (formMedia()[selectedMediaIndex()] || formMedia()[0]); as mainMedia) {
+        <div
+          class="form-main-media"
+          (click)="openMediaPreview(selectedMediaIndex())"
+          role="button"
+          tabindex="0"
+          title="Nhấn để xem phóng to (Lightbox)"
+          aria-label="Nhấn xem phóng to"
+        >
+          @if (mainMedia.type === 'VIDEO') {
+            <video [src]="mainMedia.url" muted autoplay loop playsinline></video>
+          } @else {
+            <img [src]="mainMedia.url" alt="Ảnh chính sản phẩm" (error)="onImageError()" />
+          }
+          <div class="main-media-overlay">
+            <span class="zoom-pill">Phóng to</span>
+          </div>
+          <span class="media-type-pill">
+            {{ mainMedia.type === 'VIDEO' ? '🎥 Video' : '🖼️ Ảnh' }} · {{ selectedMediaIndex() + 1 }}/{{ formMedia().length }}
+          </span>
+        </div>
+      } @else if (formImageUrl()) {
+        <div
+          class="form-main-media"
+          (click)="openMediaPreview(0)"
+          role="button"
+          tabindex="0"
+          title="Nhấn để xem phóng to (Lightbox)"
+          aria-label="Nhấn xem phóng to"
+        >
+          <img [src]="formImageUrl()" alt="Ảnh sản phẩm" (error)="onImageError()" />
+          <div class="main-media-overlay">
+            <span class="zoom-pill">Phóng to</span>
+          </div>
+        </div>
+      }
+
+      <!-- Danh sách Thumbnails media -->
+      @if (formMedia().length > 0) {
+        <div class="media-thumbnails-container">
+          <div class="media-thumbnails-list">
+            @for (media of formMedia(); track media.url; let i = $index) {
+              <div
+                class="media-thumbnail-item"
+                [class.active]="i === selectedMediaIndex()"
+                (click)="selectMedia(i)"
+                role="button"
+                tabindex="0"
+                [attr.aria-label]="'Chọn media ' + (i + 1)"
+              >
+                @if (media.type === 'VIDEO') {
+                  <video [src]="media.url" muted preload="metadata"></video>
+                  <span class="thumb-video-badge" title="Video">▶</span>
+                } @else {
+                  <img [src]="media.url" [alt]="'Thumbnail media ' + (i + 1)" loading="lazy" />
+                }
+
+                <div class="thumbnail-actions" (click)="$event.stopPropagation()">
+                  <button
+                    type="button"
+                    class="thumb-btn thumb-move"
+                    (click)="moveMedia(i, -1)"
+                    [disabled]="i === 0"
+                    title="Chuyển lên trước"
+                    aria-label="Chuyển lên trước"
+                  >
+                    ‹
+                  </button>
+                  <button
+                    type="button"
+                    class="thumb-btn thumb-move"
+                    (click)="moveMedia(i, 1)"
+                    [disabled]="i === formMedia().length - 1"
+                    title="Chuyển xuống sau"
+                    aria-label="Chuyển xuống sau"
+                  >
+                    ›
+                  </button>
+                  <button
+                    type="button"
+                    class="thumb-btn thumb-delete"
+                    (click)="removeMedia(i)"
+                    title="Xóa media này"
+                    aria-label="Xóa media"
+                  >
+                    ×
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
       }
 
       <!-- Nhập link ảnh URL -->
-      <div style="display: flex; gap: 8px; align-items: center; margin-top: 8px;">
-        <input class="inp" type="text" style="flex: 1;" [ngModel]="formImageUrl()"
-          (ngModelChange)="formImageUrl.set($event)" placeholder="Dán link ảnh tại đây (https://...)" />
+      <div class="media-url-input-row">
+        <input
+          class="inp"
+          type="text"
+          style="flex: 1;"
+          [ngModel]="formImageUrl()"
+          (ngModelChange)="onFormImageUrlChange($event)"
+          placeholder="Dán link ảnh hoặc video tại đây (https://...)"
+        />
         @if (formImageUrl()) {
-        <button type="button" class="btn sm" (click)="clearImage()">Gỡ ảnh</button>
+          <button type="button" class="btn sm" (click)="clearImage()">Gỡ ảnh</button>
         }
       </div>
 
       <!-- Tải ảnh trực tiếp từ máy -->
-      <div style="margin-top: 10px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-        <label class="btn sm upload-btn" style="cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-          <span>📁</span> Chọn ảnh từ máy tính
-          <input type="file" accept="image/*,video/*" multiple (change)="onMultipleMediaSelected($event)" style="display: none;" />
+      <div class="media-upload-action-row">
+        <label class="btn sm upload-btn">
+          <span>📁</span> Chọn ảnh / video từ máy tính
+          <input
+            type="file"
+            accept="image/*,video/*"
+            multiple
+            (change)="onMultipleMediaSelected($event)"
+            style="display: none;"
+          />
         </label>
-        <span style="font-size: 12px; color: var(--mute);">Hỗ trợ link online hoặc tải file từ máy</span>
+        @if (mediaUploading()) {
+          <span class="uploading-status">
+            Đang tải...
+          </span>
+        } @else {
+          <span class="upload-tip">Hỗ trợ JPG, PNG, WEBP, MP4...</span>
+        }
       </div>
-
     </div>
 
     <!-- Biến thể sản phẩm -->
@@ -986,4 +1083,61 @@
 <div class="toast on" role="status">
   {{ toastMessage() }}
 </div>
+}
+
+
+<!-- LIGHTBOX PREVIEW CHO MEDIA SẢN PHẨM -->
+@if (isMediaPreviewOpen() && formMedia()[selectedMediaIndex()]; as media) {
+  <div
+    class="media-lightbox"
+    (click)="closeMediaPreview()"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Xem lớn media sản phẩm"
+  >
+    <button
+      type="button"
+      class="lightbox-close"
+      (click)="$event.stopPropagation(); closeMediaPreview()"
+      aria-label="Đóng preview"
+    >
+      ×
+    </button>
+
+    @if (formMedia().length > 1) {
+      <button
+        type="button"
+        class="lightbox-nav lightbox-prev"
+        (click)="$event.stopPropagation(); movePreview(-1)"
+        aria-label="Media trước"
+      >
+        ‹
+      </button>
+    }
+
+    <div class="lightbox-content" (click)="$event.stopPropagation()">
+      @if (media.type === 'VIDEO') {
+        <video [src]="media.url" controls autoplay playsinline></video>
+      } @else {
+        <img [src]="media.url" alt="Preview media sản phẩm" />
+      }
+
+      @if (formMedia().length > 1) {
+        <div class="lightbox-counter">
+          {{ selectedMediaIndex() + 1 }} / {{ formMedia().length }}
+        </div>
+      }
+    </div>
+
+    @if (formMedia().length > 1) {
+      <button
+        type="button"
+        class="lightbox-nav lightbox-next"
+        (click)="$event.stopPropagation(); movePreview(1)"
+        aria-label="Media tiếp theo"
+      >
+        ›
+      </button>
+    }
+  </div>
 }

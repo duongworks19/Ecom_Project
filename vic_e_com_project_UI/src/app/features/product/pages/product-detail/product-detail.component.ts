@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  HostListener,
   OnInit,
   computed,
   inject,
@@ -25,12 +26,20 @@ export interface ProductVariantItem {
   available: boolean;
 }
 
+export interface ProductMediaItem {
+  id?: number;
+  url: string;
+  type: 'IMAGE' | 'VIDEO' | string;
+  sortOrder?: number;
+}
+
 export interface ProductDetailData {
   id: number;
   name: string;
   category: string;
   description: string;
   imageUrl: string;
+  media: ProductMediaItem[];
   price: number;
   stock: number;
   soldCount: number;
@@ -87,6 +96,12 @@ export class ProductDetailComponent implements OnInit {
   readonly quantity = signal<number>(1);
   readonly isAddingToCart = signal<boolean>(false);
   readonly isWishlisted = signal<boolean>(false);
+  readonly selectedMediaIndex = signal<number>(0);
+  readonly isLightboxOpen = signal<boolean>(false);
+  readonly selectedMedia = computed<ProductMediaItem | null>(() => {
+    const media = this.product()?.media || [];
+    return media[this.selectedMediaIndex()] || media[0] || null;
+  });
   readonly toastMessage = signal<string | null>(null);
   private toastTimer?: any;
 
@@ -197,6 +212,7 @@ export class ProductDetailComponent implements OnInit {
             category: data.category || 'Thể thao & Dã ngoại',
             description: data.description || 'Chất liệu cao cấp, độ bền tối ưu, thoáng khí và êm chân khi sử dụng.',
             imageUrl: data.imageUrl || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80',
+            media: this.normalizeMedia(data.media, data.imageUrl),
             price: Number(data.price) || 0,
             stock: data.stock !== undefined ? Number(data.stock) : 10,
             soldCount: Number(data.soldCount) || 0,
@@ -207,6 +223,7 @@ export class ProductDetailComponent implements OnInit {
           };
 
           this.product.set(pDetail);
+          this.selectedMediaIndex.set(0);
           this.isLoading.set(false);
           this.loadReviews(id);
           this.loadQuestions(id);
@@ -256,6 +273,7 @@ export class ProductDetailComponent implements OnInit {
               category: found.c || 'Thể thao & Dã ngoại',
               description: found.d || 'Sản phẩm cao cấp được sản xuất từ chất liệu chọn lọc, đem lại trải nghiệm hoàn hảo cho người dùng.',
               imageUrl: found.imageUrl || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80',
+              media: this.normalizeMedia(found.media, found.imageUrl),
               price: variants[0]?.price || 199000,
               stock: variants.reduce((s, v) => s + v.stockQty, 0),
               soldCount: found.sold || 0,
@@ -286,6 +304,7 @@ export class ProductDetailComponent implements OnInit {
       category: 'Thể thao & Dã ngoại',
       description: 'Giày thể thao êm ái, thoáng khí, đệm giày trợ lực êm ái phù hợp chạy bộ và dã ngoại.',
       imageUrl: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80',
+      media: this.normalizeMedia([], 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80'),
       price: 199000,
       stock: 10,
       soldCount: 42,
@@ -298,6 +317,57 @@ export class ProductDetailComponent implements OnInit {
     this.loadReviews(id);
     this.loadQuestions(id);
     this.cdr.markForCheck();
+  }
+
+  private normalizeMedia(raw: any, fallback?: string): ProductMediaItem[] {
+    const media = Array.isArray(raw) ? raw
+      .filter((item: any) => item?.url)
+      .map((item: any) => ({
+        id: item.id,
+        url: item.url,
+        type: String(item.type || 'IMAGE').toUpperCase(),
+        sortOrder: Number(item.sortOrder ?? 0),
+      }))
+      .sort((a: ProductMediaItem, b: ProductMediaItem) => (a.sortOrder || 0) - (b.sortOrder || 0)) : [];
+    if (media.length === 0 && fallback) {
+      return [{ url: fallback, type: 'IMAGE', sortOrder: 0 }];
+    }
+    return media;
+  }
+
+  selectMedia(index: number): void {
+    this.selectedMediaIndex.set(index);
+  }
+
+  openLightbox(index: number = this.selectedMediaIndex()): void {
+    const media = this.product()?.media || [];
+    if (!media.length) return;
+    this.selectedMediaIndex.set(Math.max(0, Math.min(index, media.length - 1)));
+    this.isLightboxOpen.set(true);
+    this.cdr.markForCheck();
+  }
+
+  closeLightbox(): void {
+    this.isLightboxOpen.set(false);
+  }
+
+  moveLightbox(delta: number): void {
+    const count = this.product()?.media?.length || 0;
+    if (count < 2) return;
+    this.selectedMediaIndex.update(index => (index + delta + count) % count);
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  handleKeyboardEvent(event: KeyboardEvent): void {
+    if (this.isLightboxOpen()) {
+      if (event.key === 'Escape') {
+        this.closeLightbox();
+      } else if (event.key === 'ArrowLeft') {
+        this.moveLightbox(-1);
+      } else if (event.key === 'ArrowRight') {
+        this.moveLightbox(1);
+      }
+    }
   }
 
   loadReviews(productId: number): void {
