@@ -338,6 +338,14 @@ export class SellerOnboardingService {
     );
   }
 
+  uploadImage(file: File, folder: string): Observable<string> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<any>(`http://localhost:9090/api/media/image?folder=${encodeURIComponent(folder)}`, formData).pipe(
+      map(res => res?.data?.url || res?.url || '')
+    );
+  }
+
   checkEmailAvailable(email: string): Observable<{ isAvailable: boolean; message: string }> {
     const trimmed = (email || '').trim().toLowerCase();
     if (!trimmed) return of({ isAvailable: false, message: 'Vui lòng nhập email' });

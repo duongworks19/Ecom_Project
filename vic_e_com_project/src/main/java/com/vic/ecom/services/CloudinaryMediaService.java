@@ -29,4 +29,16 @@ public class CloudinaryMediaService {
             return Map.of("url", fallbackUrl, "type", type, "publicId", "dev-" + System.currentTimeMillis());
         }
     }
+
+    public String uploadImage(MultipartFile file, String folder, long maxBytes) throws IOException {
+        if (file == null || file.isEmpty()) throw new IllegalArgumentException("File không được để trống");
+        String contentType = file.getContentType() == null ? "" : file.getContentType().toLowerCase();
+        if (!contentType.equals("image/jpeg") && !contentType.equals("image/png") && !contentType.equals("image/webp")) {
+            throw new IllegalArgumentException("Chỉ hỗ trợ ảnh JPG, PNG hoặc WEBP");
+        }
+        if (file.getSize() > maxBytes) throw new IllegalArgumentException("File vượt quá dung lượng cho phép");
+        Map<?, ?> result = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.asMap(
+                "resource_type", "image", "folder", folder));
+        return String.valueOf(result.get("secure_url"));
+    }
 }

@@ -53,6 +53,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/seller/**").hasAnyRole("VENDOR", "ADMIN")
                 .requestMatchers("/api/customer/profile/**").hasAnyRole("CUSTOMER", "VENDOR", "ADMIN")
+                .requestMatchers("/api/media/**").hasAnyRole("CUSTOMER", "VENDOR", "ADMIN")
                 .requestMatchers("/api/customer/**").hasAnyRole("CUSTOMER", "VENDOR", "ADMIN")
                 .requestMatchers("/uploads/avatars/**").authenticated()
                 .anyRequest().authenticated()

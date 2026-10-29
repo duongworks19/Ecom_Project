@@ -1,7 +1,8 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { KycInfo, BusinessType } from '../../models/seller-onboarding.model';
+import { SellerOnboardingService } from '../../services/seller-onboarding.service';
 
 @Component({
   selector: 'app-step-kyc',
@@ -11,6 +12,7 @@ import { KycInfo, BusinessType } from '../../models/seller-onboarding.model';
   styleUrl: './step-kyc.component.scss',
 })
 export class StepKycComponent {
+  private readonly onboardingService = inject(SellerOnboardingService);
   @Input({ required: true }) kycInfo!: KycInfo;
   @Input({ required: true }) businessType!: BusinessType;
   @Input() readOnly = false;
@@ -55,15 +57,14 @@ export class StepKycComponent {
     });
   }
 
-  private handleFileUpload(event: Event, callback: (base64: string) => void): void {
+  private handleFileUpload(event: Event, callback: (url: string) => void): void {
     const input = event.target as HTMLInputElement;
     if (input.files?.[0]) {
       const file = input.files[0];
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        callback(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
+      this.onboardingService.uploadImage(file, 'vendor/kyc').subscribe({
+        next: (url: string) => { callback(url); },
+        error: () => { /* parent validation remains unchanged */ },
+      });
     }
   }
 
