@@ -16,18 +16,16 @@
   <!-- Select Dropdowns -->
   <div class="filter-dropdowns">
     <div class="dropdown-wrapper">
-      <select class="filter-select">
+      <select class="filter-select" (change)="selectVendor($any($event.target).value)">
         <option value="all">Vendor: Tất cả</option>
-        <option value="thoitrang">Shop Thời Trang</option>
-        <option value="dientu">Shop Điện Tử</option>
+        @for (vendor of vendors; track vendor.id) { <option [value]="vendor.id">{{ vendor.name }}</option> }
       </select>
     </div>
 
     <div class="dropdown-wrapper">
-      <select class="filter-select">
+      <select class="filter-select" (change)="selectCategory($any($event.target).value)">
         <option value="all">Danh mục: Tất cả</option>
-        <option value="fashion">Thời trang</option>
-        <option value="tech">Công nghệ</option>
+        @for (category of categories; track category.id) { <option [value]="category.id">{{ category.name }}</option> }
       </select>
     </div>
   </div>
