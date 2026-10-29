@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output, signal } from '@angular/core';
+import { Component, EventEmitter, Input, Output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -9,7 +9,12 @@ import { CommonModule } from '@angular/common';
   styleUrl: './reports-filter-bar.component.scss',
 })
 export class ReportsFilterBarComponent {
+  @Input() vendors: { id: number; name: string }[] = [];
+  @Input() categories: { id: number; name: string }[] = [];
   @Output() periodChange = new EventEmitter<string>();
+  @Output() filterChange = new EventEmitter<{ vendorId?: number; categoryId?: number }>();
+  selectedVendor = signal<number | undefined>(undefined);
+  selectedCategory = signal<number | undefined>(undefined);
 
   periods = [
     { id: 'today', label: 'Hôm nay' },
@@ -25,4 +30,6 @@ export class ReportsFilterBarComponent {
     this.selectedPeriod.set(periodId);
     this.periodChange.emit(periodId);
   }
+  selectVendor(value: string): void { const id = value === 'all' ? undefined : Number(value); this.selectedVendor.set(id); this.filterChange.emit({ vendorId: id, categoryId: this.selectedCategory() }); }
+  selectCategory(value: string): void { const id = value === 'all' ? undefined : Number(value); this.selectedCategory.set(id); this.filterChange.emit({ vendorId: this.selectedVendor(), categoryId: id }); }
 }
