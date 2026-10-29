@@ -1,4 +1,4 @@
-export type SellerNavTab =
+﻿export type SellerNavTab =
   | 'overview'
   | 'orders'
   | 'refunds'
@@ -87,6 +87,13 @@ export interface LowStockProduct {
   badgeType: 'danger' | 'warning';
 }
 
+export interface SellerProductMediaItem {
+  id?: number;
+  url: string;
+  type: 'IMAGE' | 'VIDEO' | string;
+  sortOrder?: number;
+}
+
 export interface SellerProduct {
   id: number;
   name: string;
@@ -98,6 +105,7 @@ export interface SellerProduct {
   soldCount: number;
   thumbnailColor: string;
   imageUrl: string;
+  media?: SellerProductMediaItem[];
   status: 'ACTIVE' | 'LOW_STOCK' | 'HIDDEN';
 }
 

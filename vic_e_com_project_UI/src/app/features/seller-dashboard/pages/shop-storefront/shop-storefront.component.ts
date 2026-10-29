@@ -1,4 +1,4 @@
-import {
+﻿import {
   ChangeDetectionStrategy,
   Component,
   OnInit,
@@ -330,6 +330,14 @@ export class ShopStorefrontComponent implements OnInit {
   buyNow(product: SellerProduct, event?: Event): void {
     event?.stopPropagation();
     this.selectedProduct.set(product);
+  }
+
+  /** Returns the first IMAGE url from media[], falling back to imageUrl. */
+  getProductImageUrl(product: SellerProduct): string {
+    const firstImage = product.media
+      ?.filter((m) => m.type === 'IMAGE')
+      ?.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))[0];
+    return firstImage?.url || product.imageUrl;
   }
 
   showToast(msg: string): void {

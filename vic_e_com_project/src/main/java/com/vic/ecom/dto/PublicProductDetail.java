@@ -14,6 +14,7 @@ public class PublicProductDetail {
     private String category;
     private String description;
     private String imageUrl;
+    private List<ProductMediaDtos.Item> media;
     private BigDecimal price;
     private Integer stock;
     private Integer soldCount;

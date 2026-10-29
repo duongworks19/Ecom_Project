@@ -1,4 +1,4 @@
-<div class="product-page-container">
+﻿<div class="product-page-container">
   <!-- 1. Top Header Bar -->
   <header class="detail-header">
     <div class="header-inner">
@@ -44,14 +44,52 @@
         <div class="hero-grid">
           <!-- Left: Image Gallery & Badges -->
           <div class="hero-image-col">
-            <div class="image-wrapper">
-              <img [src]="prod.imageUrl" [alt]="prod.name" class="main-prod-img" />
+            <div class="image-wrapper" (click)="openLightbox()" role="button" tabindex="0" (keydown.enter)="openLightbox()" aria-label="Mở ảnh sản phẩm">
+              @if (selectedMedia()?.type === 'VIDEO') {
+                <video [src]="selectedMedia()?.url" class="main-prod-img" controls (click)="openLightbox(); $event.stopPropagation()"></video>
+              } @else {
+                <img [src]="selectedMedia()?.url || prod.imageUrl" [alt]="prod.name" class="main-prod-img" (click)="openLightbox(selectedMediaIndex()); $event.stopPropagation()" />
+              }
+              @if (prod.media.length > 1) {
+                <button
+                  type="button"
+                  class="gallery-nav-btn prev"
+                  (click)="$event.stopPropagation(); moveLightbox(-1)"
+                  aria-label="Xem ảnh trước"
+                  title="Ảnh trước"
+                >
+                  ‹
+                </button>
+                <button
+                  type="button"
+                  class="gallery-nav-btn next"
+                  (click)="$event.stopPropagation(); moveLightbox(1)"
+                  aria-label="Xem ảnh kế tiếp"
+                  title="Ảnh kế tiếp"
+                >
+                  ›
+                </button>
+                <!-- <span class="gallery-hint">Bấm để xem ảnh lớn</span> -->
+              }
               @if (currentStock() <= 10 && currentStock() > 0) {
                 <span class="stock-alert-badge">Chỉ còn {{ currentStock() }}</span>
               } @else if (currentStock() === 0) {
                 <span class="stock-alert-badge out-of-stock">Tạm hết hàng</span>
               }
             </div>
+            @if (prod.media.length > 1) {
+              <div class="media-thumbnails">
+                @for (media of prod.media; track media.id || $index) {
+                  <button type="button" class="media-thumb" [class.active]="selectedMediaIndex() === $index" (click)="selectMedia($index); $event.stopPropagation()" (dblclick)="openLightbox(); $event.stopPropagation()" aria-label="Chọn media {{ $index + 1 }}">
+                    @if (media.type === 'VIDEO') {
+                      <video [src]="media.url" muted></video>
+                    } @else {
+                      <img [src]="media.url" [alt]="prod.name + ' ' + ($index + 1)" loading="lazy" />
+                    }
+                  </button>
+                }
+              </div>
+            }
           </div>
 
           <!-- Right: Info & Buying Options -->
@@ -429,6 +467,63 @@
         </div>
       </section>
     </main>
+  }
+
+  @if (isLightboxOpen() && selectedMedia(); as media) {
+    <div
+      class="lightbox-backdrop"
+      (click)="closeLightbox()"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Xem lớn ảnh sản phẩm"
+    >
+      <button
+        type="button"
+        class="lightbox-close"
+        (click)="$event.stopPropagation(); closeLightbox()"
+        aria-label="Đóng preview"
+      >
+        ×
+      </button>
+
+      @if ((product()?.media?.length || 0) > 1) {
+        <button
+          type="button"
+          class="lightbox-nav prev"
+          (click)="$event.stopPropagation(); moveLightbox(-1)"
+          aria-label="Ảnh trước"
+          title="Ảnh trước"
+        >
+          ‹
+        </button>
+      }
+
+      <div class="lightbox-content" (click)="$event.stopPropagation()">
+        @if (media.type === 'VIDEO') {
+          <video [src]="media.url" controls autoplay playsinline></video>
+        } @else {
+          <img [src]="media.url" [alt]="product()?.name" />
+        }
+
+        @if ((product()?.media?.length || 0) > 1) {
+          <div class="lightbox-counter">
+            {{ selectedMediaIndex() + 1 }} / {{ product()?.media?.length }}
+          </div>
+        }
+      </div>
+
+      @if ((product()?.media?.length || 0) > 1) {
+        <button
+          type="button"
+          class="lightbox-nav next"
+          (click)="$event.stopPropagation(); moveLightbox(1)"
+          aria-label="Ảnh tiếp theo"
+          title="Ảnh tiếp theo"
+        >
+          ›
+        </button>
+      }
+    </div>
   }
 
   <!-- Toast Floating Notification -->

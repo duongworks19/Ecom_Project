@@ -3,6 +3,7 @@ package com.vic.ecom.controller;
 import com.vic.ecom.dto.ApiResponse;
 import com.vic.ecom.dto.ProductVariantDtos;
 import com.vic.ecom.dto.PublicProductDetail;
+import com.vic.ecom.dto.ProductMediaDtos;
 import com.vic.ecom.dto.search.SearchProductItem;
 import com.vic.ecom.services.PublicProductVariantService;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.vic.ecom.entity.Product;
 import com.vic.ecom.repository.ProductRepository;
+import com.vic.ecom.repository.ProductMediaRepository;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -24,6 +26,7 @@ import java.util.stream.Collectors;
 public class PublicProductVariantController {
     private final PublicProductVariantService service;
     private final ProductRepository productRepository;
+    private final ProductMediaRepository mediaRepository;
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<SearchProductItem>>> listAllPublicProducts() {
@@ -67,6 +70,8 @@ public class PublicProductVariantController {
         }
         ProductVariantDtos.Response varRes = service.list(productId);
         List<ProductVariantDtos.Item> variants = varRes != null ? varRes.variants() : List.of();
+        List<ProductMediaDtos.Item> media = ProductMediaDtos.fromEntities(
+                mediaRepository.findByProductIdOrderBySortOrderAscIdAsc(productId));
 
         BigDecimal minPrice = BigDecimal.ZERO;
         int totalStock = 0;
@@ -87,6 +92,7 @@ public class PublicProductVariantController {
                 .category(p.getCategory() != null ? p.getCategory() : "Khác")
                 .description(p.getDescription())
                 .imageUrl(p.getImageUrl())
+                .media(media)
                 .price(minPrice)
                 .stock(totalStock)
                 .soldCount(0)
