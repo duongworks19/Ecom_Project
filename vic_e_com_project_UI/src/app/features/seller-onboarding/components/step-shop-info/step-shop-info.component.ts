@@ -133,12 +133,9 @@ export class StepShopInfoComponent implements OnInit {
     const input = event.target as HTMLInputElement;
     if (input.files?.[0]) {
       const file = input.files[0];
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        this.shopInfo.logoUrl = e.target?.result as string;
-        this.emitChange();
-      };
-      reader.readAsDataURL(file);
+      this.onboardingService.uploadImage(file, 'vendor/logos').subscribe({
+        next: url => { this.shopInfo.logoUrl = url; this.emitChange(); },
+      });
     }
   }
 
