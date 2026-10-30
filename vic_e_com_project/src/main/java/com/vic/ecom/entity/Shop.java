@@ -29,10 +29,10 @@ public class Shop {
     @Column(length = 255)
     private String tagline;
 
-    @Column(length = 500)
+    @Column(columnDefinition = "TEXT")
     private String logo;
 
-    @Column(length = 500)
+    @Column(columnDefinition = "TEXT")
     private String banner;
 
     @Column(columnDefinition = "TEXT")

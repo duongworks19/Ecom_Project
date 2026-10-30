@@ -46,8 +46,19 @@ public class SellerProductUpdateService {
             product.setName(newName);
         }
 
-        product.setCategory(req.resolveCategory());
-        if (req.getCategoryId() != null) categoryRepository.findById(req.getCategoryId()).ifPresent(c -> product.setCategoryId(c.getId()));
+        if (req.getCategoryId() != null) {
+            categoryRepository.findById(req.getCategoryId()).ifPresent(c -> {
+                product.setCategoryId(c.getId());
+                product.setCategory(c.getName());
+            });
+        } else if (req.resolveCategory() != null && !req.resolveCategory().isBlank()) {
+            String catName = req.resolveCategory().trim();
+            product.setCategory(catName);
+            categoryRepository.findAll().stream()
+                    .filter(c -> c.getName() != null && c.getName().equalsIgnoreCase(catName))
+                    .findFirst()
+                    .ifPresent(c -> product.setCategoryId(c.getId()));
+        }
         product.setDescription(req.resolveDescription());
         product.setStatus(req.resolveStatus());
         product.setUpdatedAt(LocalDateTime.now());
@@ -122,6 +133,7 @@ public class SellerProductUpdateService {
                 .id(saved.getId())
                 .n(saved.getName())
                 .c(saved.getCategory())
+                .categoryId(saved.getCategoryId())
                 .d(saved.getDescription())
                 .s(saved.getStatus())
                 .sold(totalSold)

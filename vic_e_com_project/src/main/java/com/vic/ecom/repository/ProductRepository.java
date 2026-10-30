@@ -38,9 +38,9 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Query("SELECT p FROM Product p LEFT JOIN FETCH p.variants WHERE p.shop.id = :shopId AND p.status = :status ORDER BY p.id DESC")
     List<Product> findProductsByShopIdAndStatusWithVariants(@Param("shopId") Long shopId, @Param("status") String status);
 
-    @Query("SELECT p FROM Product p LEFT JOIN FETCH p.variants WHERE (p.status IS NULL OR p.status = 'VISIBLE') AND (LOWER(p.name) LIKE LOWER(CONCAT('%', :kw, '%')) OR LOWER(p.category) LIKE LOWER(CONCAT('%', :kw, '%')) OR LOWER(p.description) LIKE LOWER(CONCAT('%', :kw, '%'))) ORDER BY p.id DESC")
+    @Query("SELECT p FROM Product p LEFT JOIN FETCH p.variants LEFT JOIN FETCH p.shop WHERE (p.status IS NULL OR p.status = 'VISIBLE') AND (LOWER(p.name) LIKE LOWER(CONCAT('%', :kw, '%')) OR LOWER(p.category) LIKE LOWER(CONCAT('%', :kw, '%')) OR LOWER(p.description) LIKE LOWER(CONCAT('%', :kw, '%'))) ORDER BY p.id DESC")
     List<Product> searchPublicProducts(@Param("kw") String keyword);
 
-    @Query("SELECT p FROM Product p LEFT JOIN FETCH p.variants WHERE p.status IS NULL OR p.status = 'VISIBLE' ORDER BY p.id DESC")
+    @Query("SELECT p FROM Product p LEFT JOIN FETCH p.variants LEFT JOIN FETCH p.shop WHERE p.status IS NULL OR p.status = 'VISIBLE' ORDER BY p.id DESC")
     List<Product> findAllActiveProductsWithVariants();
 }

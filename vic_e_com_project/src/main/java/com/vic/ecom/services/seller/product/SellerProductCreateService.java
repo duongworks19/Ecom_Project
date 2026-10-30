@@ -63,12 +63,30 @@ public class SellerProductCreateService {
         Product product = new Product();
         product.setShop(shop);
         product.setName(name);
-        product.setCategory(category);
         product.setDescription(description);
         product.setStatus(status);
         product.setImageUrl(imageUrl);
         if (req.getCategoryId() != null) {
-            categoryRepository.findById(req.getCategoryId()).ifPresent(c -> product.setCategoryId(c.getId()));
+            categoryRepository.findById(req.getCategoryId()).ifPresent(c -> {
+                product.setCategoryId(c.getId());
+                product.setCategory(c.getName());
+            });
+        }
+        if (product.getCategoryId() == null && category != null && !category.isBlank()) {
+            product.setCategory(category);
+            categoryRepository.findAll().stream()
+                    .filter(c -> c.getName() != null && c.getName().equalsIgnoreCase(category.trim()))
+                    .findFirst()
+                    .ifPresent(c -> product.setCategoryId(c.getId()));
+        }
+        if (product.getCategoryId() == null) {
+            categoryRepository.findAll().stream().findFirst().ifPresent(c -> {
+                product.setCategoryId(c.getId());
+                if (product.getCategory() == null) product.setCategory(c.getName());
+            });
+        }
+        if (product.getCategory() == null || product.getCategory().isBlank()) {
+            product.setCategory(category != null && !category.isBlank() ? category : "Chung");
         }
 
         for (SellerProductVariantDto v : variants) {
@@ -100,6 +118,7 @@ public class SellerProductCreateService {
                 .id(saved.getId())
                 .n(saved.getName())
                 .c(saved.getCategory())
+                .categoryId(saved.getCategoryId())
                 .d(saved.getDescription())
                 .s(saved.getStatus())
                 .sold(0)

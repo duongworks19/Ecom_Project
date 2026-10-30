@@ -36,60 +36,65 @@ public class SellerShopResolverService {
             }
         }
 
-        Shop shop = null;
-        if (userId != null) {
-            Optional<Vendor> vendorOpt = vendorRepository.findByUserId(userId);
-            if (vendorOpt.isPresent()) {
-                shop = vendorOpt.get().getShop();
-            }
+        if (userId == null) {
+            return null;
         }
 
-        if (shop == null) {
-            List<Shop> existingShops = shopRepository.findAll();
-            if (!existingShops.isEmpty()) {
-                shop = existingShops.get(0);
-            }
-        }
-
-        if (shop == null) {
-            final Long finalUserId = userId;
-            User sellerUser = (finalUserId != null) ? userRepository.findById(finalUserId).orElse(null) : null;
-            if (sellerUser == null) {
-                sellerUser = userRepository.findByEmail("seller@lumihomedecor.vn")
-                        .orElseGet(() -> {
-                            User u = new User();
-                            u.setEmail("seller@lumihomedecor.vn");
-                            u.setFullName("Lumi Home Decor Owner");
-                            u.setPhone("0987654321");
-                            u.setRole(UserRole.VENDOR);
-                            u.setStatus(UserStatus.ACTIVE);
-                            u.setAuthProvider("LOCAL");
-                            return userRepository.save(u);
-                        });
-            }
-
-            final User targetUser = sellerUser;
-            Vendor vendor = vendorRepository.findByUserId(targetUser.getId())
-                    .orElseGet(() -> {
-                        Vendor v = new Vendor();
-                        v.setUser(targetUser);
-                        v.setBusinessName("Lumi Home Decor Co., Ltd.");
-                        v.setApprovalStatus(ApprovalStatus.APPROVED);
-                        return vendorRepository.save(v);
-                    });
-
+        Optional<Vendor> vendorOpt = vendorRepository.findByUserId(userId);
+        if (vendorOpt.isPresent()) {
+            Vendor vendor = vendorOpt.get();
             if (vendor.getShop() != null) {
-                shop = vendor.getShop();
-            } else {
-                Shop s = new Shop();
-                s.setVendor(vendor);
-                s.setName("Lumi Home Decor");
-                s.setDescription("Đồ decor phong cách tối giản Bắc Âu.");
-                s.setPickupAddress("Số 12 Ngõ 88 Trần Thái Tông, Cầu Giấy, Hà Nội");
-                shop = shopRepository.save(s);
+                Shop s = vendor.getShop();
+                if ((s.getLogo() == null || s.getLogo().isBlank()) && vendor.getKycDocumentUrl() != null) {
+                    String kyc = vendor.getKycDocumentUrl();
+                    if (kyc.contains("\"logo\"")) {
+                        try {
+                            com.fasterxml.jackson.databind.JsonNode node = new com.fasterxml.jackson.databind.ObjectMapper().readTree(kyc);
+                            if (node.has("logo") && !node.get("logo").asText().isBlank()) {
+                                s.setLogo(node.get("logo").asText());
+                                s = shopRepository.save(s);
+                            }
+                        } catch (Exception ignored) {}
+                    }
+                }
+                return s;
             }
+            Shop s = new Shop();
+            s.setVendor(vendor);
+            s.setName(vendor.getBusinessName() != null && !vendor.getBusinessName().isBlank()
+                    ? vendor.getBusinessName() : "Shop " + userId);
+            s.setDescription("Gian hàng mới");
+            s.setPickupAddress("");
+            s.setBusinessHours("08:00 – 21:00");
+            if (vendor.getKycDocumentUrl() != null && vendor.getKycDocumentUrl().contains("\"logo\"")) {
+                try {
+                    com.fasterxml.jackson.databind.JsonNode node = new com.fasterxml.jackson.databind.ObjectMapper().readTree(vendor.getKycDocumentUrl());
+                    if (node.has("logo") && !node.get("logo").asText().isBlank()) {
+                        s.setLogo(node.get("logo").asText());
+                    }
+                } catch (Exception ignored) {}
+            }
+            return shopRepository.save(s);
         }
 
-        return shop;
+        User user = userRepository.findById(userId).orElse(null);
+        if (user != null) {
+            Vendor vendor = new Vendor();
+            vendor.setUser(user);
+            vendor.setBusinessName(user.getFullName() != null && !user.getFullName().isBlank()
+                    ? user.getFullName() : "Shop " + user.getId());
+            vendor.setApprovalStatus(ApprovalStatus.APPROVED);
+            vendor = vendorRepository.save(vendor);
+
+            Shop s = new Shop();
+            s.setVendor(vendor);
+            s.setName(vendor.getBusinessName());
+            s.setDescription("Gian hàng của " + user.getFullName());
+            s.setPickupAddress("");
+            s.setBusinessHours("08:00 – 21:00");
+            return shopRepository.save(s);
+        }
+
+        return null;
     }
 }

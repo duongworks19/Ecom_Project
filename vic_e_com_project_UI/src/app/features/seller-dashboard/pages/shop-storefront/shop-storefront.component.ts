@@ -1,4 +1,4 @@
-﻿import {
+import {
   ChangeDetectionStrategy,
   Component,
   OnInit,
@@ -247,8 +247,73 @@ export class ShopStorefrontComponent implements OnInit {
     this.shopVouchers.set(fallback);
   }
 
+  readonly logoLoadFailed = signal<boolean>(false);
+
+  onLogoError(): void {
+    this.logoLoadFailed.set(true);
+  }
+
   readonly shopName = computed(() => {
     return this.currentShop()?.name || this.dashboardService.dashboard().shopName || 'VICMART Shop';
+  });
+
+  readonly shopLogo = computed(() => {
+    const directLogo = this.currentShop()?.logo?.trim();
+    if (directLogo) return directLogo;
+
+    const dashLogo = this.dashboardService.dashboard()?.shopLogo?.trim();
+    if (dashLogo) return dashLogo;
+
+    const profLogo = (this.dashboardService.shopProfile() as any)?.logo?.trim();
+    if (profLogo) return profLogo;
+
+    const shopName = this.shopName().trim().toLowerCase();
+    const shopId = this.currentShop()?.id;
+
+    try {
+      const kycStorage = JSON.parse(localStorage.getItem('vic_vendor_kyc_storage') || '{}');
+      let stored = (shopId ? kycStorage[String(shopId)] : undefined) ||
+                   (shopName ? kycStorage[shopName] : undefined);
+      if (!stored && shopName) {
+        for (const k of Object.keys(kycStorage)) {
+          if (k.toLowerCase().includes(shopName) || shopName.includes(k.toLowerCase())) {
+            stored = kycStorage[k];
+            break;
+          }
+        }
+      }
+      if (!stored && kycStorage['latest_user_submission']) {
+        stored = kycStorage['latest_user_submission'];
+      }
+      if (!stored) {
+        for (const k of Object.keys(kycStorage)) {
+          if (kycStorage[k]?.logo?.trim()) {
+            stored = kycStorage[k];
+            break;
+          }
+        }
+      }
+      if (stored?.logo?.trim()) return stored.logo.trim();
+    } catch {}
+
+    try {
+      const draftRaw = localStorage.getItem('vic_seller_onboarding_draft');
+      if (draftRaw) {
+        const draft = JSON.parse(draftRaw);
+        if (draft.shopInfo?.logoUrl?.trim()) return draft.shopInfo.logoUrl.trim();
+      }
+    } catch {}
+
+    try {
+      const profRaw = (shopId ? localStorage.getItem(`vic_seller_shop_profile_${shopId}`) : null) ||
+                      localStorage.getItem('vic_seller_shop_profile');
+      if (profRaw) {
+        const prof = JSON.parse(profRaw);
+        if (prof.logo?.trim()) return prof.logo.trim();
+      }
+    } catch {}
+
+    return '';
   });
 
   readonly shopAvatarLetter = computed(() => {

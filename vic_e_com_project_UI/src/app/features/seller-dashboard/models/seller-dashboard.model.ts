@@ -1,4 +1,4 @@
-﻿export type SellerNavTab =
+export type SellerNavTab =
   | 'overview'
   | 'orders'
   | 'refunds'
@@ -196,6 +196,8 @@ export interface SellerShopProfile {
   pickupAddress: string;
   warehouseAddress?: string;
   businessHours: string;
+  logo?: string;
+  banner?: string;
 }
 
 export interface SellerDashboardData {

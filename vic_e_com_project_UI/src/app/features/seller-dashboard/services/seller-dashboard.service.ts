@@ -42,7 +42,7 @@ export class SellerDashboardService {
   readonly orderFilter = signal<OrderFilterType>('ALL');
   readonly notificationMessage = signal<string | null>(null);
 
-  readonly products = signal<SellerProduct[]>(INITIAL_SELLER_PRODUCTS);
+  readonly products = signal<SellerProduct[]>([]);
   readonly vouchers = signal<SellerVoucher[]>(INITIAL_SELLER_VOUCHERS);
   readonly promotions = signal<SellerPromotion[]>(INITIAL_SELLER_PROMOTIONS);
   readonly reviews = signal<SellerReviewQuestion[]>(INITIAL_SELLER_REVIEWS);
@@ -82,16 +82,6 @@ export class SellerDashboardService {
   }
 
   loadShopProductsFromStorage(): void {
-    const raw = localStorage.getItem('vic_seller_products');
-    if (raw) {
-      try {
-        const list = JSON.parse(raw);
-        if (Array.isArray(list)) {
-          this.syncProducts(list);
-          return;
-        }
-      } catch {}
-    }
     this.products.set([]);
   }
 
@@ -148,6 +138,8 @@ export class SellerDashboardService {
       appData.contactInfo.province,
     ].filter(Boolean);
 
+    const logo = (appData.shopInfo as any)?.logoUrl?.trim() || '';
+
     const currentProfile = this.shopProfile();
     const updatedProfile: SellerShopProfile = {
       ...currentProfile,
@@ -163,6 +155,7 @@ export class SellerDashboardService {
           : currentProfile.pickupAddress,
       phone: appData.contactInfo.phone?.trim() || currentProfile.phone,
       email: appData.contactInfo.email?.trim() || currentProfile.email,
+      logo: logo || currentProfile.logo,
     };
 
     this.shopProfile.set(updatedProfile);
@@ -173,6 +166,7 @@ export class SellerDashboardService {
       ...curr,
       shopName,
       shopAvatarLetter: shopName.charAt(0).toUpperCase(),
+      shopLogo: logo || curr.shopLogo,
       greetingTitle: `Chào ${shortName}, hôm nay có 12 việc cần xử lý`,
       shopProfile: updatedProfile,
     });

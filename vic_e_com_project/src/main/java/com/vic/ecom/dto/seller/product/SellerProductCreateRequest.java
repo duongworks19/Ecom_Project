@@ -44,7 +44,7 @@ public class SellerProductCreateRequest {
     }
 
     public String resolveCategory() {
-        return (c != null && !c.isBlank()) ? c.trim() : (category != null ? category.trim() : "Nhà cửa & Đời sống");
+        return (c != null && !c.isBlank()) ? c.trim() : (category != null ? category.trim() : "");
     }
 
     public String resolveDescription() {

@@ -122,6 +122,19 @@ public class AdminVendorController {
         Shop s = v.getShop();
         String createdAt = u != null && u.getCreatedAt() != null ? u.getCreatedAt().format(DATE_FMT) : "—";
 
+        String logo = s != null ? s.getLogo() : null;
+        if ((logo == null || logo.isBlank()) && v.getKycDocumentUrl() != null) {
+            String kyc = v.getKycDocumentUrl();
+            if (kyc.contains("\"logo\"")) {
+                try {
+                    com.fasterxml.jackson.databind.JsonNode node = new com.fasterxml.jackson.databind.ObjectMapper().readTree(kyc);
+                    if (node.has("logo") && !node.get("logo").asText().isBlank()) {
+                        logo = node.get("logo").asText();
+                    }
+                } catch (Exception ignored) {}
+            }
+        }
+
         return AdminVendorListItemDto.builder()
                 .id(v.getId())
                 .userId(u != null ? u.getId() : null)
@@ -130,7 +143,7 @@ public class AdminVendorController {
                 .ownerPhone(u != null ? u.getPhone() : "—")
                 .businessName(v.getBusinessName())
                 .shopName(s != null ? s.getName() : v.getBusinessName())
-                .shopLogo(s != null ? s.getLogo() : null)
+                .shopLogo(logo)
                 .shopPickupAddress(s != null ? s.getPickupAddress() : "—")
                 .kycDocumentUrl(v.getKycDocumentUrl())
                 .approvalStatus(v.getApprovalStatus().name())

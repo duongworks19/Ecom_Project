@@ -60,6 +60,12 @@ public class ShopService {
         if (req.getBusinessHours() != null) {
             shop.setBusinessHours(req.getBusinessHours().trim());
         }
+        if (req.getLogo() != null && !req.getLogo().isBlank()) {
+            shop.setLogo(req.getLogo().trim());
+        }
+        if (req.getBanner() != null && !req.getBanner().isBlank()) {
+            shop.setBanner(req.getBanner().trim());
+        }
         return shopRepository.save(shop);
     }
 

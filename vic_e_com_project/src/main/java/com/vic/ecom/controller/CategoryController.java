@@ -22,7 +22,7 @@ public class CategoryController {
     @GetMapping
     public ResponseEntity<ApiResponse<PublicCategoryDtos.Response>> list() {
         List<PublicCategoryDtos.Item> items = categories.findAllByOrderByIdAsc().stream()
-                .filter(c -> c.getStatus() == CategoryStatus.VISIBLE)
+                .filter(c -> c.getStatus() == null || c.getStatus() == CategoryStatus.VISIBLE)
                 .map(this::toItem)
                 .toList();
         return ResponseEntity.ok(ApiResponse.ok("Danh sách danh mục", new PublicCategoryDtos.Response(items)));

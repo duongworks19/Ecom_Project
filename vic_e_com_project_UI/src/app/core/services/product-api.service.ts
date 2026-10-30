@@ -21,13 +21,15 @@ export class ProductApiService {
       ? `${this.baseUrl}/categories`
       : `${this.baseUrl}/categories.json`;
 
-    return this.http.get<{ data: PublicCategoryResponse }>(url).pipe(
-      map((response) => response.data.items),
-      catchError(() =>
-        this.baseUrl.startsWith('http')
-          ? this.http.get<CategoryItem[]>('/api/categories.json').pipe(catchError(() => of(null)))
-          : of(null)
-      )
+    return this.http.get<any>(url).pipe(
+      map((response) => {
+        if (Array.isArray(response?.data?.items)) return response.data.items;
+        if (Array.isArray(response?.data)) return response.data;
+        if (Array.isArray(response?.items)) return response.items;
+        if (Array.isArray(response)) return response;
+        return [];
+      }),
+      catchError(() => of([]))
     );
   }
 

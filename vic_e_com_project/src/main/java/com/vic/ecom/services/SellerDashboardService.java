@@ -52,86 +52,43 @@ public class SellerDashboardService {
 
     @Transactional
     public Shop getOrCreateInitializedShop(Long userId) {
-        Shop shop = null;
-        if (userId != null) {
-            Optional<Vendor> vendorOpt = vendorRepository.findByUserId(userId);
-            if (vendorOpt.isPresent()) {
-                shop = vendorOpt.get().getShop();
-            }
-        }
-        if (shop == null) {
-            List<Shop> existingShops = shopRepository.findAll();
-            if (!existingShops.isEmpty()) {
-                shop = existingShops.get(0);
-            }
-        }
-        if (shop == null) {
-            User sellerUser = userRepository.findByEmail("seller@lumihomedecor.vn")
-                    .orElseGet(() -> {
-                        User u = new User();
-                        u.setEmail("seller@lumihomedecor.vn");
-                        u.setFullName("Lumi Home Decor Owner");
-                        u.setPhone("0987654321");
-                        u.setRole(UserRole.VENDOR);
-                        u.setStatus(UserStatus.ACTIVE);
-                        u.setAuthProvider("LOCAL");
-                        return userRepository.save(u);
-                    });
-
-            Vendor vendor = vendorRepository.findByUserId(sellerUser.getId())
-                    .orElseGet(() -> {
-                        Vendor v = new Vendor();
-                        v.setUser(sellerUser);
-                        v.setBusinessName("Lumi Home Decor Co., Ltd.");
-                        v.setApprovalStatus(ApprovalStatus.APPROVED);
-                        return vendorRepository.save(v);
-                    });
-
-            Shop newShop = new Shop();
-            newShop.setVendor(vendor);
-            newShop.setName("Lumi Home Decor");
-            newShop.setTagline("Minimalist & Cozy Scandinavian Living");
-            newShop.setDescription("Chuyên phụ kiện trang trí nhà cửa phong cách Bắc Âu tối giản: đèn gốm thủ công, nến thơm tinh dầu thiên nhiên, bình hoa thủy tinh và khung tranh gỗ sồi tự nhiên.");
-            newShop.setPhone("0987 654 321");
-            newShop.setEmail("hello@lumihomedecor.vn");
-            newShop.setPickupAddress("Số 45 Ngõ 82 Dịch Vọng Hậu, Quận Cầu Giấy, Hà Nội");
-            newShop.setBusinessHours("08:30 - 21:00 (Thứ 2 - Chủ Nhật)");
-            newShop.setStatus(ShopStatus.ACTIVE);
-            newShop.setRatingAvg(BigDecimal.valueOf(4.8));
-            shop = shopRepository.save(newShop);
-        } else {
-            boolean updated = false;
-            if (shop.getTagline() == null) {
-                shop.setTagline("Minimalist & Cozy Scandinavian Living");
-                updated = true;
-            }
-            if (shop.getDescription() == null) {
-                shop.setDescription("Chuyên phụ kiện trang trí nhà cửa phong cách Bắc Âu tối giản: đèn gốm thủ công, nến thơm tinh dầu thiên nhiên, bình hoa thủy tinh và khung tranh gỗ sồi tự nhiên.");
-                updated = true;
-            }
-            if (shop.getPhone() == null) {
-                shop.setPhone("0987 654 321");
-                updated = true;
-            }
-            if (shop.getEmail() == null) {
-                shop.setEmail("hello@lumihomedecor.vn");
-                updated = true;
-            }
-            if (shop.getPickupAddress() == null) {
-                shop.setPickupAddress("Số 45 Ngõ 82 Dịch Vọng Hậu, Quận Cầu Giấy, Hà Nội");
-                updated = true;
-            }
-            if (shop.getBusinessHours() == null) {
-                shop.setBusinessHours("08:30 - 21:00 (Thứ 2 - Chủ Nhật)");
-                updated = true;
-            }
-            if (updated) {
-                shop = shopRepository.save(shop);
-            }
+        if (userId == null) {
+            return null;
         }
 
-        seedShopDataIfNeeded(shop);
-        return shop;
+        Optional<Vendor> vendorOpt = vendorRepository.findByUserId(userId);
+        if (vendorOpt.isPresent()) {
+            Vendor vendor = vendorOpt.get();
+            if (vendor.getShop() != null) {
+                return vendor.getShop();
+            }
+            Shop s = new Shop();
+            s.setVendor(vendor);
+            s.setName(vendor.getBusinessName() != null && !vendor.getBusinessName().isBlank()
+                    ? vendor.getBusinessName() : "Shop " + userId);
+            s.setDescription("Gian hàng mới");
+            s.setStatus(ShopStatus.ACTIVE);
+            return shopRepository.save(s);
+        }
+
+        User user = userRepository.findById(userId).orElse(null);
+        if (user != null) {
+            Vendor vendor = new Vendor();
+            vendor.setUser(user);
+            vendor.setBusinessName(user.getFullName() != null && !user.getFullName().isBlank()
+                    ? user.getFullName() : "Shop " + user.getId());
+            vendor.setApprovalStatus(ApprovalStatus.APPROVED);
+            vendor = vendorRepository.save(vendor);
+
+            Shop s = new Shop();
+            s.setVendor(vendor);
+            s.setName(vendor.getBusinessName());
+            s.setDescription("Gian hàng của " + user.getFullName());
+            s.setStatus(ShopStatus.ACTIVE);
+            return shopRepository.save(s);
+        }
+
+        return null;
     }
 
     private void seedShopDataIfNeeded(Shop shop) {
@@ -265,6 +222,19 @@ public class SellerDashboardService {
         String shopName = (shop.getName() != null && !shop.getName().isBlank()) ? shop.getName() : "Lumi Home Decor";
         String avatarLetter = shopName.substring(0, 1).toUpperCase();
         String logo = shop.getLogo();
+        if ((logo == null || logo.isBlank()) && shop.getVendor() != null && shop.getVendor().getKycDocumentUrl() != null) {
+            String kyc = shop.getVendor().getKycDocumentUrl();
+            if (kyc.contains("\"logo\"")) {
+                try {
+                    com.fasterxml.jackson.databind.JsonNode node = new com.fasterxml.jackson.databind.ObjectMapper().readTree(kyc);
+                    if (node.has("logo") && !node.get("logo").asText().isBlank()) {
+                        logo = node.get("logo").asText();
+                        shop.setLogo(logo);
+                        shopRepository.save(shop);
+                    }
+                } catch (Exception ignored) {}
+            }
+        }
         boolean isApproved = shop.getStatus() == ShopStatus.ACTIVE;
 
         List<Product> dbProducts = productRepository.findByShopIdOrderByIdDesc(shopId);

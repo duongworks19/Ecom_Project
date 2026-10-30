@@ -6,7 +6,8 @@ export type ProductCategory =
   | 'sports'
   | 'food'
   | 'kids'
-  | 'books';
+  | 'books'
+  | (string & {});
 
 export interface ProductSeller {
   name: string;

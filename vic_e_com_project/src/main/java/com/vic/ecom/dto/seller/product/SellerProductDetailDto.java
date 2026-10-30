@@ -17,6 +17,7 @@ public class SellerProductDetailDto {
     private Long id;
     private String n; // name
     private String c; // category
+    private Long categoryId;
     private String d; // description
     private String s; // status: VISIBLE, HIDDEN, DRAFT
     private Integer sold; // sold count
