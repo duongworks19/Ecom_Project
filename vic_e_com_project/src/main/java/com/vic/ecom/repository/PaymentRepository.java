@@ -11,7 +11,8 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface PaymentRepository extends JpaRepository<Payment, Long> {
-    Optional<Payment> findByOrder(Order order);
+    java.util.List<Payment> findByOrderOrderByPaidAtDescIdDesc(Order order);
+    java.util.List<Payment> findByOrder_IdOrderByPaidAtDescIdDesc(Long orderId);
 
     @Modifying
     @Query(value = "ALTER TABLE payments DROP CONSTRAINT IF EXISTS payments_status_check", nativeQuery = true)

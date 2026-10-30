@@ -8,6 +8,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface ReturnRequestRepository extends JpaRepository<ReturnRequest, Long> {
+    List<ReturnRequest> findByOrder_IdOrderByCreatedAtDesc(Long orderId);
+    long countByStatus(ReturnRequestStatus status);
     List<ReturnRequest> findByTypeAndStatusAndCreatedAtGreaterThanEqualAndCreatedAtLessThan(
             ReturnRequestType type, ReturnRequestStatus status, LocalDateTime from, LocalDateTime to);
 }
