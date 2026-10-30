@@ -14,7 +14,7 @@ import java.util.List;
 @Table(
         name = "orders",
         indexes = {
-                @Index(name = "idx_orders_customer_create_at", columnList = "customer_id, create_at"),
+                @Index(name = "idx_orders_customer_created_at", columnList = "customer_id, created_at"),
                 @Index(name = "idx_orders_shop_id", columnList = "shop_id"),
                 @Index(name = "idx_orders_code", columnList = "order_code")
         }
@@ -63,8 +63,9 @@ public class Order {
     @Column(length = 20, nullable = false)
     private OrderStatus status = OrderStatus.PENDING;
 
-    @Column(name = "total", precision = 12, scale = 2, nullable = false)
+    @Column(name = "total_amount", precision = 12, scale = 2, nullable = false)
     private BigDecimal totalAmount = BigDecimal.ZERO;
+
 
     @Column(precision = 12, scale = 2)
     private BigDecimal subtotal = BigDecimal.ZERO;
@@ -78,8 +79,9 @@ public class Order {
     @Column(name = "voucher_id")
     private Long voucherId;
 
-    @Column(name = "create_at", nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
+
 
     @Column(name = "delivered_at")
     private LocalDateTime deliveredAt;
@@ -100,6 +102,13 @@ public class Order {
     private List<ReturnRequest> returnRequests = new ArrayList<>();
 
     public Order() {
+    }
+
+    @PrePersist
+    @PreUpdate
+    private void syncCreatedAtColumns() {
+        if (createdAt == null) createdAt = LocalDateTime.now();
+        if (totalAmount == null) totalAmount = BigDecimal.ZERO;
     }
 
     public void addItem(OrderItem item) {

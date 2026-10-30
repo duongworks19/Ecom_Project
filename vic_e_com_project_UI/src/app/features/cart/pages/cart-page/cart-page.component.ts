@@ -288,7 +288,9 @@ export class CartPageComponent implements OnInit {
 
   onCheckout(): void {
     if (this.selectedCount() === 0) return;
-    this.toast.info('Chuyển sang trang thanh toán...');
-    // Nối router checkout nếu có, tạm thời thông báo
+    const itemIds = Array.from(this.selectedItemIds());
+    void this.router.navigate(['/checkout'], {
+      queryParams: { cartItemIds: itemIds.join(',') },
+    });
   }
 }

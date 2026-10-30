@@ -77,8 +77,8 @@ public class AdminDashboardRepositoryImpl implements AdminDashboardRepository {
         String sql = """
                 SELECT
                     d.day::date AS rev_date,
-                    COALESCE(SUM(o.total), 0.00) AS amount
-                FROM generate_series(CAST(:startDate AS date), CAST(:endDate AS date), INTERVAL '1 day') AS d(day)
+                    COALESCE(SUM(o.total_amount), 0.00) AS amount
+                FROM generate_series(CAST(:startDate AS date), CAST(:endDate AS date), CAST('1 day' AS interval)) AS d(day)
                 LEFT JOIN orders o
                     ON o.status = 'DELIVERED'
                    AND o.delivered_at >= :fromTime

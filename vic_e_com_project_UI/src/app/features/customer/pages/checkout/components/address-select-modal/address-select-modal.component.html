@@ -1,0 +1,60 @@
+@if (isOpen()) {
+  <div class="modal-backdrop" (click)="onClose()"></div>
+
+  <div class="modal-container" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-header">
+      <h3 id="modal-title" class="modal-title">Địa chỉ của tôi</h3>
+      <button
+        type="button"
+        class="modal-close-btn"
+        aria-label="Đóng"
+        (click)="onClose()"
+      >
+        ×
+      </button>
+    </div>
+
+    <div class="modal-body">
+      @if (addresses().length === 0) {
+        <div class="empty-addresses">
+          <p>Bạn chưa có địa chỉ nhận hàng nào đã lưu.</p>
+        </div>
+      } @else {
+        <div class="address-list">
+          @for (addr of addresses(); track addr.id) {
+            <label
+              class="address-option"
+              [class.address-option--active]="selectedId() === addr.id"
+            >
+              <div class="address-radio-col">
+                <input
+                  type="radio"
+                  name="selectedAddress"
+                  [checked]="selectedId() === addr.id"
+                  (change)="onSelect(addr)"
+                />
+              </div>
+
+              <div class="address-details">
+                <div class="address-contact">
+                  <span class="contact-name">{{ addr.recipientName }}</span>
+                  <span class="contact-sep">·</span>
+                  <span class="contact-phone">{{ addr.phone }}</span>
+                  @if (addr.isDefault) {
+                    <span class="default-badge">Mặc định</span>
+                  }
+                </div>
+                <div class="address-text">{{ formatFullAddress(addr) }}</div>
+              </div>
+            </label>
+          }
+        </div>
+      }
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn-cancel" (click)="onClose()">Đóng</button>
+    </div>
+  </div>
+}
+
