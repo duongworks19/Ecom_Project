@@ -11,7 +11,8 @@ public final class AdminDispatchDtos {
     public record Summary(Counts counts, boolean running, LocalDateTime lastScanAt, List<Shipper> shippers) { }
     public record Item(Long orderId, String orderCode, String district, String shopName,
                        String receiverName, String receiverPhone, BigDecimal codAmount,
-                       String displayStatus, String shipperName, int attemptNo, String waitingNote) { }
+                       String displayStatus, String orderStatus, String shipperName,
+                       int attemptNo, String waitingNote) { }
     public record Page<T>(List<T> content, int page, int size, long totalElements) { }
     public record Event(String status, String note, LocalDateTime createdAt) { }
     public record Detail(Long orderId, String orderCode, String trackingCode, String route,

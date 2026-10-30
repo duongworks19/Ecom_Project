@@ -391,15 +391,15 @@ public class SellerDashboardService {
         if ("CONFIRM".equalsIgnoreCase(action)) {
             OrderStatus previous = order.getStatus();
             order.setStatus(OrderStatus.PREPARING);
-            saveOrderHistory(order, previous, OrderStatus.PREPARING, shop.getVendor().getUser().getId(), "Vendor xác nhận và bắt đầu chuẩn bị hàng");
+            saveOrderHistory(order, previous, OrderStatus.PREPARING, actorUserId(order, shop), "Vendor xác nhận và bắt đầu chuẩn bị hàng");
         } else if ("MARK_PACKED".equalsIgnoreCase(action)) {
             OrderStatus previous = order.getStatus();
             order.setStatus(OrderStatus.PACKED);
-            saveOrderHistory(order, previous, OrderStatus.PACKED, shop.getVendor().getUser().getId(), "Vendor đã đóng gói đơn hàng");
+            saveOrderHistory(order, previous, OrderStatus.PACKED, actorUserId(order, shop), "Vendor đã đóng gói đơn hàng");
         } else if ("START_SHIPPING".equalsIgnoreCase(action)) {
             OrderStatus previous = order.getStatus();
             order.setStatus(OrderStatus.READY_TO_SHIP);
-            saveOrderHistory(order, previous, OrderStatus.READY_TO_SHIP, shop.getVendor().getUser().getId(), "Vendor chuyển đơn sang chờ điều phối");
+            saveOrderHistory(order, previous, OrderStatus.READY_TO_SHIP, actorUserId(order, shop), "Vendor chuyển đơn sang chờ điều phối");
             if (TransactionSynchronizationManager.isSynchronizationActive()) {
                 TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                     @Override
@@ -427,6 +427,12 @@ public class SellerDashboardService {
         history.setChangedBy(userId);
         history.setNote(note);
         orderHistory.save(history);
+    }
+
+    private Long actorUserId(Order order, Shop fallbackShop) {
+        Shop orderShop = order.getShop() != null ? order.getShop() : fallbackShop;
+        if (orderShop == null || orderShop.getVendor() == null || orderShop.getVendor().getUser() == null) return null;
+        return orderShop.getVendor().getUser().getId();
     }
 
     @Transactional

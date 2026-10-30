@@ -121,8 +121,24 @@ public class DispatchService {
                 .min(Comparator.comparingLong((Candidate c) -> c.active).thenComparing(c -> c.profile.getId()))
                 .map(c -> c.profile).orElseThrow(() -> com.vic.ecom.ultis.CustomerAccountException.unprocessable(
                         "NO_SHIPPER", "Chưa có shipper phù hợp để gán lại", null));
-        assign(order, shipper);
-        return shipments.findByOrder_Id(order.getId()).orElseThrow();
+        Shipment shipment = shipments.findByOrder_IdOrderByAssignedAtDesc(order.getId()).stream()
+                .filter(s -> s.getStatus() == ShipmentStatus.FAILED)
+                .findFirst()
+                .orElseThrow(() -> com.vic.ecom.ultis.CustomerAccountException.conflict(
+                        "SHIPMENT_NOT_FOUND", "Không tìm thấy shipment giao thất bại", null));
+        shipment.setShipper(shipper);
+        shipment.setStatus(ShipmentStatus.ASSIGNED);
+        shipment.setAssignedAt(LocalDateTime.now());
+        shipment.setPickedUpAt(null);
+        shipment.setDeliveredAt(null);
+        shipment.setCodCollected(false);
+        shipment = shipments.save(shipment);
+        ShipmentEvent event = new ShipmentEvent();
+        event.setShipment(shipment);
+        event.setStatus(ShipmentStatus.ASSIGNED);
+        event.setNote("Admin đã gán lại shipper");
+        events.save(event);
+        return shipment;
     }
 
     private boolean matchesArea(ShipperProfile shipper, Order order) {

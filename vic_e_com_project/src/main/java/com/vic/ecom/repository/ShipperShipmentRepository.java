@@ -17,6 +17,7 @@ public interface ShipperShipmentRepository extends JpaRepository<Shipment, Long>
     List<Shipment> findByShipper_IdAndStatusInOrderByDeliveredAtDesc(Long shipperId, Collection<ShipmentStatus> statuses);
     Optional<Shipment> findByIdAndShipper_Id(Long id, Long shipperId);
     long countByShipper_IdAndStatusAndDeliveredAtGreaterThanEqualAndDeliveredAtLessThan(Long shipperId, ShipmentStatus status, LocalDateTime from, LocalDateTime to);
+    long countByShipper_IdAndStatusAndAssignedAtGreaterThanEqualAndAssignedAtLessThan(Long shipperId, ShipmentStatus status, LocalDateTime from, LocalDateTime to);
     @Query("select coalesce(sum(s.codAmount), 0) from Shipment s where s.shipper.id = :shipper and s.status = :status and s.codCollected = true and s.deliveredAt >= :from and s.deliveredAt < :to")
     BigDecimal sumCollectedCod(@Param("shipper") Long shipper, @Param("status") ShipmentStatus status, @Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
     @Modifying

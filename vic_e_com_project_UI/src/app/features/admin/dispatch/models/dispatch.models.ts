@@ -41,6 +41,7 @@ export interface DispatchItem {
   receiverPhone: string;
   codAmount: number;
   displayStatus: DisplayStatus;
+  orderStatus: string;
   shipperName: string | null;
   attemptNo: number;
   waitingNote: string | null;
