@@ -126,46 +126,66 @@
               }
             </div>
 
-            <!-- Voucher Box -->
+            <!-- Voucher Box (Chọn Voucher của Shop & Web) -->
             <div class="voucher-box">
               @if (shop.voucherCode) {
-                <div class="applied-voucher-row">
-                  <span class="applied-voucher-badge">
-                    Voucher {{ shop.voucherCode }} · -{{ shop.discountAmount | vndCurrency }}
-                  </span>
-                  <button
-                    type="button"
-                    class="btn-remove-voucher"
-                    (click)="removeVoucher(shop.shopId)"
-                  >
-                    Gỡ voucher
-                  </button>
-                </div>
-              } @else {
-                <div class="voucher-input-group">
-                  <label class="voucher-label" [for]="'voucher-' + shop.shopId">
-                    Mã voucher của shop
-                  </label>
-                  <div class="voucher-input-row">
-                    <input
-                      type="text"
-                      [id]="'voucher-' + shop.shopId"
-                      class="voucher-input"
-                      [class.voucher-input--error]="!!shopVoucherErrors().get(shop.shopId)"
-                      placeholder="Nhập mã voucher"
-                      #vInput
-                    />
+                <div class="applied-voucher-bar">
+                  <div class="applied-voucher-info" (click)="openVoucherModal(shop)">
+                    <span class="voucher-icon">🎟️</span>
+                    <div class="applied-voucher-text">
+                      <span class="applied-voucher-title">
+                        Voucher đã chọn: <strong>{{ shop.voucherCode }}</strong>
+                      </span>
+                      <span class="applied-voucher-savings">
+                        Tiết kiệm {{ shop.discountAmount | vndCurrency }}
+                      </span>
+                    </div>
+                  </div>
+                  <div class="applied-voucher-actions">
                     <button
                       type="button"
-                      class="btn-apply-voucher"
-                      (click)="applyVoucher(shop.shopId, vInput.value)"
+                      class="btn-change-voucher"
+                      (click)="openVoucherModal(shop)"
                     >
-                      Áp dụng
+                      Đổi voucher
+                    </button>
+                    <button
+                      type="button"
+                      class="btn-remove-voucher"
+                      (click)="removeVoucher(shop.shopId)"
+                      title="Gỡ voucher này"
+                    >
+                      Gỡ
                     </button>
                   </div>
-                  @if (shopVoucherErrors().get(shop.shopId); as vErr) {
-                    <div class="voucher-error-msg">{{ vErr }}</div>
-                  }
+                </div>
+              } @else {
+                <div class="voucher-trigger-bar" (click)="openVoucherModal(shop)">
+                  <div class="voucher-trigger-left">
+                    <span class="voucher-icon">🎟️</span>
+                    <div class="voucher-trigger-text">
+                      <span class="voucher-trigger-title">Voucher của Shop & VICMART</span>
+                      <span class="voucher-trigger-desc">
+                        @if ((shopAvailableVouchers().get(shop.shopId) || []).length > 0) {
+                          Có {{ (shopAvailableVouchers().get(shop.shopId) || []).length }} mã giảm giá có thể chọn
+                        } @else {
+                          Chọn voucher giảm giá của shop hoặc sàn
+                        }
+                      </span>
+                    </div>
+                  </div>
+                  <div class="voucher-trigger-right">
+                    <span class="btn-open-voucher-picker">
+                      Chọn voucher
+                      <span class="arrow-icon">›</span>
+                    </span>
+                  </div>
+                </div>
+              }
+              @if (shopVoucherErrors().get(shop.shopId); as vErr) {
+                <div class="voucher-inline-error">
+                  <span class="err-icon">⚠️</span>
+                  <span>{{ vErr }}</span>
                 </div>
               }
             </div>
@@ -262,5 +282,20 @@
     (selectAddress)="onAddressSelected($event)"
     (closeModal)="isAddressModalOpen.set(false)"
   />
+
+  <!-- Voucher Selection Modal -->
+  <vic-voucher-select-modal
+    [isOpen]="isVoucherModalOpen()"
+    [shopId]="activeVoucherShopId()"
+    [shopName]="activeVoucherShopName()"
+    [subtotal]="activeVoucherSubtotal()"
+    [selectedCode]="activeVoucherShopId() ? (shopVouchers().get(activeVoucherShopId()!) || null) : null"
+    [vouchers]="activeVoucherShopId() ? (shopAvailableVouchers().get(activeVoucherShopId()!) || []) : []"
+    [errorMessage]="activeVoucherShopId() ? (shopVoucherErrors().get(activeVoucherShopId()!) || null) : null"
+    (applyCode)="onVoucherModalApply($event)"
+    (removeCode)="onVoucherModalRemove()"
+    (closeModal)="closeVoucherModal()"
+  />
 </div>
+
 

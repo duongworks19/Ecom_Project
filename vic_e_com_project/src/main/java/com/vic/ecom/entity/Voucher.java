@@ -26,7 +26,7 @@ public class Voucher {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "shop_id", nullable = false)
+    @JoinColumn(name = "shop_id", nullable = true)
     private Shop shop;
 
     @Column(name = "code", nullable = false, length = 50)

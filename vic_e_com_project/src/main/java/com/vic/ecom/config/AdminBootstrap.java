@@ -20,6 +20,7 @@ public class AdminBootstrap implements ApplicationRunner {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
 
     @Value("${ADMIN_EMAIL:}")
     private String adminEmail;
@@ -30,6 +31,11 @@ public class AdminBootstrap implements ApplicationRunner {
     @Override
     @Transactional
     public void run(ApplicationArguments args) {
+        try {
+            jdbcTemplate.execute("ALTER TABLE vouchers ALTER COLUMN shop_id DROP NOT NULL");
+        } catch (Exception ignored) {
+        }
+
         if (userRepository.existsByRole(UserRole.ADMIN)) {
             return;
         }

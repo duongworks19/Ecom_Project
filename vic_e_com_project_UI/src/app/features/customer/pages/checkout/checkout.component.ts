@@ -12,9 +12,12 @@ import { CartStateService } from '../../../cart/services/cart-state.service';
 import { ToastService } from '../../../../shared/ui/toast/toast.service';
 import { CheckoutService } from './services/checkout.service';
 import { AddressSelectModalComponent } from './components/address-select-modal/address-select-modal.component';
+import { VoucherSelectModalComponent } from './components/voucher-select-modal/voucher-select-modal.component';
 import {
+  CheckoutAvailableVoucher,
   CheckoutPreviewResponse,
   CheckoutRequest,
+  CheckoutShopPreview,
   CheckoutVoucherInput,
   MAX_CART_ITEMS,
   VOUCHER_ERROR_CODES,
@@ -23,7 +26,14 @@ import {
 @Component({
   selector: 'vic-checkout',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, VndCurrencyPipe, AddressSelectModalComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterLink,
+    VndCurrencyPipe,
+    AddressSelectModalComponent,
+    VoucherSelectModalComponent,
+  ],
   templateUrl: './checkout.component.html',
   styleUrl: './checkout.component.scss',
 })
@@ -51,6 +61,13 @@ export class CheckoutComponent implements OnInit {
   readonly shopVouchers = signal<Map<number, string>>(new Map());
   readonly shopVoucherErrors = signal<Map<number, string>>(new Map());
   readonly voucherInputs = signal<Map<number, string>>(new Map());
+  readonly shopAvailableVouchers = signal<Map<number, CheckoutAvailableVoucher[]>>(new Map());
+
+  // Voucher modal state
+  readonly isVoucherModalOpen = signal(false);
+  readonly activeVoucherShopId = signal<number | null>(null);
+  readonly activeVoucherShopName = signal<string>('');
+  readonly activeVoucherSubtotal = signal<number>(0);
 
   // Last successful preview cache
   private lastGoodPreview: { request: CheckoutRequest; response: CheckoutPreviewResponse } | null = null;
@@ -94,8 +111,15 @@ export class CheckoutComponent implements OnInit {
         next: (res) => {
           this.preview.set(res);
           this.lastGoodPreview = { request: this.buildCurrentRequest(), response: res };
+          if (this.pendingVoucherShopId !== null) {
+            this.isVoucherModalOpen.set(false);
+          }
           this.pendingVoucherShopId = null;
           this.isPreviewLoading.set(false);
+
+          for (const s of res.shops) {
+            this.loadShopVouchers(s.shopId);
+          }
         },
         error: (err: HttpErrorResponse) => {
           this.handlePreviewError(err);
@@ -195,6 +219,51 @@ export class CheckoutComponent implements OnInit {
 
     this.pendingVoucherShopId = null;
     this.previewTrigger$.next();
+  }
+
+  loadShopVouchers(shopId: number, force = false): void {
+    if (!force && this.shopAvailableVouchers().has(shopId)) return;
+    this.checkoutService.getShopVouchers(shopId).subscribe({
+      next: (res) => {
+        const map = new Map(this.shopAvailableVouchers());
+        map.set(shopId, res.data || []);
+        this.shopAvailableVouchers.set(map);
+      },
+      error: (err) => {
+        console.warn(`Could not load vouchers for shop ${shopId}`, err);
+      },
+    });
+  }
+
+  openVoucherModal(shop: CheckoutShopPreview): void {
+    this.activeVoucherShopId.set(shop.shopId);
+    this.activeVoucherShopName.set(shop.shopName);
+    this.activeVoucherSubtotal.set(shop.subtotal);
+
+    // Clear previous error when opening
+    const nextErrors = new Map(this.shopVoucherErrors());
+    nextErrors.delete(shop.shopId);
+    this.shopVoucherErrors.set(nextErrors);
+
+    this.loadShopVouchers(shop.shopId, true);
+    this.isVoucherModalOpen.set(true);
+  }
+
+  closeVoucherModal(): void {
+    this.isVoucherModalOpen.set(false);
+  }
+
+  onVoucherModalApply(code: string): void {
+    const shopId = this.activeVoucherShopId();
+    if (!shopId) return;
+    this.applyVoucher(shopId, code);
+  }
+
+  onVoucherModalRemove(): void {
+    const shopId = this.activeVoucherShopId();
+    if (!shopId) return;
+    this.removeVoucher(shopId);
+    this.closeVoucherModal();
   }
 
   onAddressSelected(addr: CustomerAddress): void {

@@ -28,6 +28,7 @@ public class ShopService {
     private final ShopRepository shopRepository;
     private final ProductRepository productRepository;
     private final VoucherRepository voucherRepository;
+    private final org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
 
     @Transactional(readOnly = true)
     public ShopResponse getShopById(Long id) {
@@ -127,15 +128,89 @@ public class ShopService {
         return result;
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public List<VoucherDtos.Response> getActiveVouchersByShopId(Long shopId) {
         LocalDateTime now = LocalDateTime.now();
-        List<Voucher> vouchers = voucherRepository.findByShopIdAndStatus(shopId, VoucherStatus.ACTIVE);
-        return vouchers.stream()
+        try {
+            ensureDefaultWebVouchers();
+        } catch (Exception ignored) {
+        }
+
+        List<Voucher> shopVouchers = new ArrayList<>();
+        try {
+            shopVouchers = voucherRepository.findByShopIdAndStatus(shopId, VoucherStatus.ACTIVE);
+        } catch (Exception ignored) {
+        }
+
+        List<Voucher> webVouchers = new ArrayList<>();
+        try {
+            webVouchers = voucherRepository.findByShopIsNullAndStatus(VoucherStatus.ACTIVE);
+        } catch (Exception ignored) {
+        }
+
+        List<Voucher> combined = new ArrayList<>();
+        combined.addAll(shopVouchers);
+        combined.addAll(webVouchers);
+
+        return combined.stream()
                 .filter(v -> (v.getStartAt() == null || !now.isBefore(v.getStartAt()))
                         && (v.getEndAt() == null || !now.isAfter(v.getEndAt()))
                         && (v.getUsageLimit() == null || v.getUsedCount() == null || v.getUsedCount() < v.getUsageLimit()))
                 .map(v -> VoucherService.toResponse(v, now))
                 .collect(Collectors.toList());
+    }
+
+    private void ensureDefaultWebVouchers() {
+        try {
+            jdbcTemplate.execute("ALTER TABLE vouchers ALTER COLUMN shop_id DROP NOT NULL");
+        } catch (Exception ignored) {
+        }
+
+        try {
+            if (voucherRepository.findByShopIsNullAndCodeIgnoreCase("VICMARTNEW").isEmpty()) {
+                Voucher v = Voucher.builder()
+                        .code("VICMARTNEW")
+                        .discountType(com.vic.ecom.enums.VoucherDiscountType.FIXED)
+                        .value(BigDecimal.valueOf(20000))
+                        .minOrderAmount(BigDecimal.valueOf(150000))
+                        .usageLimit(10000)
+                        .usedCount(0)
+                        .startAt(LocalDateTime.now().minusDays(1))
+                        .endAt(LocalDateTime.now().plusMonths(6))
+                        .status(VoucherStatus.ACTIVE)
+                        .build();
+                voucherRepository.save(v);
+            }
+            if (voucherRepository.findByShopIsNullAndCodeIgnoreCase("FREESHIP").isEmpty()) {
+                Voucher v = Voucher.builder()
+                        .code("FREESHIP")
+                        .discountType(com.vic.ecom.enums.VoucherDiscountType.FIXED)
+                        .value(BigDecimal.valueOf(30000))
+                        .minOrderAmount(BigDecimal.valueOf(250000))
+                        .usageLimit(10000)
+                        .usedCount(0)
+                        .startAt(LocalDateTime.now().minusDays(1))
+                        .endAt(LocalDateTime.now().plusMonths(6))
+                        .status(VoucherStatus.ACTIVE)
+                        .build();
+                voucherRepository.save(v);
+            }
+            if (voucherRepository.findByShopIsNullAndCodeIgnoreCase("VICMARTVIP").isEmpty()) {
+                Voucher v = Voucher.builder()
+                        .code("VICMARTVIP")
+                        .discountType(com.vic.ecom.enums.VoucherDiscountType.PERCENT)
+                        .value(BigDecimal.valueOf(10))
+                        .maxDiscount(BigDecimal.valueOf(50000))
+                        .minOrderAmount(BigDecimal.valueOf(300000))
+                        .usageLimit(10000)
+                        .usedCount(0)
+                        .startAt(LocalDateTime.now().minusDays(1))
+                        .endAt(LocalDateTime.now().plusMonths(6))
+                        .status(VoucherStatus.ACTIVE)
+                        .build();
+                voucherRepository.save(v);
+            }
+        } catch (Exception ignored) {
+        }
     }
 }

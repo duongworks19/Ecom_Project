@@ -21,6 +21,12 @@ public interface VoucherRepository extends JpaRepository<Voucher, Long> {
 
     List<Voucher> findByShopIdAndStatus(Long shopId, VoucherStatus status);
 
+    List<Voucher> findByShopIsNullAndStatus(VoucherStatus status);
+
+    Optional<Voucher> findByShopIsNullAndCodeIgnoreCase(String code);
+
+    Optional<Voucher> findFirstByCodeIgnoreCase(String code);
+
     boolean existsByShopIdAndCodeIgnoreCaseAndStatusNot(Long shopId, String code, VoucherStatus status);
 
     boolean existsByShopIdAndCodeIgnoreCaseAndStatusNotAndIdNot(Long shopId, String code, VoucherStatus status, Long id);

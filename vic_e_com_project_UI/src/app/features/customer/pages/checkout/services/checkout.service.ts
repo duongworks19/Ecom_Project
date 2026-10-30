@@ -3,10 +3,12 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../../../environments/environment';
 import {
+  CheckoutAvailableVoucher,
   CheckoutPreviewResponse,
   CheckoutRequest,
   PlaceOrderResponse,
 } from '../models/checkout.models';
+import { ApiResponse } from '../../../../../shared/models/api-response.model';
 
 export function buildCheckoutRequestBody(req: CheckoutRequest): CheckoutRequest {
   return {
@@ -33,6 +35,10 @@ export class CheckoutService {
   placeOrder(request: CheckoutRequest): Observable<PlaceOrderResponse> {
     const body = buildCheckoutRequestBody(request);
     return this.http.post<PlaceOrderResponse>(this.ordersUrl, body);
+  }
+
+  getShopVouchers(shopId: number): Observable<ApiResponse<CheckoutAvailableVoucher[]>> {
+    return this.http.get<ApiResponse<CheckoutAvailableVoucher[]>>(`${environment.apiUrl}/shops/${shopId}/vouchers`);
   }
 }
 
