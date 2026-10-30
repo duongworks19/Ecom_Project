@@ -8,6 +8,7 @@ import com.vic.ecom.enums.ShipmentStatus;
 import com.vic.ecom.enums.ShipperWorkStatus;
 import com.vic.ecom.repository.DeliveryFailureRepository;
 import com.vic.ecom.repository.ShipmentEventRepository;
+import com.vic.ecom.repository.OrderStatusHistoryRepository;
 import com.vic.ecom.repository.ShipperShipmentRepository;
 import com.vic.ecom.repository.PaymentRepository;
 import com.vic.ecom.enums.OrderStatus;
@@ -30,18 +31,19 @@ public class ShipperShipmentService {
     private final DeliveryFailureRepository failures;
     private final PaymentRepository payments;
     private final DispatchService dispatch;
+    private final OrderStatusHistoryRepository histories;
 
     @Transactional public ShipperPortalDtos.Item pickup(Authentication auth, Long id) {
         var s = owned(auth, id);
         if (shipments.pickup(id, s.getShipper().getId(), ShipmentStatus.ASSIGNED, ShipmentStatus.PICKED_UP, LocalDateTime.now()) == 0) invalid();
-        s.getOrder().setStatus(OrderStatus.SHIPPING); s.getShipper().setWorkStatus(ShipperWorkStatus.BUSY); shipments.save(s); event(s, ShipmentStatus.PICKED_UP, "Shipper đã nhận hàng"); return query.detail(auth, id);
+        OrderStatus previous = s.getOrder().getStatus(); s.getOrder().setStatus(OrderStatus.SHIPPING); s.getShipper().setWorkStatus(ShipperWorkStatus.BUSY); shipments.save(s); history(s.getOrder(), previous, OrderStatus.SHIPPING, s.getShipper().getUser().getId(), "Shipper đã lấy hàng"); event(s, ShipmentStatus.PICKED_UP, "Shipper đã nhận hàng"); return query.detail(auth, id);
     }
     @Transactional public ShipperPortalDtos.Item delivered(Authentication auth, Long id, BigDecimal collectedCod) {
         var s = owned(auth, id);
         if (s.getStatus() != ShipmentStatus.PICKED_UP && s.getStatus() != ShipmentStatus.DELIVERING) invalid();
         if (s.getCodAmount().signum() > 0 && (collectedCod == null || s.getCodAmount().compareTo(collectedCod) != 0)) throw CustomerAccountException.unprocessable("COD_MISMATCH", "Số tiền COD không khớp", "collectedCod");
         if (shipments.complete(id, s.getShipper().getId(), List.of(ShipmentStatus.PICKED_UP, ShipmentStatus.DELIVERING), ShipmentStatus.DELIVERED, LocalDateTime.now(), s.getCodAmount().signum() > 0) == 0) invalid();
-        s.getOrder().setStatus(OrderStatus.DELIVERED); s.getOrder().setDeliveredAt(LocalDateTime.now()); s.getShipper().setWorkStatus(ShipperWorkStatus.AVAILABLE); payments.findByOrderOrderByPaidAtDescIdDesc(s.getOrder()).stream().findFirst().ifPresent(p -> { p.setStatus(PaymentStatus.PAID.name()); payments.save(p); }); shipments.save(s); event(s, ShipmentStatus.DELIVERED, "Giao hàng thành công"); dispatch.dispatchPendingOrders(); return query.detail(auth, id);
+        OrderStatus previous = s.getOrder().getStatus(); s.getOrder().setStatus(OrderStatus.DELIVERED); s.getOrder().setDeliveredAt(LocalDateTime.now()); s.getShipper().setWorkStatus(ShipperWorkStatus.AVAILABLE); payments.findByOrderOrderByPaidAtDescIdDesc(s.getOrder()).stream().findFirst().ifPresent(p -> { p.setStatus(PaymentStatus.PAID.name()); payments.save(p); }); shipments.save(s); history(s.getOrder(), previous, OrderStatus.DELIVERED, s.getShipper().getUser().getId(), "Giao hàng thành công, đã thu COD"); event(s, ShipmentStatus.DELIVERED, "Giao hàng thành công"); dispatch.dispatchPendingOrders(); return query.detail(auth, id);
     }
     @Transactional public ShipperPortalDtos.Item failure(Authentication auth, Long id, String reason, String notes) {
         var s = owned(auth, id); if (s.getStatus() != ShipmentStatus.PICKED_UP && s.getStatus() != ShipmentStatus.DELIVERING) invalid();
@@ -49,9 +51,10 @@ public class ShipperShipmentService {
         String text = reason + (notes == null || notes.isBlank() ? "" : ": " + notes.trim()); if (text.length() > 500) text = text.substring(0, 500);
         if (shipments.fail(id, s.getShipper().getId(), List.of(ShipmentStatus.PICKED_UP, ShipmentStatus.DELIVERING), ShipmentStatus.FAILED) == 0) invalid();
         s.getShipper().setWorkStatus(ShipperWorkStatus.AVAILABLE); shipments.save(s);
-        DeliveryFailure f = new DeliveryFailure(); f.setShipment(s); f.setReason(text); f.setAttemptNo((int) failures.countByShipment_Order_Id(s.getOrder().getId()) + 1); failures.save(f); event(s, ShipmentStatus.FAILED, text); dispatch.dispatchPendingOrders(); return query.detail(auth, id);
+        DeliveryFailure f = new DeliveryFailure(); f.setShipment(s); f.setReason(text); f.setAttemptNo((int) failures.countByShipment_Order_Id(s.getOrder().getId()) + 1); failures.save(f); history(s.getOrder(), s.getOrder().getStatus(), s.getOrder().getStatus(), s.getShipper().getUser().getId(), "Giao thất bại: " + text); event(s, ShipmentStatus.FAILED, text); dispatch.dispatchPendingOrders(); return query.detail(auth, id);
     }
     private com.vic.ecom.entity.Shipment owned(Authentication a, Long id) { return shipments.findByIdAndShipper_Id(id, query.requireProfile(a).getId()).orElseThrow(() -> CustomerAccountException.notFound("SHIPMENT_NOT_FOUND", "Không tìm thấy đơn giao hàng")); }
     private void event(com.vic.ecom.entity.Shipment s, ShipmentStatus status, String note) { ShipmentEvent e = new ShipmentEvent(); e.setShipment(s); e.setStatus(status); e.setNote(note); events.save(e); }
+    private void history(com.vic.ecom.entity.Order order, OrderStatus from, OrderStatus to, Long userId, String note) { var h = new com.vic.ecom.entity.OrderStatusHistory(); h.setOrderId(order.getId()); h.setFromStatus(from); h.setToStatus(to); h.setChangedBy(userId); h.setNote(note); histories.save(h); }
     private void invalid() { throw CustomerAccountException.conflict("INVALID_STATE", "Shipment không ở trạng thái cho phép", null); }
 }

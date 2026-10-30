@@ -98,6 +98,29 @@ export const routes: Routes = [
     title: 'Giỏ hàng — VIC MART',
   },
   {
+    path: 'checkout',
+    component: CustomerLayoutComponent,
+    canActivate: [passwordChangeGuard, customerAuthGuard],
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./features/customer/pages/checkout/checkout.component').then(
+            (m) => m.CheckoutComponent
+          ),
+        title: 'Thanh toán — VIC MART',
+      },
+      {
+        path: 'success',
+        loadComponent: () =>
+          import('./features/customer/pages/checkout/checkout-success.component').then(
+            (m) => m.CheckoutSuccessComponent
+          ),
+        title: 'Đặt hàng thành công — VIC MART',
+      },
+    ],
+  },
+  {
     path: 'account',
     component: CustomerLayoutComponent,
     canActivate: [passwordChangeGuard, customerAuthGuard],

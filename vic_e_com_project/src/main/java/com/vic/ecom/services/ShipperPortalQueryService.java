@@ -119,6 +119,7 @@ public class ShipperPortalQueryService {
         profiles.save(p);
     }
 
+    @Transactional(readOnly = true)
     public List<ShipperPortalDtos.Item> list(Authentication auth, String status) {
         Long id = requireProfile(auth).getId();
         List<ShipmentStatus> statuses = switch (status == null ? "ALL" : status) {
@@ -137,19 +138,26 @@ public class ShipperPortalQueryService {
                 .map(this::item).toList();
     }
 
+    @Transactional(readOnly = true)
     public ShipperPortalDtos.Item detail(Authentication auth, Long shipmentId) {
         return shipperShipments.findByIdAndShipper_Id(shipmentId, requireProfile(auth).getId()).map(this::item)
                 .orElseThrow(() -> CustomerAccountException.notFound("SHIPMENT_NOT_FOUND", "Không tìm thấy đơn giao hàng"));
     }
 
+    @Transactional(readOnly = true)
     public List<ShipperPortalDtos.Item> history(Authentication auth) {
         return shipperShipments.findByShipper_IdAndStatusInOrderByDeliveredAtDesc(requireProfile(auth).getId(), List.of(ShipmentStatus.DELIVERED, ShipmentStatus.FAILED)).stream().map(this::item).toList();
     }
 
     private ShipperPortalDtos.Item item(com.vic.ecom.entity.Shipment s) {
+        var order = s.getOrder();
+        var shop = order.getShop();
+        String vendorName = shop == null ? null : shop.getName();
+        String vendorPhone = shop == null ? null : shop.getPhone();
+        String vendorAddress = shop == null ? null : shop.getPickupAddress();
         List<ShipperPortalDtos.Event> eventList = events.findByShipment_IdOrderByCreatedAtAsc(s.getId()).stream().map(e -> new ShipperPortalDtos.Event(e.getId(), s.getId(), e.getStatus(), e.getCreatedAt(), e.getStatus().name(), e.getNote())).toList();
         ShipperPortalDtos.Failure failure = failures.findTopByShipment_IdOrderByCreatedAtDesc(s.getId()).map(f -> new ShipperPortalDtos.Failure(f.getId(), s.getId(), f.getReason(), f.getReason(), f.getCreatedAt())).orElse(null);
-        return new ShipperPortalDtos.Item(s.getId(), s.getOrder().getId(), "SPX-" + String.format("%05d", s.getId()), s.getShipper().getId(), s.getStatus(), s.getCodAmount(), null, null, null, null, null, null, null, null, s.getAssignedAt(), eventList, failure);
+        return new ShipperPortalDtos.Item(s.getId(), order.getId(), "SPX-" + String.format("%05d", s.getId()), s.getShipper().getId(), s.getStatus(), s.getCodAmount(), vendorName, vendorPhone, vendorAddress, order.getReceiverName(), order.getReceiverPhone(), order.getShippingAddress(), order.getProductSummary(), null, s.getAssignedAt(), eventList, failure);
     }
 
     private String code(ShipperProfile p) { return "SHP-" + p.getCreatedAt().getYear() + "-" + String.format("%04d", p.getId()); }

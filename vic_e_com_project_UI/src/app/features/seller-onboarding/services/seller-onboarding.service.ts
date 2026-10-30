@@ -71,9 +71,6 @@ export class SellerOnboardingService {
           },
           updatedAt: draft.updatedAt || curr.updatedAt,
         });
-        if (draft.status === 'APPROVED') {
-          this.authService.updateRoleLocally('VENDOR');
-        }
       }
     } catch { }
   }
@@ -256,10 +253,6 @@ export class SellerOnboardingService {
         localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(updated));
 
         // Nếu đã được duyệt (APPROVED), tự động kích hoạt quyền VENDOR trên giao diện
-        if (serverStatus === 'APPROVED') {
-          this.authService.updateRoleLocally('VENDOR');
-        }
-
         return updated;
       }),
       catchError(() => {

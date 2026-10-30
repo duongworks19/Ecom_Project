@@ -103,6 +103,13 @@ export class AdminOrdersComponent implements OnInit {
           this.totalOrders.set(page.total);
           this.totalPages.set(page.totalPages);
           this.loadingOrders.set(false);
+          const selectedId = this.selectedItem()?.id;
+          const first = page.items[0];
+          if (!first) {
+            this.closeDetail();
+          } else if (!selectedId || !page.items.some((item) => item.id === selectedId)) {
+            this.selectOrder(first);
+          }
         },
         error: (err) => {
           this.ordersError.set(err.message);

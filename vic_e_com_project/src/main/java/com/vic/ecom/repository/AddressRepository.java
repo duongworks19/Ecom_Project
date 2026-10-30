@@ -17,6 +17,8 @@ public interface AddressRepository extends JpaRepository<Address, Long> {
 
     long countByUser_Id(Long userId);
 
+    java.util.Optional<Address> findByIdAndUser_Id(Long id, Long userId);
+
     @Modifying(flushAutomatically = true)
     @Query("UPDATE Address a SET a.isDefault = false WHERE a.user.id = :userId AND a.isDefault = true")
     int clearDefaultForUser(@Param("userId") Long userId);

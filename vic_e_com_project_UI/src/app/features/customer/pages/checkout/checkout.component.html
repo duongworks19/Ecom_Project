@@ -1,0 +1,266 @@
+<div class="checkout-page">
+  <div class="checkout-container">
+    <!-- Header -->
+    <header class="checkout-header">
+      <h1 class="checkout-title">
+        Thanh toán
+        @if (preview(); as p) {
+          <span class="checkout-subtitle">
+            ({{ p.shops.length }} shop) · dữ liệu minh họa
+          </span>
+        }
+      </h1>
+    </header>
+
+    <!-- Error Alerts -->
+    @if (pageError(); as err) {
+      <div class="alert-box alert-box--error" role="alert">
+        <div class="alert-msg">{{ err }}</div>
+        <a routerLink="/cart" class="alert-link">Quay lại giỏ hàng</a>
+      </div>
+    }
+
+    @if (networkError(); as netErr) {
+      <div class="alert-box alert-box--warning" role="alert">
+        <div class="alert-msg">{{ netErr }}</div>
+        <a routerLink="/account/orders" class="alert-link">Kiểm tra lịch sử đơn hàng</a>
+      </div>
+    }
+
+    <!-- Card 1: Địa chỉ nhận hàng -->
+    <section class="checkout-card address-card" aria-label="Địa chỉ nhận hàng">
+      <div class="address-card__header">
+        <h2 class="card-title">Địa chỉ nhận hàng</h2>
+        @if (selectedAddress()) {
+          <button
+            type="button"
+            class="btn-change-address"
+            (click)="isAddressModalOpen.set(true)"
+          >
+            Thay đổi
+          </button>
+        }
+      </div>
+
+      @if (!selectedAddress()) {
+        <div class="empty-address-box">
+          <p class="empty-address-text">
+            Bạn chưa có địa chỉ nhận hàng nào. Vui lòng thêm địa chỉ trước khi đặt hàng.
+          </p>
+          <a routerLink="/account/addresses" class="btn-add-address">
+            + Thêm địa chỉ mới
+          </a>
+        </div>
+      } @else {
+        <div class="address-info">
+          <div class="address-contact">
+            <span class="contact-name">{{ selectedAddress()!.recipientName }}</span>
+            <span class="contact-sep">·</span>
+            <span class="contact-phone">{{ selectedAddress()!.phone }}</span>
+          </div>
+          <div class="address-detail-line">
+            {{ formatAddress(selectedAddress()) }}
+            @if (selectedAddress()!.isDefault) {
+              <span class="default-badge">Mặc định</span>
+            }
+          </div>
+        </div>
+      }
+    </section>
+
+    <!-- Shop Blocks -->
+    <section class="shops-section" aria-label="Danh sách sản phẩm theo shop">
+      <!-- Table Header (Desktop) -->
+      <div class="shop-table-head">
+        <div class="col-head col-head--product">SẢN PHẨM</div>
+        <div class="col-head col-head--price">ĐƠN GIÁ</div>
+        <div class="col-head col-head--quantity">SỐ LƯỢNG</div>
+        <div class="col-head col-head--total">THÀNH TIỀN</div>
+      </div>
+
+      @if (isPreviewLoading() && !preview()) {
+        <div class="skeleton-shops" aria-busy="true">
+          <div class="skeleton-block"></div>
+          <div class="skeleton-block"></div>
+        </div>
+      } @else if (preview(); as p) {
+        @for (shop of p.shops; track shop.shopId) {
+          <div class="checkout-card shop-card">
+            <!-- Shop Header -->
+            <div class="shop-card__header">
+              <span class="shop-badge">SHOP</span>
+              <span class="shop-name">{{ shop.shopName }}</span>
+            </div>
+
+            <!-- Shop Items List -->
+            <div class="shop-items-list">
+              @for (item of shop.items; track item.cartItemId) {
+                <div class="item-row">
+                  <div class="item-info-col">
+                    @if (item.thumbnailUrl) {
+                      <img class="item-thumbnail" [src]="item.thumbnailUrl" [alt]="item.productName" loading="lazy" />
+                    } @else {
+                      <div class="item-img-placeholder" aria-hidden="true"></div>
+                    }
+                    <div class="item-meta">
+                      <div class="item-title">{{ item.productName }}</div>
+                      @if (item.variantInfo) {
+                        <div class="item-variant">
+                          <span class="variant-pill">Phân loại: {{ item.variantInfo }}</span>
+                        </div>
+                      }
+                    </div>
+                  </div>
+
+                  <div class="item-price-col">
+                    @if (item.originalPrice && item.originalPrice > item.unitPrice) {
+                      <div class="price-original">{{ item.originalPrice | vndCurrency }}</div>
+                    }
+                    <div class="price-current">{{ item.unitPrice | vndCurrency }}</div>
+                  </div>
+
+                  <div class="item-qty-col">{{ item.quantity }}</div>
+
+                  <div class="item-total-col">{{ item.lineTotal | vndCurrency }}</div>
+                </div>
+              }
+            </div>
+
+            <!-- Voucher Box -->
+            <div class="voucher-box">
+              @if (shop.voucherCode) {
+                <div class="applied-voucher-row">
+                  <span class="applied-voucher-badge">
+                    Voucher {{ shop.voucherCode }} · -{{ shop.discountAmount | vndCurrency }}
+                  </span>
+                  <button
+                    type="button"
+                    class="btn-remove-voucher"
+                    (click)="removeVoucher(shop.shopId)"
+                  >
+                    Gỡ voucher
+                  </button>
+                </div>
+              } @else {
+                <div class="voucher-input-group">
+                  <label class="voucher-label" [for]="'voucher-' + shop.shopId">
+                    Mã voucher của shop
+                  </label>
+                  <div class="voucher-input-row">
+                    <input
+                      type="text"
+                      [id]="'voucher-' + shop.shopId"
+                      class="voucher-input"
+                      [class.voucher-input--error]="!!shopVoucherErrors().get(shop.shopId)"
+                      placeholder="Nhập mã voucher"
+                      #vInput
+                    />
+                    <button
+                      type="button"
+                      class="btn-apply-voucher"
+                      (click)="applyVoucher(shop.shopId, vInput.value)"
+                    >
+                      Áp dụng
+                    </button>
+                  </div>
+                  @if (shopVoucherErrors().get(shop.shopId); as vErr) {
+                    <div class="voucher-error-msg">{{ vErr }}</div>
+                  }
+                </div>
+              }
+            </div>
+
+            <!-- Shop Money Lines -->
+            <div class="shop-totals">
+              <div class="total-row">
+                <span class="total-label">Tạm tính</span>
+                <span class="total-val">
+                  @if (isPreviewLoading()) { ... } @else { {{ shop.subtotal | vndCurrency }} }
+                </span>
+              </div>
+              <div class="total-row">
+                <span class="total-label">Phí vận chuyển</span>
+                <span class="total-val">
+                  @if (isPreviewLoading()) { ... } @else { {{ shop.shippingFee | vndCurrency }} }
+                </span>
+              </div>
+              @if (shop.discountAmount > 0) {
+                <div class="total-row total-row--discount">
+                  <span class="total-label">Giảm giá voucher</span>
+                  <span class="total-val">
+                    -{{ shop.discountAmount | vndCurrency }}
+                  </span>
+                </div>
+              }
+              <div class="total-row total-row--grand">
+                <span class="total-label">Tổng đơn</span>
+                <span class="total-val">
+                  @if (isPreviewLoading()) { ... } @else { {{ shop.total | vndCurrency }} }
+                </span>
+              </div>
+            </div>
+          </div>
+        }
+      }
+    </section>
+
+    <!-- Card 3: Phương thức thanh toán -->
+    <section class="checkout-card payment-card" aria-label="Phương thức thanh toán">
+      <h2 class="card-title">Phương thức thanh toán</h2>
+      <div class="payment-option payment-option--selected">
+        <div class="payment-radio">
+          <input
+            type="radio"
+            id="payment-cod"
+            name="paymentMethod"
+            value="COD"
+            checked
+            disabled
+          />
+        </div>
+        <label for="payment-cod" class="payment-label">
+          <span class="payment-name">Thanh toán khi nhận hàng (COD)</span>
+          <span class="payment-desc">Trả tiền mặt cho shipper khi nhận hàng.</span>
+        </label>
+      </div>
+    </section>
+
+    <!-- Card 4: Tổng kết & Đặt hàng -->
+    <section class="checkout-card submit-card" aria-label="Xác nhận và đặt hàng">
+      <div class="submit-card__left">
+        <p class="split-orders-note">
+          Đơn của {{ preview()?.shops?.length || 0 }} shop sẽ được tách thành
+          {{ preview()?.shops?.length || 0 }} đơn hàng riêng. Bạn thanh toán từng đơn khi nhận hàng.
+        </p>
+      </div>
+
+      <div class="submit-card__right">
+        <div class="grand-total-row">
+          <span class="grand-total-label">Tổng thanh toán</span>
+          <span class="grand-total-val">
+            @if (isPreviewLoading()) { ... } @else { {{ preview()?.grandTotal | vndCurrency }} }
+          </span>
+        </div>
+
+        <button
+          type="button"
+          class="btn-place-order"
+          [disabled]="isPlacingOrder() || isPreviewLoading() || !selectedAddress() || !preview() || !!pageError()"
+          (click)="onPlaceOrder()"
+        >
+          {{ isPlacingOrder() ? 'Đang đặt hàng...' : 'Đặt hàng' }}
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <!-- Address Selection Modal -->
+  <vic-address-select-modal
+    [addresses]="addresses()"
+    [selectedId]="selectedAddress()?.id ?? null"
+    [isOpen]="isAddressModalOpen()"
+    (selectAddress)="onAddressSelected($event)"
+    (closeModal)="isAddressModalOpen.set(false)"
+  />
+</div>
+

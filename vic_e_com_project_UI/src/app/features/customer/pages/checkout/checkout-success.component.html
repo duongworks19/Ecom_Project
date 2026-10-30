@@ -1,0 +1,56 @@
+<div class="success-page">
+  <div class="success-card">
+    <div class="success-icon" aria-hidden="true">
+      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10" stroke="#103c25" fill="#c7f0da" />
+        <path d="M8 12l2.5 2.5L16 9" stroke="#103c25" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+    </div>
+
+    <h1 class="success-title">Đặt hàng thành công!</h1>
+    <p class="success-desc">
+      Cảm ơn bạn đã mua sắm tại VICMART. Đơn hàng của bạn đã được tiếp nhận và người bán sẽ sớm chuẩn bị hàng.
+    </p>
+
+    @if (placed(); as res) {
+      <div class="orders-summary">
+        <div class="orders-summary__head">
+          <span>Chi tiết các đơn hàng được tách ({{ res.orders.length }} shop):</span>
+        </div>
+
+        <div class="orders-list">
+          @for (order of res.orders; track order.id) {
+            <div class="order-entry">
+              <div class="order-entry__left">
+                <span class="order-code">#{{ order.orderCode }}</span>
+                <span class="order-shop">· {{ order.shopName }}</span>
+              </div>
+              <div class="order-entry__total">
+                {{ order.total | vndCurrency }}
+              </div>
+            </div>
+          }
+        </div>
+
+        <div class="grand-total-row">
+          <span class="label">Tổng thanh toán (COD):</span>
+          <span class="value">{{ res.grandTotal | vndCurrency }}</span>
+        </div>
+      </div>
+    } @else {
+      <div class="fallback-note">
+        <p>Đơn hàng của bạn đã được ghi nhận thành công.</p>
+      </div>
+    }
+
+    <div class="success-actions">
+      <a routerLink="/account/orders" class="btn-orders">
+        Xem lịch sử đơn hàng
+      </a>
+      <a routerLink="/" class="btn-continue">
+        Tiếp tục mua sắm
+      </a>
+    </div>
+  </div>
+</div>
+

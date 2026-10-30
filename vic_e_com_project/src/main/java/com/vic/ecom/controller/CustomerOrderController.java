@@ -4,6 +4,7 @@ import com.vic.ecom.dto.OrderDtos.CancelOrderRequest;
 import com.vic.ecom.dto.OrderDtos.OrderCardDto;
 import com.vic.ecom.dto.OrderDtos.OrderPageDto;
 import com.vic.ecom.dto.OrderDtos.RebuyResponse;
+import com.vic.ecom.dto.CheckoutDtos;
 import com.vic.ecom.dto.ProfileDtos.ErrorBody;
 import com.vic.ecom.services.CustomerOrderService;
 import com.vic.ecom.ultis.CustomerAccountException;
@@ -20,6 +21,12 @@ import org.springframework.web.bind.annotation.*;
 public class CustomerOrderController {
 
     private final CustomerOrderService orderService;
+    private final com.vic.ecom.services.CustomerCheckoutService checkoutService;
+
+    @PostMapping
+    public ResponseEntity<CheckoutDtos.Placed> place(Authentication authentication, @RequestBody CheckoutDtos.Request request) {
+        return ResponseEntity.ok(checkoutService.place(authentication, request));
+    }
 
     @GetMapping
     public ResponseEntity<OrderPageDto> listOrders(

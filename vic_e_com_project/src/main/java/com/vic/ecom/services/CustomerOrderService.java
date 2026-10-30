@@ -33,6 +33,7 @@ public class CustomerOrderService {
     private final OrderStatusHistoryRepository orderStatusHistoryRepository;
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
+    private final OrderStockReleaseService stockRelease;
 
     @Transactional(readOnly = true)
     public OrderPageDto listOrders(Authentication auth, String statusFilter, int page, int size) {
@@ -77,7 +78,7 @@ public class CustomerOrderService {
         orderRepository.save(order);
 
         List<OrderItem> items = orderItemRepository.findByOrder_IdOrderByIdAsc(order.getId());
-        restoreInventoryAndWriteLogs(order.getId(), customer.getId(), items);
+        stockRelease.releaseOrderStock(order);
         voucherUsageRepository.deleteByOrderId(order.getId());
         paymentRepository.dropLegacyStatusCheckConstraint();
         paymentRepository.markPaymentsFailedByOrderId(order.getId());

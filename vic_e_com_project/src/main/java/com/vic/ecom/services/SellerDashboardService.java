@@ -47,6 +47,8 @@ public class SellerDashboardService {
     private final ShopPromotionRepository shopPromotionRepository;
     private final ShopReviewRepository shopReviewRepository;
     private final DispatchService dispatchService;
+    private final OrderStockReleaseService stockRelease;
+    private final OrderStatusHistoryRepository orderHistory;
 
     @Transactional
     public Shop getOrCreateInitializedShop(Long userId) {
@@ -147,7 +149,8 @@ public class SellerDashboardService {
             productRepository.saveAll(initialProducts);
         }
 
-        if (orderRepository.findByShopIdOrderByCreatedAtDescIdDesc(shopId).isEmpty()) {
+        // ponytail: Orders are created only by checkout; demo orders must never enter the production seller flow.
+        if (false) {
             User defaultCustomer = userRepository.findAll().stream()
                     .findFirst()
                     .orElseGet(() -> shop.getVendor().getUser());
@@ -416,11 +419,17 @@ public class SellerDashboardService {
         });
 
         if ("CONFIRM".equalsIgnoreCase(action)) {
+            OrderStatus previous = order.getStatus();
             order.setStatus(OrderStatus.PREPARING);
+            saveOrderHistory(order, previous, OrderStatus.PREPARING, shop.getVendor().getUser().getId(), "Vendor xác nhận và bắt đầu chuẩn bị hàng");
         } else if ("MARK_PACKED".equalsIgnoreCase(action)) {
+            OrderStatus previous = order.getStatus();
             order.setStatus(OrderStatus.PACKED);
+            saveOrderHistory(order, previous, OrderStatus.PACKED, shop.getVendor().getUser().getId(), "Vendor đã đóng gói đơn hàng");
         } else if ("START_SHIPPING".equalsIgnoreCase(action)) {
+            OrderStatus previous = order.getStatus();
             order.setStatus(OrderStatus.READY_TO_SHIP);
+            saveOrderHistory(order, previous, OrderStatus.READY_TO_SHIP, shop.getVendor().getUser().getId(), "Vendor chuyển đơn sang chờ điều phối");
             if (TransactionSynchronizationManager.isSynchronizationActive()) {
                 TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                     @Override
@@ -430,11 +439,24 @@ public class SellerDashboardService {
                 });
             }
         } else if ("APPROVE_REFUND".equalsIgnoreCase(action) || "CANCEL".equalsIgnoreCase(action)) {
-            order.setStatus(OrderStatus.CANCELLED);
+            if (order.getId() != null && order.getStatus() != OrderStatus.CANCELLED && order.getStatus() != OrderStatus.REJECTED) {
+                order.setStatus(OrderStatus.CANCELLED);
+                stockRelease.releaseOrderStock(order);
+            }
         }
 
         Order saved = orderRepository.save(order);
         return toOrderDto(saved);
+    }
+
+    private void saveOrderHistory(Order order, OrderStatus from, OrderStatus to, Long userId, String note) {
+        OrderStatusHistory history = new OrderStatusHistory();
+        history.setOrderId(order.getId());
+        history.setFromStatus(from);
+        history.setToStatus(to);
+        history.setChangedBy(userId);
+        history.setNote(note);
+        orderHistory.save(history);
     }
 
     @Transactional
