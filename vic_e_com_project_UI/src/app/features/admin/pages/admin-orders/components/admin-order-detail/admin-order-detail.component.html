@@ -1,0 +1,221 @@
+<div class="detail-backdrop" [class.detail-backdrop--visible]="isOpen()" (click)="onClose()"></div>
+
+<aside class="detail-card" [class.detail-card--open]="isOpen()" aria-label="Chi tiết đơn hàng">
+  @if (loading()) {
+    <div class="detail-loading" aria-busy="true">
+      <div class="skeleton-line skeleton-line--title"></div>
+      <div class="skeleton-line skeleton-line--subtitle"></div>
+      <div class="skeleton-box"></div>
+      <div class="skeleton-box"></div>
+    </div>
+  } @else if (error()) {
+    <div class="detail-error" role="alert">
+      <p class="error-msg">{{ error() }}</p>
+      <button type="button" class="btn-dismiss" (click)="onClose()">Đóng</button>
+    </div>
+  } @else if (!detail()) {
+    <div class="empty-placeholder">
+      <span class="empty-icon" aria-hidden="true">📄</span>
+      <p class="empty-text">Chọn một đơn hàng từ danh sách bên trái để xem chi tiết</p>
+    </div>
+  } @else {
+    <div class="detail-header">
+      <div class="detail-header__code">
+        #{{ selectedItem()?.orderCode || detail()?.id }}
+      </div>
+      <div class="detail-header__actions">
+        @if (selectedItem(); as item) {
+          <span
+            class="status-badge"
+            [class.status-badge--attention]="item.needsAttention"
+          >
+            {{ item.statusLabel }}
+          </span>
+        }
+        <button
+          type="button"
+          class="btn-close"
+          aria-label="Đóng chi tiết"
+          (click)="onClose()"
+        >
+          ×
+        </button>
+      </div>
+    </div>
+
+    <div class="detail-body">
+      <!-- Section: Khách hàng -->
+      <section class="info-section">
+        <h4 class="section-title">Khách hàng</h4>
+        <div class="info-text info-text--primary">
+          {{ detail()!.customer.recipientName || detail()!.customer.accountName }}
+          @if (detail()!.customer.recipientPhone) {
+            · {{ detail()!.customer.recipientPhone }}
+          }
+        </div>
+        <div class="info-text info-text--secondary">
+          {{ detail()!.customer.recipientAddress || 'Chưa có địa chỉ giao hàng' }}
+        </div>
+      </section>
+
+      <!-- Section: Shop · sản phẩm -->
+      <section class="info-section">
+        <h4 class="section-title">Shop · sản phẩm</h4>
+        <div class="info-text info-text--shop">{{ detail()!.shop.name || 'VIC Shop' }}</div>
+        <div class="product-list">
+          @for (item of detail()!.items; track $index) {
+            <div class="product-item">
+              <span class="product-name">{{ item.productName }}</span>
+              @if (item.variantInfo) {
+                <span class="product-variant"> · {{ item.variantInfo }}</span>
+              }
+              <span class="product-price"> · {{ item.unitPrice | vndCurrency }}</span>
+              @if (item.quantity > 1) {
+                <span class="product-qty"> x{{ item.quantity }}</span>
+              }
+            </div>
+          }
+        </div>
+        <div class="amounts-summary">
+          Tạm tính {{ detail()!.amounts.subtotal | vndCurrency }}
+          · Phí ship {{ detail()!.amounts.shippingFee | vndCurrency }}
+          · Giảm {{ detail()!.amounts.discountAmount | vndCurrency }}
+          @if (detail()!.amounts.voucherCode) {
+            · Voucher: {{ detail()!.amounts.voucherCode }}
+          }
+        </div>
+      </section>
+
+      <!-- Section: Thanh toán & vận chuyển -->
+      <section class="info-section">
+        <h4 class="section-title">Thanh toán & vận chuyển</h4>
+        <div class="payments-list">
+          @for (pay of detail()!.payments; track $index) {
+            <div class="log-row">
+              {{ pay.method }} {{ pay.amount | vndCurrency }} · {{ pay.status }}
+              @if (pay.paidAt) {
+                · {{ formatDate(pay.paidAt) }}
+              }
+              @if (pay.collectedBy) {
+                · Thu bởi: {{ pay.collectedBy }}
+              }
+            </div>
+          } @empty {
+            <div class="empty-subtext">Chưa có thông tin thanh toán</div>
+          }
+        </div>
+
+        <div class="shipping-list">
+          @for (ship of detail()!.shipping; track ship.id) {
+            <div class="shipping-entry">
+              <div class="log-row">
+                Shipper: {{ ship.shipperName || 'Chưa gán' }} · {{ ship.status }}
+                @if (ship.codAmount > 0) {
+                  · COD {{ ship.codAmount | vndCurrency }} ({{ ship.codCollected ? 'Đã thu' : 'Chưa thu' }})
+                }
+              </div>
+              @if (ship.failures.length > 0) {
+                <div class="failures-list">
+                  @for (f of ship.failures; track $index) {
+                    <div class="failure-item">
+                      Thất bại lần {{ f.attemptNo }}: {{ f.reason || 'Không rõ lý do' }} ({{ formatDate(f.at) }})
+                      @if (f.nextAction) {
+                        · Tiếp theo: {{ f.nextAction }}
+                      }
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          } @empty {
+            <div class="empty-subtext">Chưa có thông tin vận chuyển</div>
+          }
+        </div>
+      </section>
+
+      <!-- Section: Đổi trả & hỗ trợ -->
+      <section class="info-section">
+        <h4 class="section-title">Đổi trả & hỗ trợ</h4>
+        @if (detail()!.returnRequests.length === 0) {
+          <div class="empty-subtext">Không có yêu cầu đổi trả</div>
+        } @else {
+          <div class="returns-list">
+            @for (ret of detail()!.returnRequests; track $index) {
+              <div class="log-row">
+                Đổi trả: {{ ret.type }} · {{ ret.status }} · Hoàn {{ ret.refundAmount | vndCurrency }}
+                · {{ formatDate(ret.createdAt) }}
+                @if (ret.reason) {
+                  · Lý do: {{ ret.reason }}
+                }
+              </div>
+            }
+          </div>
+        }
+
+        @if (detail()!.supportTickets.length === 0) {
+          <div class="empty-subtext">Không có ticket đang mở</div>
+        } @else {
+          <div class="tickets-list">
+            @for (ticket of detail()!.supportTickets; track $index) {
+              <div class="log-row">
+                Ticket: {{ ticket.subject }} · {{ ticket.status }} · {{ formatDate(ticket.createdAt) }}
+              </div>
+            }
+          </div>
+        }
+
+        @if (detail()!.cancelReason) {
+          <div class="notice-row notice-row--cancel">
+            Lý do hủy: {{ detail()!.cancelReason }}
+          </div>
+        }
+        @if (detail()!.rejectReason) {
+          <div class="notice-row notice-row--reject">
+            Lý do từ chối: {{ detail()!.rejectReason }}
+          </div>
+        }
+      </section>
+
+      <!-- Section: Dòng thời gian -->
+      <section class="info-section">
+        <h4 class="section-title">Dòng thời gian</h4>
+        <div class="timeline-list">
+          @for (step of detail()!.timeline; track $index) {
+            <div class="timeline-item">
+              <span
+                class="timeline-dot"
+                [class.timeline-dot--completed]="!!step.at"
+              ></span>
+              <div class="timeline-content">
+                <div class="timeline-name">{{ step.toLabel || step.toStatus }}</div>
+                <div class="timeline-meta">
+                  {{ formatDate(step.at) }}
+                  @if (step.changedBy) {
+                    · {{ step.changedBy }} ({{ step.role || 'hệ thống' }})
+                  }
+                  @if (step.note) {
+                    · ghi chú: {{ step.note }}
+                  }
+                </div>
+              </div>
+            </div>
+          } @empty {
+            <div class="empty-subtext">Chưa có lịch sử trạng thái</div>
+          }
+        </div>
+      </section>
+    </div>
+
+    <!-- Footer Action -->
+    <div class="detail-footer">
+      <a
+        routerLink="/admin/dispatch"
+        class="btn-dispatch"
+        (click)="onClose()"
+      >
+        Mở trong Gán shipper & vận đơn
+      </a>
+    </div>
+  }
+</aside>
+

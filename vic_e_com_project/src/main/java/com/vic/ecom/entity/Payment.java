@@ -1,7 +1,6 @@
 package com.vic.ecom.entity;
 
 import com.vic.ecom.enums.PaymentMethod;
-import com.vic.ecom.enums.PaymentStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -18,20 +17,26 @@ public class Payment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id", nullable = false, unique = true)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id", nullable = false)
     private Order order;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "collected_by")
+    private User collectedBy;
 
     @Enumerated(EnumType.STRING)
     @Column(length = 20, nullable = false)
     private PaymentMethod method = PaymentMethod.COD;
 
-    @Enumerated(EnumType.STRING)
-    @Column(length = 20, nullable = false)
-    private PaymentStatus status = PaymentStatus.PENDING;
+    @Column(length = 500, nullable = false)
+    private String status = "PENDING";
 
     @Column(precision = 12, scale = 2, nullable = false)
     private BigDecimal amount = BigDecimal.ZERO;
+
+    @Column(name = "paid_at")
+    private java.time.LocalDateTime paidAt;
 
     public Payment() {
     }

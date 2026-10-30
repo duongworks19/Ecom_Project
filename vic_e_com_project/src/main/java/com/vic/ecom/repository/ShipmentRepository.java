@@ -13,6 +13,7 @@ import java.util.List;
 public interface ShipmentRepository extends JpaRepository<Shipment, Long> {
     boolean existsByOrder_Id(Long orderId);
     java.util.Optional<Shipment> findByOrder_Id(Long orderId);
+    List<Shipment> findByOrder_IdOrderByAssignedAtDesc(Long orderId);
 
     long countByShipper_IdAndStatusIn(Long shipperId, Collection<ShipmentStatus> statuses);
     long countByStatusIn(Collection<ShipmentStatus> statuses);

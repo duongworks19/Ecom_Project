@@ -1,1 +1,266 @@
-<!-- Reverted by user request -->
+<div class="orders-page">
+  <!-- Header -->
+  <header class="orders-header">
+    <div class="orders-header__left">
+      <h1 class="orders-header__title">Đơn hàng</h1>
+      <p class="orders-header__desc">
+        Theo dõi toàn bộ đơn trên sàn để phát hiện vấn đề. Màn hình chỉ đọc: muốn đổi shipper hoặc xử lý giao thất bại, mở trang Gán shipper & vận đơn.
+      </p>
+    </div>
+    <div class="orders-header__right">
+      <span class="readonly-badge">Chỉ đọc · dữ liệu minh họa</span>
+    </div>
+  </header>
+
+  <!-- 4 KPI Summary Cards -->
+  <section class="kpi-grid" aria-label="Thống kê đơn hàng">
+    <button
+      type="button"
+      class="kpi-card kpi-card--dark"
+      [class.kpi-card--active]="selectedStatus() === 'ALL'"
+      (click)="onSelectChip('ALL')"
+    >
+      <div class="kpi-card__title">Tất cả đơn</div>
+      <div class="kpi-card__value">{{ summary()?.total ?? 0 }}</div>
+      <div class="kpi-card__subtext">Mọi trạng thái, mọi shop</div>
+    </button>
+
+    <button
+      type="button"
+      class="kpi-card kpi-card--neutral"
+      [class.kpi-card--active]="selectedStatus() === 'delivering'"
+      (click)="onSelectChip('delivering')"
+    >
+      <div class="kpi-card__title">Đang giao</div>
+      <div class="kpi-card__value">{{ summary()?.delivering ?? 0 }}</div>
+      <div class="kpi-card__subtext">Đã gán, đã lấy hàng hoặc đang giao</div>
+    </button>
+
+    <button
+      type="button"
+      class="kpi-card kpi-card--attention"
+    >
+      <div class="kpi-card__title">Cần chú ý</div>
+      <div class="kpi-card__value">{{ summary()?.needsAttention ?? 0 }}</div>
+      <div class="kpi-card__subtext">Giao thất bại, chờ xác nhận lâu</div>
+    </button>
+
+    <button
+      type="button"
+      class="kpi-card kpi-card--neutral"
+      [class.kpi-card--active]="selectedStatus() === 'delivered'"
+      (click)="onSelectChip('delivered')"
+    >
+      <div class="kpi-card__title">Đã giao</div>
+      <div class="kpi-card__value">{{ summary()?.delivered ?? 0 }}</div>
+      <div class="kpi-card__subtext">Hoàn tất giao và thanh toán</div>
+    </button>
+  </section>
+
+  <!-- Filters Row -->
+  <section class="filters-row" aria-label="Bộ lọc tìm kiếm">
+    <div class="search-box">
+      <svg class="search-box__icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input
+        type="search"
+        class="search-box__input"
+        placeholder="Tìm mã đơn, khách, SĐT, shop"
+        [value]="searchQuery()"
+        (input)="onSearchInput($event)"
+        aria-label="Tìm mã đơn, khách, SĐT, shop"
+      />
+    </div>
+
+    <div class="dropdowns-group">
+      <!-- Shop Filter -->
+      <select
+        class="filter-select"
+        (change)="onShopChange($event)"
+        aria-label="Lọc theo cửa hàng"
+      >
+        <option value="">Shop: Tất cả</option>
+        @for (s of shops(); track s.id) {
+          <option [value]="s.id">{{ s.name }}</option>
+        }
+      </select>
+
+      <!-- Payment Method Filter -->
+      <select
+        class="filter-select"
+        (change)="onPaymentChange($event)"
+        aria-label="Lọc theo phương thức thanh toán"
+      >
+        <option value="ALL">Thanh toán: Tất cả</option>
+        <option value="COD">COD</option>
+      </select>
+
+      <!-- Date Range Filters -->
+      <div class="date-group">
+        <input
+          type="date"
+          class="filter-date"
+          [value]="dateFrom()"
+          (change)="onDateFromChange($event)"
+          aria-label="Từ ngày"
+          title="Từ ngày"
+        />
+        <span class="date-sep">—</span>
+        <input
+          type="date"
+          class="filter-date"
+          [value]="dateTo()"
+          (change)="onDateToChange($event)"
+          aria-label="Đến ngày"
+          title="Đến ngày"
+        />
+      </div>
+    </div>
+  </section>
+
+  <!-- Status Chips Row -->
+  <div class="chips-row" role="tablist" aria-label="Lọc theo trạng thái đơn hàng">
+    <button
+      type="button"
+      class="chip"
+      [class.chip--active]="selectedStatus() === 'ALL'"
+      (click)="onSelectChip('ALL')"
+      role="tab"
+      [attr.aria-selected]="selectedStatus() === 'ALL'"
+    >
+      Tất cả {{ summary()?.total ?? 0 }}
+    </button>
+
+    @for (chip of statusChips; track chip.key) {
+      <button
+        type="button"
+        class="chip"
+        [class.chip--active]="selectedStatus() === chip.key"
+        (click)="onSelectChip(chip.key)"
+        role="tab"
+        [attr.aria-selected]="selectedStatus() === chip.key"
+      >
+        {{ chip.label }} {{ summary()?.byStatus?.[chip.key] ?? 0 }}
+      </button>
+    }
+  </div>
+
+  <!-- Main Two-Column Workspace -->
+  <div class="orders-workspace">
+    <!-- Left Column: Table of Orders -->
+    <section class="orders-list-col" aria-label="Danh sách đơn hàng">
+      <div class="table-card">
+        <!-- Table Header -->
+        <div class="table-header-row" role="row">
+          <div class="th-cell th-cell--code">MÃ ĐƠN</div>
+          <div class="th-cell th-cell--customer">KHÁCH HÀNG</div>
+          <div class="th-cell th-cell--shop">SHOP</div>
+          <div class="th-cell th-cell--total">TỔNG TIỀN</div>
+          <div class="th-cell th-cell--payment">THANH TOÁN</div>
+          <div class="th-cell th-cell--status">TRẠNG THÁI</div>
+        </div>
+
+        <!-- Table Body -->
+        <div class="table-body">
+          @if (loadingOrders() && items().length === 0) {
+            <div class="table-skeleton" aria-busy="true">
+              <div class="skeleton-row"></div>
+              <div class="skeleton-row"></div>
+              <div class="skeleton-row"></div>
+              <div class="skeleton-row"></div>
+            </div>
+          } @else if (ordersError()) {
+            <div class="table-error" role="alert">
+              <p class="table-error__msg">{{ ordersError() }}</p>
+              <button type="button" class="btn-retry" (click)="loadOrders()">Thử lại</button>
+            </div>
+          } @else if (items().length === 0) {
+            <div class="table-empty">
+              <span class="empty-icon" aria-hidden="true">📦</span>
+              <h3 class="empty-title">Không tìm thấy đơn hàng</h3>
+              <p class="empty-desc">Không có đơn hàng nào khớp với tiêu chí tìm kiếm hoặc bộ lọc hiện tại.</p>
+            </div>
+          } @else {
+            @for (item of items(); track item.id) {
+              <button
+                type="button"
+                class="order-row"
+                [class.order-row--selected]="selectedItem()?.id === item.id"
+                (click)="selectOrder(item)"
+              >
+                <div class="td-cell td-cell--code">
+                  <span class="code-primary">#{{ item.orderCode }}</span>
+                  <span class="code-sub">{{ formatDate(item.createdAt) }}</span>
+                </div>
+                <div class="td-cell td-cell--customer">
+                  {{ item.recipientName || item.customerName || '—' }}
+                </div>
+                <div class="td-cell td-cell--shop">
+                  {{ item.shopName || '—' }}
+                </div>
+                <div class="td-cell td-cell--total">
+                  {{ item.total | vndCurrency }}
+                </div>
+                <div class="td-cell td-cell--payment">
+                  {{ item.paymentMethod || '—' }}
+                </div>
+                <div class="td-cell td-cell--status">
+                  <span
+                    class="badge"
+                    [class.badge--attention]="item.needsAttention"
+                  >
+                    {{ item.statusLabel }}
+                  </span>
+                </div>
+              </button>
+            }
+          }
+        </div>
+
+        <!-- Pagination Bar -->
+        <div class="pagination-bar">
+          <div class="pagination-info">
+            Hiển thị {{ items().length }} trên {{ totalOrders() }} đơn hàng
+          </div>
+          <div class="pagination-controls">
+            <button
+              type="button"
+              class="pagination-btn"
+              [disabled]="currentPage() <= 1"
+              (click)="onPageChange(currentPage() - 1)"
+              aria-label="Trang trước"
+            >
+              ‹
+            </button>
+            <span class="pagination-page">
+              Trang {{ currentPage() }} / {{ totalPages() }}
+            </span>
+            <button
+              type="button"
+              class="pagination-btn"
+              [disabled]="currentPage() >= totalPages()"
+              (click)="onPageChange(currentPage() + 1)"
+              aria-label="Trang sau"
+            >
+              ›
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right Column: Detail Panel -->
+    <section class="orders-detail-col" aria-label="Chi tiết đơn hàng">
+      <vic-admin-order-detail
+        [detail]="selectedDetail()"
+        [selectedItem]="selectedItem()"
+        [loading]="loadingDetail()"
+        [error]="detailError()"
+        [isOpen]="isDrawerOpen()"
+        (closePanel)="closeDetail()"
+      />
+    </section>
+  </div>
+</div>

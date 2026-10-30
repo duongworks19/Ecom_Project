@@ -41,7 +41,7 @@ public class ShipperShipmentService {
         if (s.getStatus() != ShipmentStatus.PICKED_UP && s.getStatus() != ShipmentStatus.DELIVERING) invalid();
         if (s.getCodAmount().signum() > 0 && (collectedCod == null || s.getCodAmount().compareTo(collectedCod) != 0)) throw CustomerAccountException.unprocessable("COD_MISMATCH", "Số tiền COD không khớp", "collectedCod");
         if (shipments.complete(id, s.getShipper().getId(), List.of(ShipmentStatus.PICKED_UP, ShipmentStatus.DELIVERING), ShipmentStatus.DELIVERED, LocalDateTime.now(), s.getCodAmount().signum() > 0) == 0) invalid();
-        s.getOrder().setStatus(OrderStatus.DELIVERED); s.getOrder().setDeliveredAt(LocalDateTime.now()); s.getShipper().setWorkStatus(ShipperWorkStatus.AVAILABLE); payments.findByOrder(s.getOrder()).ifPresent(p -> { p.setStatus(PaymentStatus.PAID); payments.save(p); }); shipments.save(s); event(s, ShipmentStatus.DELIVERED, "Giao hàng thành công"); dispatch.dispatchPendingOrders(); return query.detail(auth, id);
+        s.getOrder().setStatus(OrderStatus.DELIVERED); s.getOrder().setDeliveredAt(LocalDateTime.now()); s.getShipper().setWorkStatus(ShipperWorkStatus.AVAILABLE); payments.findByOrderOrderByPaidAtDescIdDesc(s.getOrder()).stream().findFirst().ifPresent(p -> { p.setStatus(PaymentStatus.PAID.name()); payments.save(p); }); shipments.save(s); event(s, ShipmentStatus.DELIVERED, "Giao hàng thành công"); dispatch.dispatchPendingOrders(); return query.detail(auth, id);
     }
     @Transactional public ShipperPortalDtos.Item failure(Authentication auth, Long id, String reason, String notes) {
         var s = owned(auth, id); if (s.getStatus() != ShipmentStatus.PICKED_UP && s.getStatus() != ShipmentStatus.DELIVERING) invalid();

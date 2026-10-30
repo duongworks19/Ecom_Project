@@ -70,6 +70,14 @@ export const ADMIN_ROUTES: Routes = [
         title: 'Cập nhật shipper — VIC MART Admin',
       },
       {
+        path: 'orders',
+        loadComponent: () =>
+          import('./pages/admin-orders/admin-orders.component').then(
+            (m) => m.AdminOrdersComponent
+          ),
+        title: 'Đơn hàng — VIC MART Admin',
+      },
+      {
         path: 'dispatch',
         loadChildren: () =>
           import('./dispatch/dispatch.routes').then((m) => m.DISPATCH_ROUTES),

@@ -95,7 +95,7 @@ public class AdminDispatchCommandService {
                 log.setReason(InventoryLogReason.RETURN);
                 inventory.save(log);
             }
-            payments.findByOrder(order).ifPresent(p -> payments.save(p));
+            payments.findByOrderOrderByPaidAtDescIdDesc(order).stream().findFirst().ifPresent(p -> payments.save(p));
         }
         return query.detail(orderId);
     }
