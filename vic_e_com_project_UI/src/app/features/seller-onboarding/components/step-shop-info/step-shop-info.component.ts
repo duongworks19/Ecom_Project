@@ -1,9 +1,10 @@
-import { Component, EventEmitter, Input, Output, OnInit, inject, signal } from '@angular/core';
+import { Component, EventEmitter, Input, Output, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { ShopInfo, BusinessType } from '../../models/seller-onboarding.model';
 import { SellerOnboardingService } from '../../services/seller-onboarding.service';
+import { ProductService } from '../../../../core/services/product.service';
 
 @Component({
   selector: 'app-step-shop-info',
@@ -14,6 +15,7 @@ import { SellerOnboardingService } from '../../services/seller-onboarding.servic
 })
 export class StepShopInfoComponent implements OnInit {
   private readonly onboardingService = inject(SellerOnboardingService);
+  private readonly productService = inject(ProductService);
 
   @Input({ required: true }) shopInfo!: ShopInfo;
   @Input() readOnly = false;
@@ -26,7 +28,9 @@ export class StepShopInfoComponent implements OnInit {
   readonly nameCheckStatus = signal<'NONE' | 'AVAILABLE' | 'TAKEN'>('NONE');
   readonly nameCheckMessage = signal<string>('');
 
-  readonly categories = [
+  /* ponytail: chỉ hiển thị danh mục gốc; danh mục con không phải ngành hàng chính của shop. */
+  readonly categories = computed(() => this.productService.categories().filter((c) => c.parentId == null));
+  readonly legacyCategories = [
     'Thời trang & Phụ kiện',
     'Mỹ phẩm & Chăm sóc sắc đẹp',
     'Điện thoại & Đồ công nghệ',
@@ -122,9 +126,10 @@ export class StepShopInfoComponent implements OnInit {
     this.emitChange();
   }
 
-  selectCategory(cat: string): void {
+  selectCategory(cat: { id: number | string; name: string }): void {
     if (this.readOnly) return;
-    this.shopInfo.primaryCategory = cat;
+    this.shopInfo.primaryCategory = cat.name;
+    this.shopInfo.primaryCategoryId = Number(cat.id);
     this.emitChange();
   }
 

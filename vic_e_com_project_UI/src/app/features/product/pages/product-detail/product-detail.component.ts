@@ -591,10 +591,39 @@ export class ProductDetailComponent implements OnInit {
   }
 
   buyNow(): void {
-    this.addToCart();
-    setTimeout(() => {
-      this.router.navigate(['/cart']);
-    }, 300);
+    const p = this.product();
+    const variantId = this.currentVariant()?.variantId;
+    if (!p || !variantId || this.isAddingToCart()) return;
+
+    const qty = this.quantity();
+    this.isAddingToCart.set(true);
+    this.cartApi.addItem({ variantId, quantity: qty }).subscribe({
+      next: () => {
+        this.cartApi.getCart().subscribe({
+          next: (cart) => {
+            const item = cart.shops.flatMap((shop) => shop.items)
+              .find((candidate) => candidate.variantId === variantId);
+            this.isAddingToCart.set(false);
+            this.cartState.refreshCount();
+            if (item) {
+              void this.router.navigate(['/checkout'], {
+                queryParams: { cartItemIds: item.itemId },
+              });
+            } else {
+              this.showToast('Không tìm thấy sản phẩm vừa thêm vào giỏ hàng.');
+            }
+          },
+          error: () => {
+            this.isAddingToCart.set(false);
+            this.showToast('Không thể tải giỏ hàng để tiếp tục thanh toán.');
+          },
+        });
+      },
+      error: () => {
+        this.isAddingToCart.set(false);
+        this.showToast('Không thể thêm sản phẩm vào giỏ hàng.');
+      },
+    });
   }
 
   toggleWishlist(): void {
