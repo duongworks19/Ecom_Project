@@ -48,7 +48,9 @@ public class AdminDispatchQueryService {
     @Transactional
     public AdminDispatchDtos.Page<AdminDispatchDtos.Item> items(String status, int page, int size) {
         List<Order> all = orders.findAll();
-        List<AdminDispatchDtos.Item> result = all.stream().map(this::item).filter(i -> status == null || status.isBlank() || i.displayStatus().equals(status)).toList();
+        List<AdminDispatchDtos.Item> result = all.stream()
+                .map(this::item)
+                .filter(i -> status == null || status.isBlank() || i.displayStatus().equals(status)).toList();
         int from = Math.min(page * size, result.size());
         int to = Math.min(from + size, result.size());
         return new AdminDispatchDtos.Page<>(result.subList(from, to), page, size, result.size());
@@ -57,7 +59,7 @@ public class AdminDispatchQueryService {
     @Transactional
     public AdminDispatchDtos.Detail detail(Long id) {
         Order order = orders.findById(id).orElseThrow(() -> com.vic.ecom.ultis.CustomerAccountException.notFound("ORDER_NOT_FOUND", "Không tìm thấy đơn hàng"));
-        Shipment shipment = shipments.findByOrder_Id(id).orElse(null);
+        Shipment shipment = shipments.findByOrder_IdOrderByAssignedAtDesc(id).stream().findFirst().orElse(null);
         var item = item(order);
         var eventItems = shipment == null ? List.<AdminDispatchDtos.Event>of() : events.findByShipment_IdOrderByCreatedAtAsc(shipment.getId()).stream()
                 .map(e -> new AdminDispatchDtos.Event(e.getStatus().name(), e.getNote(), e.getCreatedAt())).toList();
@@ -66,11 +68,12 @@ public class AdminDispatchQueryService {
     }
 
     private AdminDispatchDtos.Item item(Order order) {
-        Shipment shipment = shipments.findByOrder_Id(order.getId()).orElse(null);
+        Shipment shipment = shipments.findByOrder_IdOrderByAssignedAtDesc(order.getId()).stream().findFirst().orElse(null);
         String status = shipment == null ? "WAITING" : shipment.getStatus().name();
         if (shipment != null && List.of(ShipmentStatus.ASSIGNED, ShipmentStatus.PICKED_UP, ShipmentStatus.DELIVERING).contains(shipment.getStatus())) status = "DELIVERING";
         return new AdminDispatchDtos.Item(order.getId(), order.getOrderCode(), order.getShippingAddress(), null,
                 order.getReceiverName(), order.getReceiverPhone(), order.getTotalAmount(), status,
+                order.getStatus().name(),
                 shipment == null ? null : shipment.getShipper().getUser().getFullName(),
                 shipment == null ? 0 : (int) failures.countByShipment_Order_Id(order.getId()),
                 shipment == null ? "Đang chờ hệ thống tự động gán shipper" : null);

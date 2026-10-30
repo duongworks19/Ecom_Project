@@ -99,7 +99,7 @@ public class ShipperPortalQueryService {
         LocalDateTime from = today.atStartOfDay();
         LocalDateTime to = today.plusDays(1).atStartOfDay();
         long delivered = shipperShipments.countByShipper_IdAndStatusAndDeliveredAtGreaterThanEqualAndDeliveredAtLessThan(id, ShipmentStatus.DELIVERED, from, to);
-        long failed = shipperShipments.countByShipper_IdAndStatusAndDeliveredAtGreaterThanEqualAndDeliveredAtLessThan(id, ShipmentStatus.FAILED, from, to);
+        long failed = shipperShipments.countByShipper_IdAndStatusAndAssignedAtGreaterThanEqualAndAssignedAtLessThan(id, ShipmentStatus.FAILED, from, to);
         BigDecimal cod = shipperShipments.sumCollectedCod(id, ShipmentStatus.DELIVERED, from, to);
         Double rate = delivered + failed == 0 ? null : (double) delivered / (delivered + failed) * 100;
         return new ShipperPortalDtos.Kpi(ready, delivering, delivered, failed, cod, rate);
@@ -134,6 +134,8 @@ public class ShipperPortalQueryService {
         return shipperShipments.findByShipper_IdAndStatusInOrderByAssignedAtAsc(id, statuses).stream()
                 .filter(s -> s.getStatus() == ShipmentStatus.ASSIGNED || s.getStatus() == ShipmentStatus.PICKED_UP
                         || s.getStatus() == ShipmentStatus.DELIVERING
+                        // ponytail: FAILED shipment không có deliveredAt; giữ lại để tra cứu log, không tự ẩn sau lần giao cuối.
+                        || s.getStatus() == ShipmentStatus.FAILED
                         || (s.getDeliveredAt() != null && s.getDeliveredAt().toLocalDate().equals(today)))
                 .map(this::item).toList();
     }

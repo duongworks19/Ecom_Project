@@ -57,7 +57,11 @@ public class AdminDispatchCommandService {
             throw CustomerAccountException.badRequest("INVALID_ACTION", "Hành động xử lý không hợp lệ", "action");
         }
         Order order = order(orderId);
-        Shipment shipment = shipments.findByOrder_Id(orderId).orElseThrow(() ->
+        if (order.getStatus() == OrderStatus.CANCELLED || order.getStatus() == OrderStatus.REJECTED) {
+            throw CustomerAccountException.conflict("INVALID_STATE", "Đơn hàng đã kết thúc, không thể xử lý lại", null);
+        }
+        Shipment shipment = shipments.findByOrder_IdOrderByAssignedAtDesc(orderId).stream()
+                .filter(s -> s.getStatus() == ShipmentStatus.FAILED).findFirst().orElseThrow(() ->
                 CustomerAccountException.conflict("SHIPMENT_NOT_FOUND", "Đơn chưa có shipment thất bại", null));
         if (shipment.getStatus() != ShipmentStatus.FAILED) {
             throw CustomerAccountException.conflict("INVALID_STATE", "Đơn không ở trạng thái giao thất bại", null);

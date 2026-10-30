@@ -32,6 +32,15 @@ export class FailurePanelComponent {
   returnNote = '';
 
   readonly availability = computed(() => {
+    const orderStatus = this.detail().item.orderStatus;
+    if (orderStatus === 'CANCELLED' || orderStatus === 'REJECTED') {
+      return {
+        canRetry: false,
+        canReassign: false,
+        canReturn: false,
+        disabledReason: 'Đơn hàng đã kết thúc, không thể xử lý lại.',
+      };
+    }
     return getFailureActionAvailability(this.detail().item.attemptNo, 3);
   });
 
@@ -50,7 +59,12 @@ export class FailurePanelComponent {
   });
 
   onAction(action: ResolutionAction): void {
-    if (this.loading()) return;
+    const allowed = {
+      RETRY: this.availability().canRetry,
+      REASSIGN: this.availability().canReassign,
+      RETURN: this.availability().canReturn,
+    }[action];
+    if (this.loading() || !allowed) return;
 
     if (action === 'RETURN') {
       this.returnNote = '';
@@ -65,7 +79,7 @@ export class FailurePanelComponent {
   }
 
   confirmReturn(): void {
-    if (this.loading()) return;
+    if (this.loading() || !this.availability().canReturn) return;
     this.resolve.emit({
       action: 'RETURN',
       note: this.returnNote.trim() || undefined,

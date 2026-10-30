@@ -61,6 +61,16 @@ public class CustomerOrderService {
                 orderPage.getTotalElements(), orderPage.getTotalPages(), buildCountsByStatus(customer.getId()));
     }
 
+    @Transactional(readOnly = true)
+    public OrderCardDto getOrder(Authentication auth, Long orderId) {
+        if (orderId == null || orderId <= 0) {
+            throw CustomerAccountException.badRequest("INVALID_ORDER_ID", "Mã đơn hàng không hợp lệ", "id");
+        }
+        User customer = profileService.requireActiveCustomer(auth);
+        Order order = requireOwnedOrder(customer.getId(), orderId);
+        return toCardDto(order, orderItemRepository.findByOrder_IdOrderByIdAsc(orderId), loadShopNames(List.of(order)));
+    }
+
     @Transactional
     public OrderCardDto cancelOrder(Authentication auth, Long orderId, CancelOrderRequest req) {
         User customer = profileService.requireActiveCustomer(auth);

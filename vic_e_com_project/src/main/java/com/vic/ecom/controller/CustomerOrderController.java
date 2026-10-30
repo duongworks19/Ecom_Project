@@ -38,6 +38,11 @@ public class CustomerOrderController {
         return ResponseEntity.ok(orderService.listOrders(authentication, status, page, size));
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<OrderCardDto> getOrder(Authentication authentication, @PathVariable Long id) {
+        return ResponseEntity.ok(orderService.getOrder(authentication, id));
+    }
+
     @PostMapping("/{id}/cancel")
     public ResponseEntity<OrderCardDto> cancelOrder(
             Authentication authentication,
