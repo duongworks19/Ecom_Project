@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Product } from '../models/product.model';
 import { CategoryItem } from '../models/category.model';
 import { ProductApiService } from './product-api.service';
-import { INITIAL_PRODUCTS } from '../../features/landing/constants/landing-products.mock';
+import { environment } from '../../../environments/environment';
 
 export interface ProductFilterState {
   category: string;
@@ -12,15 +12,29 @@ export interface ProductFilterState {
   sort: string;
 }
 
+function getShopAvatar(logo?: string | null, name?: string | null): string {
+  if (logo && logo.trim().length > 0) {
+    return logo.trim();
+  }
+  const shopName = (name || 'Shop').trim();
+  const words = shopName.split(/\s+/).filter(Boolean);
+  const initials = words.length >= 2
+    ? (words[0][0] + words[1][0]).toUpperCase()
+    : shopName.slice(0, 2).toUpperCase();
+
+  return `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="%233b82f6"/><stop offset="100%" stop-color="%231d4ed8"/></linearGradient></defs><rect width="64" height="64" rx="32" fill="url(%23g)"/><text x="50%" y="54%" font-family="system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif" font-size="24" font-weight="700" fill="%23ffffff" text-anchor="middle" dominant-baseline="middle">${initials}</text></svg>`;
+}
+
 @Injectable({
   providedIn: 'root',
 })
 export class ProductService {
   private readonly productApi = inject(ProductApiService);
   private readonly http = inject(HttpClient);
+  private readonly apiUrl = environment.apiUrl;
 
   readonly categories = signal<CategoryItem[]>([]);
-  readonly allProducts = signal<Product[]>(INITIAL_PRODUCTS);
+  readonly allProducts = signal<Product[]>([]);
   readonly activeCategoryId = signal<string>('all');
   readonly searchQuery = signal<string>('');
   readonly selectedPriceRange = signal<string>('all');
@@ -46,13 +60,17 @@ export class ProductService {
 
     if (cat !== 'all') {
       const targetCat = this.categories().find(
-        (c) => String(c.id) === cat || c.slug === cat,
+        (c) => String(c.id) === cat || c.slug === cat || c.name.toLowerCase() === cat.toLowerCase(),
       );
       const slug = targetCat ? targetCat.slug.toLowerCase() : cat.toLowerCase();
+      const targetName = targetCat ? targetCat.name.toLowerCase() : '';
       list = list.filter((p) =>
         p.category.toLowerCase().includes(slug) ||
         p.categoryLabel.toLowerCase().includes(slug) ||
-        (targetCat && p.categoryLabel.toLowerCase().includes(targetCat.name.toLowerCase())),
+        (targetName && (
+          p.categoryLabel.toLowerCase().includes(targetName) ||
+          p.category.toLowerCase().includes(targetName)
+        )),
       );
     }
 
@@ -92,20 +110,20 @@ export class ProductService {
         if (apiCategories && apiCategories.length > 0) {
           this.categories.set(apiCategories);
         }
-        this.isLoading.set(false);
       },
-      error: () => this.isLoading.set(false),
+      error: () => {},
     });
 
-    this.http.get<any>('http://localhost:9090/api/products').subscribe({
+    const productsUrl = `${this.apiUrl}/products`;
+    this.http.get<any>(productsUrl).subscribe({
       next: (res) => {
         const dbProducts = res?.data || res;
-        if (Array.isArray(dbProducts) && dbProducts.length > 0) {
+        if (Array.isArray(dbProducts)) {
           const mapped: Product[] = dbProducts.map((p: any) => ({
             id: String(p.id),
             name: p.name,
-            category: 'fashion',
-            categoryLabel: p.category || 'Thời trang & Phụ kiện',
+            category: p.category ? p.category.toLowerCase() : 'other',
+            categoryLabel: p.category || 'Khác',
             price: Number(p.price) || 0,
             soldCount: p.soldCount || 0,
             rating: p.ratingAvg ? Number(p.ratingAvg) : 5.0,
@@ -113,15 +131,18 @@ export class ProductService {
             aspectRatio: 'square',
             seller: {
               name: p.shopName || 'VICMART Shop',
-              avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&h=100&q=80',
+              avatar: getShopAvatar(p.shopLogo, p.shopName),
               verified: true,
             },
             shopId: p.shopId || 1,
           }));
-          this.allProducts.set([...mapped, ...INITIAL_PRODUCTS]);
+          this.allProducts.set(mapped);
         }
+        this.isLoading.set(false);
       },
-      error: () => {},
+      error: () => {
+        this.isLoading.set(false);
+      },
     });
   }
 

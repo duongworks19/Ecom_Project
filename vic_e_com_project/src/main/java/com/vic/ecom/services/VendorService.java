@@ -269,6 +269,16 @@ public class VendorService {
         }
         if (req.getLogo() != null && !req.getLogo().isBlank()) {
             shop.setLogo(req.getLogo());
+        } else if ((shop.getLogo() == null || shop.getLogo().isBlank()) && vendor.getKycDocumentUrl() != null) {
+            String kyc = vendor.getKycDocumentUrl();
+            if (kyc.contains("\"logo\"")) {
+                try {
+                    com.fasterxml.jackson.databind.JsonNode node = new com.fasterxml.jackson.databind.ObjectMapper().readTree(kyc);
+                    if (node.has("logo") && !node.get("logo").asText().isBlank()) {
+                        shop.setLogo(node.get("logo").asText());
+                    }
+                } catch (Exception ignored) {}
+            }
         }
         if (req.getBanner() != null && !req.getBanner().isBlank()) {
             shop.setBanner(req.getBanner());
@@ -319,7 +329,19 @@ public class VendorService {
 
             // Kích hoạt gian hàng
             if (vendor.getShop() != null) {
-                vendor.getShop().setStatus(ShopStatus.ACTIVE);
+                Shop s = vendor.getShop();
+                s.setStatus(ShopStatus.ACTIVE);
+                if ((s.getLogo() == null || s.getLogo().isBlank()) && vendor.getKycDocumentUrl() != null) {
+                    String kyc = vendor.getKycDocumentUrl();
+                    if (kyc.contains("\"logo\"")) {
+                        try {
+                            com.fasterxml.jackson.databind.JsonNode node = new com.fasterxml.jackson.databind.ObjectMapper().readTree(kyc);
+                            if (node.has("logo") && !node.get("logo").asText().isBlank()) {
+                                s.setLogo(node.get("logo").asText());
+                            }
+                        } catch (Exception ignored) {}
+                    }
+                }
             }
         } else if ("REJECT".equalsIgnoreCase(action)) {
             vendor.setApprovalStatus(ApprovalStatus.REJECTED);

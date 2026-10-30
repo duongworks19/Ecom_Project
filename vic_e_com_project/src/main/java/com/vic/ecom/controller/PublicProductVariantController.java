@@ -54,6 +54,7 @@ public class PublicProductVariantController {
                             .price(minPrice)
                             .shopId(p.getShop() != null ? p.getShop().getId() : null)
                             .shopName(p.getShop() != null ? p.getShop().getName() : "VICMART Shop")
+                            .shopLogo(p.getShop() != null ? p.getShop().getLogo() : null)
                             .ratingAvg(p.getShop() != null && p.getShop().getRatingAvg() != null ? p.getShop().getRatingAvg() : BigDecimal.valueOf(5.0))
                             .soldCount(totalSold)
                             .build();

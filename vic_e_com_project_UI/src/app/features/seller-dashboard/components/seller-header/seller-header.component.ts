@@ -23,6 +23,7 @@ import {
 export class SellerHeaderComponent {
   readonly shopName = input.required<string>();
   readonly shopAvatarLetter = input.required<string>();
+  readonly shopLogo = input<string | undefined>();
   readonly unreadCount = input.required<number>();
   readonly notifications = input.required<SellerNotification[]>();
 

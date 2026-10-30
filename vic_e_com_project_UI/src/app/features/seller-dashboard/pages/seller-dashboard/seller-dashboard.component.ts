@@ -14,12 +14,22 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink, NavigationEnd, ActivatedRoute } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { AuthService } from '../../../../core/services/auth.service';
+import { ProductApiService } from '../../../../core/services/product-api.service';
+import { CategoryItem } from '../../../../core/models/category.model';
 import {
   ProductVariant,
   SellerProduct,
   SellerProductService,
 } from '../../services/seller-product.service';
 import { SellerDashboardService } from '../../services/seller-dashboard.service';
+
+export interface SellerCategoryOption {
+  id: number;
+  name: string;
+  displayName: string;
+  parentId?: number | null;
+  level: number;
+}
 
 export interface OrderItem {
   c: string; // Mã đơn
@@ -98,6 +108,7 @@ export interface CampaignItem {
 export class SellerDashboardComponent implements OnInit {
   private readonly productService = inject(SellerProductService);
   private readonly dashboardService = inject(SellerDashboardService);
+  private readonly productApiService = inject(ProductApiService);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
@@ -114,9 +125,10 @@ export class SellerDashboardComponent implements OnInit {
     em: 'lumi@vicmart.vn',
     ad: 'Số 12 Ngõ 88 Trần Thái Tông, Cầu Giấy, Hà Nội',
     hr: '08:00 – 21:00',
+    logo: '',
   };
 
-  private syncProfileData(data: { n: string; d: string; ph: string; em: string; ad: string; hr: string }): void {
+  private syncProfileData(data: { n: string; d: string; ph: string; em: string; ad: string; hr: string; logo?: string }): void {
     this.shopProfile.set(data);
     this.formShopProfile.n = data.n || '';
     this.formShopProfile.d = data.d || '';
@@ -124,6 +136,7 @@ export class SellerDashboardComponent implements OnInit {
     this.formShopProfile.em = data.em || '';
     this.formShopProfile.ad = data.ad || '';
     this.formShopProfile.hr = data.hr || '08:00 – 21:00';
+    this.formShopProfile.logo = data.logo || '';
     this.cdr.markForCheck();
   }
 
@@ -142,6 +155,7 @@ export class SellerDashboardComponent implements OnInit {
         this.syncViewFromUrl(e.urlAfterRedirects || e.url);
       });
 
+    this.loadCategories();
     this.loadProducts();
     this.loadCurrentShopInfo();
     this.loadVouchers();
@@ -269,16 +283,6 @@ export class SellerDashboardComponent implements OnInit {
   }
 
   loadCurrentShopInfo(): void {
-    const savedLocal = localStorage.getItem('vic_seller_shop_profile');
-    if (savedLocal) {
-      try {
-        const parsed = JSON.parse(savedLocal);
-        if (parsed && parsed.n) {
-          this.syncProfileData(parsed);
-        }
-      } catch { }
-    }
-
     this.http.get<any>('http://localhost:9090/api/shops/current').subscribe({
       next: (res) => {
         const shop = res?.data || res;
@@ -286,14 +290,16 @@ export class SellerDashboardComponent implements OnInit {
           this.currentShopId.set(shop.id);
           const data = {
             n: shop.name || this.formShopProfile.n,
-            d: shop.description || this.formShopProfile.d || 'Đồ decor phong cách tối giản Bắc Âu.',
-            ph: shop.phone || this.formShopProfile.ph || '0912345678',
-            em: shop.email || this.formShopProfile.em || 'lumi@vicmart.vn',
-            ad: shop.pickupAddress || this.formShopProfile.ad || 'Số 12 Ngõ 88 Trần Thái Tông, Cầu Giấy, Hà Nội',
+            d: shop.description || this.formShopProfile.d || '',
+            ph: shop.phone || this.formShopProfile.ph || '',
+            em: shop.email || this.formShopProfile.em || '',
+            ad: shop.pickupAddress || this.formShopProfile.ad || '',
             hr: shop.businessHours || this.formShopProfile.hr || '08:00 – 21:00',
+            logo: shop.logo || '',
           };
           this.syncProfileData(data);
-          localStorage.setItem('vic_seller_shop_profile', JSON.stringify(data));
+          localStorage.setItem(`vic_seller_shop_profile_${shop.id}`, JSON.stringify(data));
+          localStorage.removeItem('vic_seller_shop_profile');
         }
       },
       error: () => { },
@@ -325,48 +331,132 @@ export class SellerDashboardComponent implements OnInit {
     });
   }
 
+  loadCategories(): void {
+    this.productApiService.getCategories().subscribe({
+      next: (items) => {
+        if (items && items.length > 0) {
+          const treeOptions = this.buildCategoryTreeOptions(items);
+          this.dbCategories.set(treeOptions);
+
+          // Nếu chưa chọn danh mục thì chọn danh mục đầu tiên từ DB
+          if (!this.formCategoryId() || !this.formCategory()) {
+            this.formCategoryId.set(treeOptions[0].id);
+            this.formCategory.set(treeOptions[0].name);
+          }
+        } else {
+          this.dbCategories.set([]);
+        }
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.dbCategories.set([]);
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
+  buildCategoryTreeOptions(items: CategoryItem[]): SellerCategoryOption[] {
+    if (!items || !items.length) return [];
+
+    const map = new Map<number, CategoryItem>();
+    const childrenMap = new Map<number, CategoryItem[]>();
+
+    for (const item of items) {
+      const id = Number(item.id);
+      map.set(id, item);
+      const pid = item.parentId != null ? Number(item.parentId) : null;
+      if (pid != null) {
+        if (!childrenMap.has(pid)) {
+          childrenMap.set(pid, []);
+        }
+        childrenMap.get(pid)!.push(item);
+      }
+    }
+
+    const roots: CategoryItem[] = [];
+    for (const item of items) {
+      const pid = item.parentId != null ? Number(item.parentId) : null;
+      if (pid == null || !map.has(pid)) {
+        roots.push(item);
+      }
+    }
+
+    const result: SellerCategoryOption[] = [];
+    const visited = new Set<number>();
+
+    const traverse = (node: CategoryItem, level: number) => {
+      const id = Number(node.id);
+      if (visited.has(id)) return;
+      visited.add(id);
+
+      let prefix = '';
+      if (level === 1) prefix = '— ';
+      else if (level >= 2) prefix = '—— ';
+
+      result.push({
+        id,
+        name: node.name,
+        displayName: `${prefix}${node.name}`,
+        parentId: node.parentId != null ? Number(node.parentId) : null,
+        level,
+      });
+
+      const children = childrenMap.get(id) || [];
+      for (const child of children) {
+        traverse(child, level + 1);
+      }
+    };
+
+    for (const root of roots) {
+      traverse(root, 0);
+    }
+
+    for (const item of items) {
+      const id = Number(item.id);
+      if (!visited.has(id)) {
+        traverse(item, 0);
+      }
+    }
+
+    return result;
+  }
+
+  onCategoryChange(val: any): void {
+    if (val == null) return;
+    const numId = Number(val);
+    const matched = !isNaN(numId)
+      ? this.dbCategories().find((c: SellerCategoryOption) => c.id === numId)
+      : this.dbCategories().find((c: SellerCategoryOption) => c.name.toLowerCase() === String(val).toLowerCase());
+
+    if (matched) {
+      this.formCategoryId.set(matched.id);
+      this.formCategory.set(matched.name);
+    } else {
+      this.formCategory.set(String(val));
+    }
+  }
+
   loadProducts(): void {
     this.productService.getProducts().subscribe({
       next: (list) => {
-        if (list && list.length > 0) {
-          this.products.set(list);
-          this.syncToStorageAndStorefront(list);
-        } else {
-          const localSaved = localStorage.getItem('vic_seller_products');
-          if (localSaved) {
-            try {
-              const parsed = JSON.parse(localSaved);
-              if (Array.isArray(parsed) && parsed.length > 0) {
-                this.products.set(parsed);
-                this.dashboardService.loadShopProductsFromStorage();
-                return;
-              }
-            } catch { }
-          }
-          this.products.set([]);
-          this.syncToStorageAndStorefront([]);
-        }
+        this.products.set(list || []);
+        this.syncToStorageAndStorefront(list || []);
+        this.cdr.markForCheck();
       },
       error: () => {
-        const localSaved = localStorage.getItem('vic_seller_products');
-        if (localSaved) {
-          try {
-            const parsed = JSON.parse(localSaved);
-            if (Array.isArray(parsed) && parsed.length > 0) {
-              this.products.set(parsed);
-              this.dashboardService.loadShopProductsFromStorage();
-              return;
-            }
-          } catch { }
-        }
         this.products.set([]);
         this.syncToStorageAndStorefront([]);
+        this.cdr.markForCheck();
       },
     });
   }
 
   private syncToStorageAndStorefront(list: SellerProduct[]): void {
-    localStorage.setItem('vic_seller_products', JSON.stringify(list));
+    const shopId = this.currentShopId();
+    if (shopId) {
+      localStorage.setItem(`vic_seller_products_${shopId}`, JSON.stringify(list));
+    }
+    localStorage.removeItem('vic_seller_products');
     this.dashboardService.syncProducts(list);
   }
 
@@ -424,7 +514,8 @@ export class SellerDashboardComponent implements OnInit {
   // Form Thêm / Sửa sản phẩm
   readonly editingProductId = signal<number | null>(null);
   readonly formProductName = signal<string>('');
-  readonly formCategory = signal<string>('Nhà cửa & Đời sống');
+  readonly formCategory = signal<string>('');
+  readonly formCategoryId = signal<number | null>(null);
   readonly formStatus = signal<string>('VISIBLE');
   readonly formDescription = signal<string>('');
   readonly formImageUrl = signal<string>('');
@@ -523,17 +614,100 @@ export class SellerDashboardComponent implements OnInit {
     return this.userAccountName().charAt(0).toUpperCase();
   });
 
-  // Danh sách danh mục
-  readonly categories = [
-    'Thời trang & Phụ kiện',
-    'Mỹ phẩm & Chăm sóc sắc đẹp',
-    'Điện thoại & Đồ công nghệ',
-    'Nhà cửa & Đời sống',
-    'Thực phẩm & Đồ uống',
-    'Mẹ & Bé',
-    'Sách & Văn phòng phẩm',
-    'Thể thao & Dã ngoại',
-  ];
+  readonly logoLoadFailed = signal<boolean>(false);
+
+  onLogoError(): void {
+    this.logoLoadFailed.set(true);
+  }
+
+  readonly shopLogo = computed(() => {
+    const formLogo = this.formShopProfile.logo?.trim();
+    if (formLogo) return formLogo;
+
+    const directLogo = (this.shopProfile() as any)?.logo?.trim();
+    if (directLogo) return directLogo;
+
+    const dashLogo = this.dashboardService.dashboard()?.shopLogo?.trim();
+    if (dashLogo) return dashLogo;
+
+    const profServiceLogo = (this.dashboardService.shopProfile() as any)?.logo?.trim();
+    if (profServiceLogo) return profServiceLogo;
+
+    const shopName = this.shopName().trim().toLowerCase();
+    const shopId = this.currentShopId();
+
+    try {
+      const kycStorage = JSON.parse(localStorage.getItem('vic_vendor_kyc_storage') || '{}');
+      let stored = (shopId ? kycStorage[String(shopId)] : undefined) ||
+                   (shopName ? kycStorage[shopName] : undefined);
+      if (!stored && shopName) {
+        for (const k of Object.keys(kycStorage)) {
+          if (k.toLowerCase().includes(shopName) || shopName.includes(k.toLowerCase())) {
+            stored = kycStorage[k];
+            break;
+          }
+        }
+      }
+      if (!stored && kycStorage['latest_user_submission']) {
+        stored = kycStorage['latest_user_submission'];
+      }
+      if (!stored) {
+        for (const k of Object.keys(kycStorage)) {
+          if (kycStorage[k]?.logo?.trim()) {
+            stored = kycStorage[k];
+            break;
+          }
+        }
+      }
+      if (stored?.logo?.trim()) return stored.logo.trim();
+    } catch {}
+
+    try {
+      const draftRaw = localStorage.getItem('vic_seller_onboarding_draft');
+      if (draftRaw) {
+        const draft = JSON.parse(draftRaw);
+        if (draft.shopInfo?.logoUrl?.trim()) return draft.shopInfo.logoUrl.trim();
+      }
+    } catch {}
+
+    try {
+      const profRaw = (shopId ? localStorage.getItem(`vic_seller_shop_profile_${shopId}`) : null) ||
+                      localStorage.getItem('vic_seller_shop_profile');
+      if (profRaw) {
+        const prof = JSON.parse(profRaw);
+        if (prof.logo?.trim()) return prof.logo.trim();
+      }
+    } catch {}
+
+    return '';
+  });
+
+  onLogoFileSelect(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    const file = target.files && target.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      this.showToast('⚠️ Dung lượng file tối đa là 5MB.', true);
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      this.formShopProfile.logo = dataUrl;
+      this.logoLoadFailed.set(false);
+      const curr = this.shopProfile();
+      this.syncProfileData({
+        ...curr,
+        logo: dataUrl,
+      });
+      this.saveProfile();
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // Danh sách danh mục được quản lý và tạo bởi Admin
+  readonly dbCategories = signal<SellerCategoryOption[]>([]);
+  readonly categories = computed(() => this.dbCategories().map((c: SellerCategoryOption) => c.name));
 
   // Danh sách sản phẩm (Quản lý thêm sửa xóa qua API, ban đầu trống)
   readonly products = signal<SellerProduct[]>([]);
@@ -735,7 +909,9 @@ export class SellerDashboardComponent implements OnInit {
   openCreateProductModal(): void {
     this.editingProductId.set(null);
     this.formProductName.set('');
-    this.formCategory.set('Nhà cửa & Đời sống');
+    const firstCat = this.dbCategories()[0];
+    this.formCategory.set(firstCat ? firstCat.name : '');
+    this.formCategoryId.set(firstCat ? firstCat.id : null);
     this.formStatus.set('VISIBLE');
     this.formDescription.set('');
     this.formImageUrl.set('');
@@ -756,6 +932,14 @@ export class SellerDashboardComponent implements OnInit {
     this.editingProductId.set(p.id);
     this.formProductName.set(p.n);
     this.formCategory.set(p.c);
+    let matchedId = p.categoryId;
+    if (!matchedId && p.c) {
+      const found = this.dbCategories().find(
+        (cat: SellerCategoryOption) => cat.name.toLowerCase() === p.c.toLowerCase()
+      );
+      if (found) matchedId = found.id;
+    }
+    this.formCategoryId.set(matchedId || null);
     this.formStatus.set(p.s);
     this.formDescription.set(p.d || '');
     this.formImageUrl.set(p.imageUrl || '');
@@ -929,6 +1113,7 @@ export class SellerDashboardComponent implements OnInit {
     const payload: Partial<SellerProduct> = {
       n: name,
       c: this.formCategory(),
+      categoryId: this.formCategoryId() || undefined,
       d: this.formDescription().trim(),
       s: this.formStatus() as any,
       imageUrl: this.formMedia().length > 0 ? this.formMedia()[0].url : (img || 'https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=600&q=80'),
@@ -967,7 +1152,8 @@ export class SellerDashboardComponent implements OnInit {
           const newProduct: SellerProduct = {
             id: created?.id || Date.now(),
             n: name,
-            c: this.formCategory(),
+            c: created?.c || this.formCategory(),
+            categoryId: created?.categoryId || this.formCategoryId() || undefined,
             d: this.formDescription().trim(),
             s: this.formStatus() as any,
             sold: 0,
@@ -989,6 +1175,7 @@ export class SellerDashboardComponent implements OnInit {
             id: Date.now(),
             n: name,
             c: this.formCategory(),
+            categoryId: this.formCategoryId() || undefined,
             d: this.formDescription().trim(),
             s: this.formStatus() as any,
             sold: 0,
@@ -1371,6 +1558,8 @@ export class SellerDashboardComponent implements OnInit {
       return;
     }
 
+    const logo = this.formShopProfile.logo || (this.shopProfile() as any)?.logo || this.shopLogo() || '';
+
     const updatedProfile = {
       n,
       ph,
@@ -1378,6 +1567,7 @@ export class SellerDashboardComponent implements OnInit {
       hr: hr || '08:00 – 21:00',
       d: d || '',
       ad,
+      logo,
     };
 
     // 1. Cập nhật state & signals ngay lập tức
@@ -1385,6 +1575,9 @@ export class SellerDashboardComponent implements OnInit {
 
     // 2. Lưu vào localStorage để dữ liệu được bảo toàn bền vững
     localStorage.setItem('vic_seller_shop_profile', JSON.stringify(updatedProfile));
+    if (this.currentShopId()) {
+      localStorage.setItem(`vic_seller_shop_profile_${this.currentShopId()}`, JSON.stringify(updatedProfile));
+    }
 
     // Cập nhật lại draft onboarding nếu có
     const draftRaw = localStorage.getItem('vic_seller_onboarding_draft');
@@ -1395,6 +1588,7 @@ export class SellerDashboardComponent implements OnInit {
         if (!draft.contactInfo) draft.contactInfo = {};
         draft.shopInfo.shopName = n;
         draft.shopInfo.description = updatedProfile.d;
+        if (logo) draft.shopInfo.logoUrl = logo;
         draft.contactInfo.phone = ph;
         draft.contactInfo.email = updatedProfile.em;
         draft.contactInfo.detailedAddress = ad;
@@ -1410,6 +1604,7 @@ export class SellerDashboardComponent implements OnInit {
       email: updatedProfile.em,
       pickupAddress: ad,
       businessHours: updatedProfile.hr,
+      logo,
     });
 
     // 3. Đồng bộ lên Backend DB
@@ -1420,6 +1615,7 @@ export class SellerDashboardComponent implements OnInit {
       description: updatedProfile.d,
       pickupAddress: ad,
       businessHours: updatedProfile.hr,
+      logo,
     };
 
     this.http.put<any>('http://localhost:9090/api/shops/current', payload).subscribe({

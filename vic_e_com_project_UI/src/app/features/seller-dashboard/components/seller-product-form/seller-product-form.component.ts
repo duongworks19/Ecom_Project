@@ -1,7 +1,10 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  OnInit,
+  computed,
   effect,
+  inject,
   input,
   output,
   signal,
@@ -10,6 +13,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SellerProduct } from '../../models/seller-dashboard.model';
 import { PRESET_DECOR_IMAGES } from '../../constants/seller-dashboard.mock';
+import { ProductApiService } from '../../../../core/services/product-api.service';
+import { CategoryItem } from '../../../../core/models/category.model';
 
 export interface ProductVariantRow {
   sku: string;
@@ -27,7 +32,8 @@ export interface ProductVariantRow {
   styleUrl: './seller-product-form.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SellerProductFormComponent {
+export class SellerProductFormComponent implements OnInit {
+  private readonly productApiService = inject(ProductApiService);
   readonly editingProduct = input<SellerProduct | null>(null);
 
   readonly save = output<{
@@ -45,22 +51,25 @@ export class SellerProductFormComponent {
   }>();
   readonly close = output<void>();
 
-  readonly categories = [
-    'Thời trang & Phụ kiện',
-    'Mỹ phẩm & Chăm sóc sắc đẹp',
-    'Điện thoại & Đồ công nghệ',
-    'Nhà cửa & Đời sống',
-    'Thực phẩm & Đồ uống',
-    'Mẹ & Bé',
-    'Sách & Văn phòng phẩm',
-    'Thể thao & Dã ngoại',
-  ];
+  readonly dbCategories = signal<CategoryItem[]>([]);
+  readonly categories = computed(() => this.dbCategories().map((c: CategoryItem) => c.name));
 
   readonly presetImages = PRESET_DECOR_IMAGES;
 
   formName = signal<string>('');
-  formCategory = signal<string>('Nhà cửa & Đời sống');
+  formCategory = signal<string>('');
   formStatus = signal<'ACTIVE' | 'HIDDEN'>('ACTIVE');
+
+  ngOnInit(): void {
+    this.productApiService.getCategories().subscribe((items) => {
+      if (items && items.length > 0) {
+        this.dbCategories.set(items);
+        if (!this.formCategory()) {
+          this.formCategory.set(items[0].name);
+        }
+      }
+    });
+  }
   formDescription = signal<string>('');
   formImageUrl = signal<string>(PRESET_DECOR_IMAGES[0].url);
   uploadedImageFileName = signal<string | null>(null);

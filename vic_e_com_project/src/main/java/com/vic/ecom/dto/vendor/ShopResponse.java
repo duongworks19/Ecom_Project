@@ -27,9 +27,21 @@ public class ShopResponse {
         if (shop == null) return null;
         ShopResponse res = new ShopResponse();
         res.setId(shop.getId());
-        res.setVendorId(shop.getVendor() != null ? shop.getVendor().getId() : null);
         res.setName(shop.getName());
-        res.setLogo(shop.getLogo());
+        res.setVendorId(shop.getVendor() != null ? shop.getVendor().getId() : null);
+        String logo = shop.getLogo();
+        if ((logo == null || logo.isBlank()) && shop.getVendor() != null && shop.getVendor().getKycDocumentUrl() != null) {
+            String kyc = shop.getVendor().getKycDocumentUrl();
+            if (kyc.contains("\"logo\"")) {
+                try {
+                    com.fasterxml.jackson.databind.JsonNode node = new com.fasterxml.jackson.databind.ObjectMapper().readTree(kyc);
+                    if (node.has("logo") && !node.get("logo").asText().isBlank()) {
+                        logo = node.get("logo").asText();
+                    }
+                } catch (Exception ignored) {}
+            }
+        }
+        res.setLogo(logo);
         res.setBanner(shop.getBanner());
         res.setDescription(shop.getDescription());
         res.setPickupAddress(shop.getPickupAddress());

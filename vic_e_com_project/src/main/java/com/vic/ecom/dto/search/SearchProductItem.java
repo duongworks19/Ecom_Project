@@ -16,6 +16,7 @@ public class SearchProductItem {
     private BigDecimal price;
     private Long shopId;
     private String shopName;
+    private String shopLogo;
     private BigDecimal ratingAvg;
     private int soldCount;
 }

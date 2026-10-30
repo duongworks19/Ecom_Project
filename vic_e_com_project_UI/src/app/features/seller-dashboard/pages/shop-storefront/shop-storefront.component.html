@@ -1,4 +1,4 @@
-﻿@if (toastMessage(); as msg) {
+@if (toastMessage(); as msg) {
 <div class="store-toast" role="status">
   <span>✓</span>
   <span>{{ msg }}</span>
@@ -40,7 +40,13 @@
   <section class="shop-hero">
     <div class="shop-hero-inner">
       <div class="shop-identity">
-        <div class="shop-av">{{ shopAvatarLetter() }}</div>
+        <div class="shop-av" [class.has-img]="shopLogo() && !logoLoadFailed()">
+          @if (shopLogo() && !logoLoadFailed()) {
+            <img [src]="shopLogo()" [alt]="shopName()" class="shop-logo-img" (error)="onLogoError()" />
+          } @else {
+            {{ shopAvatarLetter() }}
+          }
+        </div>
         <div class="shop-meta">
           <div class="shop-title-row">
             <h1>{{ shopName() }}</h1>

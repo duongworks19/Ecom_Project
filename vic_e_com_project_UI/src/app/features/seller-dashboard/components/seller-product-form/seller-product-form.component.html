@@ -25,7 +25,7 @@
         class="inp"
         [ngModel]="formCategory()"
         (ngModelChange)="formCategory.set($event)">
-        @for (c of categories; track c) {
+        @for (c of categories(); track c) {
           <option [value]="c">{{ c }}</option>
         }
       </select>

@@ -12,4 +12,6 @@ public class UpdateShopRequest {
     private String description;
     private String pickupAddress;
     private String businessHours;
+    private String logo;
+    private String banner;
 }

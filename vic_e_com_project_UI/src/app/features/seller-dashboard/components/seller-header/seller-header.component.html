@@ -75,7 +75,13 @@
     type="button"
     title="Hồ sơ gian hàng"
     (click)="openShopProfile.emit('profile')">
-    <div class="av">{{ shopAvatarLetter() }}</div>
+    <div class="av" [class.has-img]="shopLogo()">
+      @if (shopLogo()) {
+        <img [src]="shopLogo()" [alt]="shopName()" class="header-logo-img" />
+      } @else {
+        {{ shopAvatarLetter() }}
+      }
+    </div>
     <span>{{ shopName() }}</span>
   </button>
 </header>
