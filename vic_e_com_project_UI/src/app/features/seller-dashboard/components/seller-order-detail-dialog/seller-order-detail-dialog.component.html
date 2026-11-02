@@ -1,0 +1,35 @@
+<div class="scrim" [class.on]="isOpen" role="dialog" aria-modal="true">
+  <div class="modal">
+    <h2>Chi tiết đơn hàng</h2>
+    <p style="margin: 0 0 10px; font-size: 13px; color: var(--mute)">Mã đơn {{ order?.c }}</p>
+
+    <span class="tag" [class.ok]="order?.s === 'DELIVERED'" [class.warn]="order?.s === 'PENDING'">
+      {{ order?.s === 'PENDING' ? 'Chờ xác nhận' : (order?.s === 'PREPARING' ? 'Đang chuẩn bị' :
+      (order?.s === 'PACKED' ? 'Đã đóng gói' : (order?.s === 'READY_TO_SHIP' ? 'Sẵn sàng giao' : 'Đã giao'))) }}
+    </span>
+
+    <p style="font-size: 14px; margin: 12px 0;">
+      <b>{{ order?.n }}</b> · 0912 345 678<br />
+      Địa chỉ giao: Số 45 Nguyễn Chí Thanh, Đống Đa, Hà Nội<br />
+      Phương thức thanh toán: COD (Thu tiền khi nhận hàng)<br />
+      Vận chuyển: {{ order?.s === 'READY_TO_SHIP' || order?.s === 'DELIVERED' ? 'Đã điều phối bưu tá VICMART' : 'Chưa điều phối shipper' }}
+    </p>
+
+    <div class="row">
+      <div class="g">Sản phẩm đặt mua ({{ order?.k }} món)</div>
+      <b>{{ formatVnd((order?.t || 0) - 30000) }}</b>
+    </div>
+    <div class="row">
+      <div class="g m">Phí vận chuyển</div>
+      <b>30.000đ</b>
+    </div>
+    <div class="row">
+      <div class="g"><b>Tổng cộng</b></div>
+      <b>{{ formatVnd(order?.t || 0) }}</b>
+    </div>
+
+    <div style="display: flex; justify-content: flex-end; margin-top: 18px;">
+      <button class="btn p" type="button" (click)="close.emit()">Đóng</button>
+    </div>
+  </div>
+</div>

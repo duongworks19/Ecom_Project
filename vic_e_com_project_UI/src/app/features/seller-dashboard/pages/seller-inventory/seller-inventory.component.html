@@ -1,0 +1,40 @@
+<div class="hd">
+  <div>
+    <h1 style="font-size: 28px">Kho hàng</h1>
+    <p class="sub">Cập nhật tồn kho theo biến thể. Mọi thay đổi được ghi nhật ký tự động.</p>
+  </div>
+</div>
+
+<div class="quick" style="margin-bottom: 16px; align-items: center">
+  <button class="chip" [class.active]="!lowStockOnly()" (click)="lowStockOnly.set(false)">Tất cả</button>
+  <button class="chip" [class.active]="lowStockOnly()" (click)="lowStockOnly.set(true)">
+    Sắp hết hàng ({{ lowStockItems().length }})
+  </button>
+</div>
+
+<div class="box">
+  @for (item of inventoryList(); track item.p.id + '-' + item.idx) {
+    <div class="row">
+      <div class="g">
+        <b>{{ item.p.n }} · {{ item.v.a }}</b>
+        <span class="m">SKU: {{ item.v.sku }}</span>
+      </div>
+
+      @if (item.v.q <= item.v.l) {
+        <span class="tag warn">Sắp hết</span>
+      }
+
+      <label class="m" style="display: inline-flex; align-items: center; gap: 4px;">
+        Tồn
+        <input #qInput class="inp" type="number" min="0" [value]="item.v.q" style="width: 80px; margin: 0;" />
+      </label>
+
+      <label class="m" style="display: inline-flex; align-items: center; gap: 4px;">
+        Ngưỡng
+        <input #lInput class="inp" type="number" min="0" [value]="item.v.l" style="width: 70px; margin: 0;" />
+      </label>
+
+      <button class="btn sm" (click)="saveInventoryStock(item.p.id, item.idx, qInput.value, lInput.value)">Lưu</button>
+    </div>
+  }
+</div>

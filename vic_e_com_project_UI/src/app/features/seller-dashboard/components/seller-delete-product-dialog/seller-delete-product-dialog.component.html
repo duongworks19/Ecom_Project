@@ -1,0 +1,15 @@
+<div class="scrim" [class.on]="isOpen" role="dialog" aria-modal="true">
+  <div class="modal">
+    <h2>Xóa sản phẩm?</h2>
+    <p style="font-size: 15px; margin: 14px 0;">
+      Bạn có chắc chắn muốn xóa sản phẩm <b>"{{ product?.n }}"</b>? Sản phẩm sẽ bị gỡ bỏ khỏi gian hàng của bạn.
+    </p>
+
+    <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px;">
+      <button class="btn" type="button" (click)="close.emit()">Hủy</button>
+      <button class="btn p" style="background: var(--err);" type="button" (click)="onConfirm()">
+        Xác nhận xóa
+      </button>
+    </div>
+  </div>
+</div>

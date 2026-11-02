@@ -1,0 +1,171 @@
+@use '../../styles/seller-ui' as *;
+
+:host {
+  display: block;
+}
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+
+.tile {
+  border: 0;
+  text-align: left;
+  background: var(--card);
+  border-radius: 16px;
+  padding: 16px;
+  cursor: pointer;
+  min-height: 92px;
+  transition: outline 0.1s;
+  text-decoration: none;
+  display: block;
+
+  &[aria-pressed="true"], &.active {
+    outline: 2px solid var(--ink);
+  }
+
+  b {
+    display: block;
+    font-size: 30px;
+    line-height: 1.1;
+    color: var(--ink);
+    letter-spacing: -1px;
+  }
+
+  span {
+    font-size: 13px;
+    color: var(--mute);
+  }
+}
+
+.cols {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.kpi {
+  background: var(--canvas);
+  border: 1px solid var(--hair-soft);
+  border-radius: 16px;
+  padding: 16px 18px;
+
+  span {
+    font-size: 13px;
+    color: var(--mute);
+  }
+
+  b {
+    display: block;
+    font-size: 24px;
+    letter-spacing: -0.8px;
+    color: var(--ink);
+    margin-top: 4px;
+  }
+
+  small {
+    font-size: 12px;
+    color: var(--mute);
+  }
+}
+
+.bar {
+  height: 8px;
+  background: var(--card);
+  border-radius: 9999px;
+  overflow: hidden;
+  margin: 6px 0 14px;
+
+  i {
+    display: block;
+    height: 100%;
+    background: var(--on);
+  }
+}
+
+.ck {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-size: 14px;
+  padding: 6px 0;
+
+  s {
+    text-decoration: none;
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 9999px;
+    border: 2px solid var(--hair);
+    font-size: 12px;
+    flex: none;
+  }
+
+  &.d s {
+    background: var(--on);
+    border-color: var(--on);
+    color: var(--on-t);
+  }
+
+  &.d {
+    color: var(--mute);
+  }
+}
+
+.chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  height: 120px;
+
+  div {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    height: 100%;
+    font-size: 12px;
+    color: var(--mute);
+  }
+
+  i {
+    width: 100%;
+    background: var(--card);
+    border-radius: 8px 8px 0 0;
+  }
+
+  div:last-child i {
+    background: var(--on);
+  }
+}
+
+@media (max-width: 1099px) {
+  .tiles {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .cols {
+    grid-template-columns: 1fr;
+  }
+  .kpis {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 639px) {
+  .tiles {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

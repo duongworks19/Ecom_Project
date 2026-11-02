@@ -107,4 +107,13 @@ export class SellerProductService {
       })
     );
   }
+  /**
+   * API 7: Upload media lên Cloudinary
+   * POST /api/seller/products/media/upload
+   */
+  uploadMedia(file: File): Observable<any> {
+    const data = new FormData();
+    data.append('file', file);
+    return this.http.post<any>(`${this.baseUrl}/media/upload`, data);
+  }
 }

@@ -1,0 +1,42 @@
+@if (isOpen && mediaList[selectedIndex]; as media) {
+  <div class="media-lightbox" (click)="close.emit()">
+    <button
+      type="button"
+      class="lightbox-close"
+      (click)="$event.stopPropagation(); close.emit()"
+      aria-label="Đóng preview"
+    >
+      ✕
+    </button>
+
+    @if (mediaList.length > 1) {
+      <button
+        type="button"
+        class="lightbox-nav lightbox-prev"
+        (click)="$event.stopPropagation(); prevMedia()"
+        aria-label="Xem media trước"
+      >
+        ‹
+      </button>
+      <button
+        type="button"
+        class="lightbox-nav lightbox-next"
+        (click)="$event.stopPropagation(); nextMedia()"
+        aria-label="Xem media kế tiếp"
+      >
+        ›
+      </button>
+    }
+
+    <div class="lightbox-content" (click)="$event.stopPropagation()">
+      @if (media.type === 'VIDEO') {
+        <video [src]="media.url" controls autoplay class="lightbox-media"></video>
+      } @else {
+        <img [src]="media.url" [alt]="'Preview media ' + (selectedIndex + 1)" class="lightbox-media" />
+      }
+      <div class="lightbox-counter">
+        {{ selectedIndex + 1 }} / {{ mediaList.length }}
+      </div>
+    </div>
+  </div>
+}

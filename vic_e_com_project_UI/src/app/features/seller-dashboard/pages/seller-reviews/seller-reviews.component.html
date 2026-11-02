@@ -1,0 +1,25 @@
+<div class="hd">
+  <div>
+    <h1 style="font-size: 28px">Đánh giá của khách hàng</h1>
+    <p class="sub">Phản hồi khách mua để tăng điểm uy tín và tỷ lệ quay lại của gian hàng.</p>
+  </div>
+</div>
+
+<div class="box">
+  @for (r of reviews(); track r.id) {
+    <div class="row">
+      <div class="g">
+        <span class="m">{{ r.p }} · {{ r.who }}</span>
+        <b>★ {{ r.st }} sao</b> — {{ r.x }}
+        @if (r.re) {
+          <span class="m" style="color: var(--ok); margin-top: 4px;">Phản hồi từ shop: {{ r.re }}</span>
+        }
+      </div>
+      @if (r.re) {
+        <span class="tag ok">Đã phản hồi</span>
+      } @else {
+        <button class="btn sm" (click)="replyToReview(r)">Phản hồi</button>
+      }
+    </div>
+  }
+</div>

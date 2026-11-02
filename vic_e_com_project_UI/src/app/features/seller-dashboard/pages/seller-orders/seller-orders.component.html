@@ -1,0 +1,76 @@
+<div class="hd">
+  <div>
+    <h1 style="font-size: 28px">Đơn hàng</h1>
+    <p class="sub">Xem, xác nhận và cập nhật trạng thái đơn hàng của gian hàng.</p>
+  </div>
+  <div class="quick" style="margin-bottom: 24px">
+    <button class="chip" [class.active]="orderDaysFilter() === '0'" (click)="orderDaysFilter.set('0')">Hôm nay</button>
+    <button class="chip" [class.active]="orderDaysFilter() === '7'" (click)="orderDaysFilter.set('7')">7 ngày</button>
+    <button class="chip" [class.active]="orderDaysFilter() === 'ALL'" (click)="orderDaysFilter.set('ALL')">Mọi lúc</button>
+  </div>
+</div>
+
+<div class="quick" style="margin-bottom: 16px; align-items: center">
+  <button class="chip" [class.active]="filterOrder() === 'ALL'" (click)="filterOrder.set('ALL')">Tất cả</button>
+  <button class="chip" [class.active]="filterOrder() === 'PENDING'" (click)="filterOrder.set('PENDING')">
+    Chờ xác nhận ({{ pendingOrderCount() }})
+  </button>
+  <button class="chip" [class.active]="filterOrder() === 'PREPARING'" (click)="filterOrder.set('PREPARING')">
+    Chờ đóng gói ({{ preparingOrderCount() }})
+  </button>
+  <button class="chip" [class.active]="filterOrder() === 'PACKED'" (click)="filterOrder.set('PACKED')">Đã đóng gói</button>
+  <button class="chip" [class.active]="filterOrder() === 'READY_TO_SHIP'" (click)="filterOrder.set('READY_TO_SHIP')">Sẵn sàng giao</button>
+  <button class="chip" [class.active]="filterOrder() === 'DELIVERED'" (click)="filterOrder.set('DELIVERED')">Đã giao</button>
+
+  <input
+    class="inp"
+    type="search"
+    placeholder="Tìm mã đơn, tên khách…"
+    [ngModel]="searchQuery()"
+    (ngModelChange)="searchQuery.set($event)"
+    style="width: 220px; margin: 0 0 0 auto; border-radius: 9999px"
+  />
+</div>
+
+<div class="box">
+  @if (filteredOrders().length > 0) {
+    @for (o of filteredOrders(); track o.c) {
+      <div class="row">
+        <div class="g">
+          <b>{{ o.c }}</b>
+          <span class="m">{{ o.n }} · {{ o.k }} sản phẩm · {{ o.h }}</span>
+        </div>
+        <b>{{ formatVnd(o.t) }}</b>
+        <span class="tag" [class.warn]="o.s === 'PENDING'" [class.ok]="o.s === 'DELIVERED'">
+          {{ o.s === 'PENDING' ? 'Chờ xác nhận' : (o.s === 'PREPARING' ? 'Đang chuẩn bị' : (o.s === 'PACKED' ? 'Đã đóng gói' : (o.s === 'READY_TO_SHIP' ? 'Sẵn sàng giao' : 'Đã giao'))) }}
+        </span>
+
+        @if (o.s === 'PENDING') {
+          <button class="btn sm" style="background: var(--on); color: var(--on-t);" (click)="confirmOrder(o.c)">Xác nhận</button>
+          <button class="btn sm" (click)="openRejectOrderModal(o.c)">Từ chối</button>
+        } @else if (o.s === 'PREPARING') {
+          <button class="btn sm" (click)="nextOrderStatus(o.c)">Đã đóng gói</button>
+        } @else if (o.s === 'PACKED') {
+          <button class="btn sm" (click)="nextOrderStatus(o.c)">Sẵn sàng giao</button>
+        }
+
+        <button class="btn sm" (click)="openOrderDetail(o)">Chi tiết</button>
+      </div>
+    }
+  } @else {
+    <p style="margin: 0; color: var(--mute)">Không có đơn nào khớp với bộ lọc.</p>
+  }
+</div>
+
+<app-seller-reject-order-dialog
+  [isOpen]="rejectModalOpen()"
+  [orderCode]="rejectTargetCode()"
+  (close)="closeRejectModal()"
+  (confirm)="handleRejectOrder($event)"
+></app-seller-reject-order-dialog>
+
+<app-seller-order-detail-dialog
+  [isOpen]="orderDetailOpen()"
+  [order]="selectedOrderDetail()"
+  (close)="closeOrderDetail()"
+></app-seller-order-detail-dialog>

@@ -1,0 +1,28 @@
+<div class="scrim" [class.on]="isOpen" role="dialog" aria-modal="true">
+  <div class="modal">
+    <h2>Từ chối đơn hàng</h2>
+    <p style="margin: 0; font-size: 13px; color: var(--mute)">Đơn {{ orderCode }}</p>
+
+    <textarea
+      placeholder="Nêu lý do để khách hàng biết…"
+      maxlength="300"
+      [ngModel]="reason()"
+      (ngModelChange)="reason.set($event)"
+    ></textarea>
+
+    @if (error()) {
+      <div class="err" role="alert">{{ error() }}</div>
+    }
+
+    <div class="quick" style="margin-top: 8px;">
+      <button type="button" class="chip" (click)="setReason('Hết hàng.')">Hết hàng</button>
+      <button type="button" class="chip" (click)="setReason('Sản phẩm ngừng kinh doanh.')">Sản phẩm ngừng bán</button>
+      <button type="button" class="chip" (click)="setReason('Không giao được tới khu vực này.')">Khu vực ngoài tuyến</button>
+    </div>
+
+    <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px;">
+      <button class="btn" type="button" (click)="close.emit()">Hủy</button>
+      <button class="btn p" type="button" (click)="submit()">Từ chối đơn</button>
+    </div>
+  </div>
+</div>

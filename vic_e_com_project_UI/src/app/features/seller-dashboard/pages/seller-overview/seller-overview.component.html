@@ -1,0 +1,165 @@
+<div class="hd">
+  <div>
+    <h1>Chào {{ userAccountName() }}, hôm nay có {{ totalTodoCount() }} việc cần xử lý</h1>
+    <p class="sub">Gian hàng: <b>{{ shopName() }}</b> · Xác nhận đơn mới trước 17:00 để bàn giao cho bưu tá đúng hẹn.</p>
+  </div>
+</div>
+
+<!-- Việc cần làm -->
+<div class="box">
+  <h2>Việc cần làm</h2>
+  <div class="tiles">
+    <button class="tile" [class.active]="filterOrder() === 'PENDING'"
+      (click)="filterOrder.set('PENDING'); navigateToOrders('PENDING')">
+      <b>{{ pendingOrderCount() }}</b>
+      <span>Đơn chờ xác nhận</span>
+    </button>
+    <button class="tile" [class.active]="filterOrder() === 'PREPARING'"
+      (click)="filterOrder.set('PREPARING'); navigateToOrders('PREPARING')">
+      <b>{{ preparingOrderCount() }}</b>
+      <span>Chờ đóng gói</span>
+    </button>
+    <a class="tile" routerLink="/seller/dashboard/returns">
+      <b>{{ pendingReturnCount() }}</b>
+      <span>Yêu cầu đổi trả</span>
+    </a>
+    <a class="tile" routerLink="/seller/dashboard/inventory">
+      <b>{{ lowStockItems().length }}</b>
+      <span>Sắp hết hàng</span>
+    </a>
+    <a class="tile" routerLink="/seller/dashboard/qa">
+      <b>{{ unrepliedQuestionCount() }}</b>
+      <span>Câu hỏi chưa trả lời</span>
+    </a>
+  </div>
+</div>
+
+<div class="cols">
+  <!-- Cột trái -->
+  <div>
+    <div class="box">
+      <h2>
+        <span>Đơn hàng cần xử lý</span>
+        <span class="quick">
+          <button class="chip" [class.active]="filterOrder() === 'ALL'" (click)="filterOrder.set('ALL')">
+            Tất cả ({{ openOrdersCount() }})
+          </button>
+        </span>
+      </h2>
+
+      @if (filteredOrders().length > 0) {
+      @for (o of filteredOrders(); track o.c) {
+      <div class="row">
+        <div class="g">
+          <b>{{ o.c }}</b>
+          <span class="m">{{ o.n }} · {{ o.k }} sản phẩm · {{ o.h }}</span>
+        </div>
+        <b>{{ formatVnd(o.t) }}</b>
+        <span class="tag" [class.warn]="o.s === 'PENDING'" [class.info]="o.s === 'READY_TO_SHIP'">
+          {{ o.s === 'PENDING' ? 'Chờ xác nhận' : (o.s === 'PREPARING' ? 'Đang chuẩn bị' : (o.s === 'PACKED' ? 'Đã đóng gói' : 'Sẵn sàng giao')) }}
+        </span>
+
+        @if (o.s === 'PENDING') {
+        <button class="btn p sm" (click)="confirmOrder(o.c)">Xác nhận</button>
+        <button class="btn sm" (click)="openRejectOrderModal(o.c)">Từ chối</button>
+        } @else if (o.s === 'PREPARING') {
+        <button class="btn sm" (click)="nextOrderStatus(o.c)">Đã đóng gói</button>
+        } @else if (o.s === 'PACKED') {
+        <button class="btn sm" (click)="nextOrderStatus(o.c)">Sẵn sàng giao</button>
+        }
+      </div>
+      }
+      } @else {
+      <p style="color: var(--mute); margin: 0">Không còn đơn nào ở mục này. Tốt lắm!</p>
+      }
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpis">
+      <div class="kpi">
+        <span>Doanh thu hôm nay</span>
+        <b>4.280.000đ</b>
+        <small>+12% so với hôm qua · đơn đã giao</small>
+      </div>
+      <div class="kpi">
+        <span>Đơn hàng hôm nay</span>
+        <b>{{ orders().length + 2 }}</b>
+        <small>{{ pendingOrderCount() }} chờ xác nhận</small>
+      </div>
+      <div class="kpi">
+        <span>Tỷ lệ hủy</span>
+        <b>3,2%</b>
+        <small>30 ngày gần nhất</small>
+      </div>
+      <div class="kpi">
+        <span>Đánh giá trung bình</span>
+        <b>4,8 ★</b>
+        <small>126 đánh giá</small>
+      </div>
+    </div>
+
+    <!-- Biểu đồ -->
+    <div class="box">
+      <h2>Doanh thu 7 ngày <span style="font-size: 13px; font-weight: 500; color: var(--mute)">triệu đồng, đơn DELIVERED</span></h2>
+      <div class="chart" role="img" aria-label="Doanh thu 7 ngày gần nhất">
+        @for (v of revChart; track $index) {
+        <div>
+          <span>{{ v }}</span>
+          <i [style.height.%]="(v / 5) * 80"></i>
+          <span>{{ revDays[$index] }}</span>
+        </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Cột phải -->
+  <div>
+    <div class="box">
+      <h2>Hoàn thiện gian hàng <span class="tag">2/4</span></h2>
+      <div class="bar"><i style="width: 50%"></i></div>
+      <div class="ck d"><s>✓</s>Hồ sơ shop</div>
+      <div class="ck d"><s>✓</s>Địa chỉ kho lấy hàng</div>
+      <div class="ck"><s></s>Đăng 5 sản phẩm (đã có {{ products().length }})</div>
+      <div class="ck"><s></s>Tạo voucher đầu tiên</div>
+    </div>
+
+    <!-- Sắp hết hàng -->
+    <div class="box">
+      <h2>Sắp hết hàng <span class="tag warn">{{ lowStockItems().length }}</span></h2>
+      @for (s of lowStockItems(); track s.sku) {
+      <div class="row">
+        <div class="g">
+          <b>{{ s.n }}</b>
+          <span class="m">Ngưỡng cảnh báo: {{ s.l }}</span>
+        </div>
+        <span class="tag warn">Còn {{ s.q }}</span>
+        <button class="btn sm" routerLink="/seller/dashboard/inventory">Nhập kho</button>
+      </div>
+      }
+    </div>
+
+    <!-- Cần phản hồi -->
+    <div class="box">
+      <h2>Cần phản hồi <span class="tag">{{ unrepliedQuestionCount() + pendingReturnCount() }}</span></h2>
+      @for (q of questions(); track q.id) {
+      @if (!q.a) {
+      <div class="row">
+        <div class="g">
+          <span class="m">Hỏi đáp</span>
+          <b>{{ q.x }}</b>
+        </div>
+        <button class="btn sm" routerLink="/seller/dashboard/qa">Trả lời</button>
+      </div>
+      }
+      }
+    </div>
+  </div>
+</div>
+
+<app-seller-reject-order-dialog
+  [isOpen]="rejectModalOpen()"
+  [orderCode]="rejectTargetCode()"
+  (close)="closeRejectModal()"
+  (confirm)="handleRejectOrder($event)"
+></app-seller-reject-order-dialog>
