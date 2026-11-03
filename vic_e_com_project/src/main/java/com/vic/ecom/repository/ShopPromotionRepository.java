@@ -1,12 +1,8 @@
 package com.vic.ecom.repository;
 
-import com.vic.ecom.entity.ShopPromotion;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
-
-import java.util.List;
-
-@Repository
-public interface ShopPromotionRepository extends JpaRepository<ShopPromotion, Long> {
-    List<ShopPromotion> findByShopIdOrderByIdDesc(Long shopId);
+/**
+ * @deprecated Bảng shop_promotions đã được gỡ bỏ khỏi thiết kế CSDL.
+ */
+@Deprecated
+public interface ShopPromotionRepository {
 }

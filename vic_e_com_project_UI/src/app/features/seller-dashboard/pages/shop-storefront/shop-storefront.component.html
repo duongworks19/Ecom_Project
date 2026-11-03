@@ -52,9 +52,17 @@
             <h1>{{ shopName() }}</h1>
             <span class="verified-badge">✓ Official Store</span>
           </div>
-          <p class="tagline">Chuyên ngành {{ shopCategory() }}</p>
+          @if (shopCategory()) {
+            <p class="tagline">Ngành hàng: {{ shopCategory() }}</p>
+          }
           <div class="shop-stats-inline">
-            <span>★ <b>{{ shopRating() }}</b> (Đánh giá uy tín)</span>
+            @if (shopRating()) {
+              <span>★ <b>{{ shopRating() }}</b> ({{ reviews().length }} đánh giá)</span>
+            } @else {
+              <span>★ <b>Chưa có đánh giá</b></span>
+            }
+            <span>·</span>
+            <span><b>{{ followerCount() }}</b> Người theo dõi</span>
             <span>·</span>
             <span><b>{{ products().length }}</b> Sản phẩm</span>
             <span>·</span>
@@ -64,7 +72,7 @@
       </div>
 
       <div class="shop-cta">
-        <button type="button" class="pill" [class.red]="!isFollowing()" (click)="toggleFollow()">
+        <button type="button" class="pill" [class.red]="!isFollowing()" [disabled]="isFollowingLoading()" (click)="toggleFollow()">
           {{ isFollowing() ? '✓ Đang theo dõi' : '+ Theo dõi Shop' }}
         </button>
       </div>
@@ -160,6 +168,9 @@
           <div><span>Địa chỉ kho:</span> <strong>{{ shopPickupAddress() }}</strong></div>
           <div><span>Hotline CSKH:</span> <strong>{{ shopPhone() }}</strong></div>
           <div><span>Email liên hệ:</span> <strong>{{ shopEmail() }}</strong></div>
+          @if (shopBusinessHours() !== 'Đang cập nhật') {
+            <div><span>Giờ làm việc:</span> <strong>{{ shopBusinessHours() }}</strong></div>
+          }
         </div>
       </section>
 
@@ -175,7 +186,9 @@
               <span class="stars">{{ '★'.repeat(rev.rating) }}</span>
               <small>{{ rev.createdAt }}</small>
             </div>
-            <p class="rev-prod">Sản phẩm: {{ rev.productName }}</p>
+            @if (rev.productName) {
+              <p class="rev-prod">Sản phẩm: {{ rev.productName }}</p>
+            }
             <p class="rev-comment">{{ rev.comment }}</p>
             @if (rev.reply) {
             <div class="seller-reply">
@@ -183,6 +196,10 @@
               <p>{{ rev.reply }}</p>
             </div>
             }
+          </div>
+          } @empty {
+          <div class="empty-reviews-box" style="padding: 36px 16px; text-align: center; color: #6b7280;">
+            <p style="font-size: 14px; margin: 0;">Chưa có đánh giá nào cho gian hàng này.</p>
           </div>
           }
         </div>

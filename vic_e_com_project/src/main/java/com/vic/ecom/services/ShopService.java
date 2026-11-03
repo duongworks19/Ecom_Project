@@ -1,22 +1,32 @@
 package com.vic.ecom.services;
 
+import com.vic.ecom.dto.ShopDtos;
 import com.vic.ecom.dto.VoucherDtos;
 import com.vic.ecom.dto.seller.SellerProductDto;
 import com.vic.ecom.dto.vendor.ShopResponse;
 import com.vic.ecom.entity.Product;
 import com.vic.ecom.entity.Shop;
+import com.vic.ecom.entity.ShopReview;
+import com.vic.ecom.entity.User;
 import com.vic.ecom.entity.Voucher;
 import com.vic.ecom.enums.ShopStatus;
 import com.vic.ecom.enums.VoucherStatus;
 import com.vic.ecom.repository.ProductRepository;
 import com.vic.ecom.repository.ShopRepository;
+import com.vic.ecom.repository.ShopReviewRepository;
+import com.vic.ecom.repository.UserRepository;
 import com.vic.ecom.repository.VoucherRepository;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -28,7 +38,40 @@ public class ShopService {
     private final ShopRepository shopRepository;
     private final ProductRepository productRepository;
     private final VoucherRepository voucherRepository;
+    private final ShopReviewRepository shopReviewRepository;
+    private final UserRepository userRepository;
     private final org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
+
+    @PostConstruct
+    public void init() {
+        try {
+            jdbcTemplate.execute("ALTER TABLE shops ADD COLUMN IF NOT EXISTS follower_count BIGINT DEFAULT 0");
+            jdbcTemplate.execute("UPDATE shops SET follower_count = 0 WHERE follower_count IS NULL");
+        } catch (Exception ignored) {
+        }
+        try {
+            jdbcTemplate.execute("ALTER TABLE discount_campaigns ADD COLUMN IF NOT EXISTS name VARCHAR(255) DEFAULT 'Chương trình giảm giá'");
+            jdbcTemplate.execute("ALTER TABLE discount_campaigns ADD COLUMN IF NOT EXISTS type VARCHAR(20) DEFAULT 'FLASH_SALE'");
+            jdbcTemplate.execute("ALTER TABLE discount_campaigns ADD COLUMN IF NOT EXISTS discount_percent INT DEFAULT 10");
+            jdbcTemplate.execute("ALTER TABLE discount_campaigns ADD COLUMN IF NOT EXISTS product_count INT DEFAULT 1");
+            jdbcTemplate.execute("ALTER TABLE discount_campaigns ADD COLUMN IF NOT EXISTS start_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP");
+            jdbcTemplate.execute("ALTER TABLE discount_campaigns ADD COLUMN IF NOT EXISTS end_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP");
+            jdbcTemplate.execute("ALTER TABLE discount_campaigns ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'ACTIVE'");
+            jdbcTemplate.execute("ALTER TABLE discount_campaigns ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP");
+        } catch (Exception ignored) {
+        }
+        try {
+            jdbcTemplate.execute("DROP TABLE IF EXISTS shop_follows CASCADE");
+            jdbcTemplate.execute("DROP TABLE IF EXISTS shop_promotions CASCADE");
+        } catch (Exception ignored) {
+        }
+        try {
+            jdbcTemplate.execute("DELETE FROM shop_reviews WHERE customer_name IN ('Nguyễn Ngọc Mai', 'Hoàng Gia Bảo', 'Vũ Thanh Tâm', 'Đặng Khánh Linh')");
+            jdbcTemplate.execute("UPDATE shops SET description = '' WHERE description ILIKE '%Bắc Âu%' OR description ILIKE '%Lumi%'");
+            jdbcTemplate.execute("UPDATE shops SET tagline = '' WHERE tagline ILIKE '%Bắc Âu%' OR tagline ILIKE '%Scandinavian%'");
+        } catch (Exception ignored) {
+        }
+    }
 
     @Transactional(readOnly = true)
     public ShopResponse getShopById(Long id) {
@@ -128,13 +171,14 @@ public class ShopService {
         return result;
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public List<VoucherDtos.Response> getActiveVouchersByShopId(Long shopId) {
+        return getActiveVouchersByShopId(shopId, false);
+    }
+
+    @Transactional(readOnly = true)
+    public List<VoucherDtos.Response> getActiveVouchersByShopId(Long shopId, boolean includeWeb) {
         LocalDateTime now = LocalDateTime.now();
-        try {
-            ensureDefaultWebVouchers();
-        } catch (Exception ignored) {
-        }
 
         List<Voucher> shopVouchers = new ArrayList<>();
         try {
@@ -142,15 +186,15 @@ public class ShopService {
         } catch (Exception ignored) {
         }
 
-        List<Voucher> webVouchers = new ArrayList<>();
-        try {
-            webVouchers = voucherRepository.findByShopIsNullAndStatus(VoucherStatus.ACTIVE);
-        } catch (Exception ignored) {
+        List<Voucher> combined = new ArrayList<>(shopVouchers);
+        if (includeWeb) {
+            try {
+                ensureDefaultWebVouchers();
+                List<Voucher> webVouchers = voucherRepository.findByShopIsNullAndStatus(VoucherStatus.ACTIVE);
+                combined.addAll(webVouchers);
+            } catch (Exception ignored) {
+            }
         }
-
-        List<Voucher> combined = new ArrayList<>();
-        combined.addAll(shopVouchers);
-        combined.addAll(webVouchers);
 
         return combined.stream()
                 .filter(v -> (v.getStartAt() == null || !now.isBefore(v.getStartAt()))
@@ -158,6 +202,97 @@ public class ShopService {
                         && (v.getUsageLimit() == null || v.getUsedCount() == null || v.getUsedCount() < v.getUsageLimit()))
                 .map(v -> VoucherService.toResponse(v, now))
                 .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public ShopDtos.FollowStatus getFollowStatus(Long shopId, Authentication auth) {
+        Shop shop = shopRepository.findById(shopId).orElse(null);
+        long count = (shop != null && shop.getFollowerCount() != null) ? shop.getFollowerCount() : 0L;
+        return new ShopDtos.FollowStatus(false, count);
+    }
+
+    @Transactional
+    public ShopDtos.FollowStatus toggleFollow(Long shopId, Authentication auth, Boolean isCurrentlyFollowing) {
+        User user = resolveUser(auth);
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Vui lòng đăng nhập để theo dõi gian hàng");
+        }
+        Shop shop = shopRepository.findById(shopId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy gian hàng"));
+        long count = shop.getFollowerCount() != null ? shop.getFollowerCount() : 0L;
+        boolean isNowFollowing;
+        if (Boolean.TRUE.equals(isCurrentlyFollowing)) {
+            count = Math.max(0, count - 1);
+            isNowFollowing = false;
+        } else {
+            count = count + 1;
+            isNowFollowing = true;
+        }
+        shop.setFollowerCount(count);
+        shopRepository.save(shop);
+        return new ShopDtos.FollowStatus(isNowFollowing, count);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ShopDtos.ReviewItem> getShopReviews(Long shopId) {
+        List<ShopReview> reviews = shopReviewRepository.findByShopIdAndTypeOrderByIdDesc(shopId, "REVIEW");
+        if (reviews.isEmpty()) {
+            reviews = shopReviewRepository.findByShopIdOrderByIdDesc(shopId).stream()
+                    .filter(r -> !"QA".equalsIgnoreCase(r.getType()))
+                    .collect(Collectors.toList());
+        }
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        return reviews.stream()
+                .filter(r -> !isSampleReview(r))
+                .map(r -> {
+                    String dateStr = r.getCreatedAtLabel();
+                    if (dateStr == null || dateStr.isBlank()) {
+                        dateStr = r.getCreatedAt() != null ? r.getCreatedAt().format(formatter) : "Gần đây";
+                    }
+                    String cName = r.getCustomerName();
+                    if (cName == null || cName.isBlank()) {
+                        cName = r.getCustomer() != null ? r.getCustomer().getFullName() : "Khách hàng";
+                    }
+                    return ShopDtos.ReviewItem.builder()
+                            .id(r.getId())
+                            .customerName(cName)
+                            .productName(r.getProductName() != null ? r.getProductName() : "")
+                            .productImage(r.getProductImage())
+                            .rating(r.getRating() != null ? r.getRating() : 5)
+                            .comment(r.getComment() != null ? r.getComment() : "")
+                            .reply(r.getReply())
+                            .createdAt(dateStr)
+                            .build();
+                })
+                .collect(Collectors.toList());
+    }
+
+    private boolean isSampleReview(ShopReview r) {
+        if (r == null) return false;
+        String name = r.getCustomerName();
+        if (name != null) {
+            if ("Nguyễn Ngọc Mai".equalsIgnoreCase(name) || "Hoàng Gia Bảo".equalsIgnoreCase(name)
+                    || "Vũ Thanh Tâm".equalsIgnoreCase(name) || "Đặng Khánh Linh".equalsIgnoreCase(name)) {
+                return true;
+            }
+        }
+        String comment = r.getComment();
+        if (comment != null) {
+            if (comment.contains("đèn này dùng bóng đui xoáy") || comment.contains("Mùi lavender dịu nhẹ")
+                    || comment.contains("Khung gỗ thật cầm nặng tay") || comment.contains("cắm cúc mẫu đơn rất hợp")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private User resolveUser(Authentication auth) {
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equalsIgnoreCase(auth.getName())) {
+            return null;
+        }
+        return userRepository.findByEmail(auth.getName())
+                .or(() -> userRepository.findByPhone(auth.getName()))
+                .orElse(null);
     }
 
     private void ensureDefaultWebVouchers() {

@@ -57,6 +57,9 @@ public class Shop {
     @Column(name = "rating_avg", precision = 2, scale = 1)
     private BigDecimal ratingAvg = BigDecimal.valueOf(0.0);
 
+    @Column(name = "follower_count", columnDefinition = "BIGINT DEFAULT 0")
+    private Long followerCount = 0L;
+
     @OneToMany(mappedBy = "shop", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ShopReview> reviews = new ArrayList<>();
 

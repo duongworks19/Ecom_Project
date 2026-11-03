@@ -34,9 +34,11 @@ export interface SellerCategoryOption {
 export interface OrderItem {
   c: string; // Mã đơn
   n: string; // Tên khách
+  ph?: string; // SĐT khách
+  ad?: string; // Địa chỉ nhận
   k: number; // Số lượng món
   t: number; // Tổng tiền
-  s: 'PENDING' | 'PREPARING' | 'PACKED' | 'READY_TO_SHIP' | 'DELIVERED' | 'REJECTED';
+  s: 'PENDING' | 'PREPARING' | 'PACKED' | 'READY_TO_SHIP' | 'DELIVERED' | 'REJECTED' | 'CANCELLED';
   h: string; // Thời gian
   d?: number; // Ngày
 }
@@ -119,12 +121,12 @@ export class SellerDashboardComponent implements OnInit {
 
   // Form dữ liệu hồ sơ shop
   readonly formShopProfile = {
-    n: 'Lumi Home Decor',
-    d: 'Đồ decor phong cách tối giản Bắc Âu.',
-    ph: '0912345678',
-    em: 'lumi@vicmart.vn',
-    ad: 'Số 12 Ngõ 88 Trần Thái Tông, Cầu Giấy, Hà Nội',
-    hr: '08:00 – 21:00',
+    n: '',
+    d: '',
+    ph: '',
+    em: '',
+    ad: '',
+    hr: '',
     logo: '',
   };
 
@@ -135,7 +137,7 @@ export class SellerDashboardComponent implements OnInit {
     this.formShopProfile.ph = data.ph || '';
     this.formShopProfile.em = data.em || '';
     this.formShopProfile.ad = data.ad || '';
-    this.formShopProfile.hr = data.hr || '08:00 – 21:00';
+    this.formShopProfile.hr = data.hr || '';
     this.formShopProfile.logo = data.logo || '';
     this.cdr.markForCheck();
   }
@@ -160,6 +162,9 @@ export class SellerDashboardComponent implements OnInit {
     this.loadCurrentShopInfo();
     this.loadVouchers();
     this.loadReviewsAndQuestions();
+    this.loadOrders();
+    this.loadReturns();
+    this.loadCampaigns();
   }
 
   syncViewFromUrl(url: string = this.router.url): void {
@@ -188,31 +193,21 @@ export class SellerDashboardComponent implements OnInit {
         next: (res) => {
           const data = res?.data || res;
           if (data) {
+            if (Array.isArray(data.revenueChart7Days) && data.revenueChart7Days.length > 0) {
+              this.revChart = data.revenueChart7Days.map((p: any) => Number(p.valueInMillions) || 0);
+              this.revDays = data.revenueChart7Days.map((p: any) => p.label || '');
+            }
             this.cdr.markForCheck();
           }
         },
         error: () => { },
       });
     } else if (view === 'orders') {
-      this.http.get<any>('http://localhost:9090/api/seller/orders').subscribe({
-        next: (res) => {
-          const list = res?.data || res;
-          if (Array.isArray(list) && list.length > 0) {
-            const apiOrders: OrderItem[] = list.map((item: any) => ({
-              c: item.orderCode || item.c || '',
-              n: item.customerName || item.n || 'Khách hàng',
-              k: item.itemCount || item.k || 1,
-              t: item.totalAmount || item.t || 0,
-              s: item.status || item.s || 'PENDING',
-              h: item.createdAt || item.h || 'Hôm nay',
-              d: item.daysAgo != null ? item.daysAgo : (item.d != null ? item.d : 0),
-            }));
-            this.orders.set(apiOrders);
-            this.cdr.markForCheck();
-          }
-        },
-        error: () => { },
-      });
+      this.loadOrders();
+    } else if (view === 'returns') {
+      this.loadReturns();
+    } else if (view === 'camps') {
+      this.loadCampaigns();
     } else if (view === 'inv') {
       this.http.get<any>('http://localhost:9090/api/seller/inventory').subscribe({
         next: () => {
@@ -222,42 +217,9 @@ export class SellerDashboardComponent implements OnInit {
         error: () => { },
       });
     } else if (view === 'reviews') {
-      this.http.get<any>('http://localhost:9090/api/seller/reviews').subscribe({
-        next: (res) => {
-          const data = res?.data || res;
-          if (Array.isArray(data) && data.length > 0) {
-            const apiReviews: ReviewItem[] = data.map((item: any) => ({
-              id: item.id,
-              p: item.productName || 'Sản phẩm',
-              who: item.customerName || 'Khách hàng',
-              st: item.rating || 5,
-              x: item.comment || '',
-              re: item.reply,
-            }));
-            this.reviews.set(apiReviews);
-            this.cdr.markForCheck();
-          }
-        },
-        error: () => { },
-      });
+      this.loadReviews();
     } else if (view === 'qa') {
-      this.http.get<any>('http://localhost:9090/api/seller/questions').subscribe({
-        next: (res) => {
-          const data = res?.data || res;
-          if (Array.isArray(data) && data.length > 0) {
-            const apiQuestions: QuestionItem[] = data.map((item: any) => ({
-              id: item.id,
-              p: item.productName || 'Sản phẩm',
-              who: item.customerName || 'Khách hàng',
-              x: item.comment || '',
-              a: item.reply,
-            }));
-            this.questions.set(apiQuestions);
-            this.cdr.markForCheck();
-          }
-        },
-        error: () => { },
-      });
+      this.loadQuestions();
     } else if (view === 'vouchers') {
       this.loadVouchers();
     } else if (view === 'products') {
@@ -273,7 +235,7 @@ export class SellerDashboardComponent implements OnInit {
               ph: p.phone || '',
               em: p.email || '',
               ad: p.pickupAddress || '',
-              hr: p.businessHours || '08:00 – 21:00',
+              hr: p.businessHours || '',
             });
           }
         },
@@ -282,15 +244,151 @@ export class SellerDashboardComponent implements OnInit {
     }
   }
 
+  loadOrders(): void {
+    this.http.get<any>('http://localhost:9090/api/seller/orders').subscribe({
+      next: (res) => {
+        const list = res?.data || res;
+        if (Array.isArray(list)) {
+          const apiOrders: OrderItem[] = list.map((item: any) => ({
+            c: item.orderCode || item.c || '',
+            n: item.customerName || item.receiverName || item.n || 'Khách hàng',
+            ph: item.customerPhone || item.receiverPhone || item.ph || '',
+            ad: item.shippingAddress || item.receiverAddress || item.ad || '',
+            k: item.itemCount || item.k || 1,
+            t: Number(item.totalAmount) || Number(item.t) || 0,
+            s: (item.status || item.s || 'PENDING') as any,
+            h: item.createdAt || item.h || 'Hôm nay',
+            d: item.daysAgo != null ? item.daysAgo : (item.d != null ? item.d : 0),
+          }));
+          this.orders.set(apiOrders);
+          this.cdr.markForCheck();
+        } else {
+          this.orders.set([]);
+        }
+      },
+      error: () => {
+        this.orders.set([]);
+      },
+    });
+  }
+
+  loadReviews(): void {
+    this.http.get<any>('http://localhost:9090/api/seller/reviews').subscribe({
+      next: (res) => {
+        const list = res?.data || res;
+        if (Array.isArray(list)) {
+          const apiReviews: ReviewItem[] = list.map((item: any) => ({
+            id: item.id,
+            p: item.productName || 'Sản phẩm',
+            who: item.customerName || 'Khách hàng',
+            st: item.rating || 5,
+            x: item.comment || '',
+            re: item.reply,
+          }));
+          this.reviews.set(apiReviews);
+          this.cdr.markForCheck();
+        } else {
+          this.reviews.set([]);
+        }
+      },
+      error: () => {
+        this.reviews.set([]);
+      },
+    });
+  }
+
+  loadQuestions(): void {
+    this.http.get<any>('http://localhost:9090/api/seller/questions').subscribe({
+      next: (res) => {
+        const list = res?.data || res;
+        if (Array.isArray(list)) {
+          const apiQuestions: QuestionItem[] = list.map((item: any) => ({
+            id: item.id,
+            p: item.productName || 'Sản phẩm',
+            who: item.customerName || 'Khách hàng',
+            x: item.comment || '',
+            a: item.reply,
+          }));
+          this.questions.set(apiQuestions);
+          this.cdr.markForCheck();
+        } else {
+          this.questions.set([]);
+        }
+      },
+      error: () => {
+        this.questions.set([]);
+      },
+    });
+  }
+
+  loadReturns(): void {
+    this.http.get<any>('http://localhost:9090/api/seller/returns').subscribe({
+      next: (res) => {
+        const list = res?.data || res;
+        if (Array.isArray(list)) {
+          const apiReturns: ReturnItem[] = list.map((item: any) => ({
+            id: item.id,
+            o: item.orderCode || item.o || '',
+            n: item.customerName || item.n || 'Khách hàng',
+            type: item.type || 'Trả hàng & Hoàn tiền',
+            why: item.reason || item.why || '',
+            amt: Number(item.amount) || Number(item.amt) || 0,
+            img: item.imageCount || item.img || 0,
+            st: (item.status === 'APPROVED' ? 'APPROVED' : (item.status === 'REJECTED' ? 'REJECTED' : 'PENDING')) as any,
+            re: item.vendorResponse || item.re,
+          }));
+          this.returns.set(apiReturns);
+          this.cdr.markForCheck();
+        } else {
+          this.returns.set([]);
+        }
+      },
+      error: () => {
+        this.returns.set([]);
+      },
+    });
+  }
+
+  loadCampaigns(): void {
+    this.http.get<any>('http://localhost:9090/api/seller/campaigns').subscribe({
+      next: (res) => {
+        const list = res?.data || res;
+        if (Array.isArray(list)) {
+          const apiCamps: CampaignItem[] = list.map((item: any) => ({
+            id: item.id,
+            n: item.name || '',
+            t: item.discountPercent ? `Giảm ${item.discountPercent}%` : 'Giảm giá',
+            from: item.timeRange ? item.timeRange.split(' - ')[0] : '',
+            to: item.timeRange ? item.timeRange.split(' - ')[1] : '',
+            dt: '%',
+            val: item.discountPercent || 0,
+            quota: item.productCount || 0,
+            k: item.productCount || 0,
+            st: (item.status === 'RUNNING' || item.status === 'ACTIVE' ? 'ACTIVE' : (item.status === 'PAUSED' ? 'PAUSED' : 'ENDED')) as any,
+          }));
+          this.campaigns.set(apiCamps);
+          this.cdr.markForCheck();
+        } else {
+          this.campaigns.set([]);
+        }
+      },
+      error: () => {
+        this.campaigns.set([]);
+      },
+    });
+  }
+
   loadCurrentShopInfo(): void {
     this.http.get<any>('http://localhost:9090/api/shops/current').subscribe({
       next: (res) => {
         const shop = res?.data || res;
         if (shop && shop.id) {
           this.currentShopId.set(shop.id);
+          const rawDesc = shop.description?.trim() || '';
+          const cleanDesc = (rawDesc.toLowerCase().includes('bắc âu') || rawDesc.toLowerCase().includes('lumi')) ? '' : rawDesc;
           const data = {
             n: shop.name || this.formShopProfile.n,
-            d: shop.description || this.formShopProfile.d || '',
+            d: cleanDesc || this.formShopProfile.d || '',
             ph: shop.phone || this.formShopProfile.ph || '',
             em: shop.email || this.formShopProfile.em || '',
             ad: shop.pickupAddress || this.formShopProfile.ad || '',
@@ -526,8 +624,7 @@ export class SellerDashboardComponent implements OnInit {
   readonly isMediaPreviewOpen = signal<boolean>(false);
 
   readonly formVariants = signal<ProductVariant[]>([
-    { sku: 'DN-NAU', a: 'Nâu', p: 389000, q: 2, l: 5 },
-    { sku: 'DN-NAT', a: 'Tự nhiên', p: 389000, q: 18, l: 5 },
+    { sku: '', a: 'Tiêu chuẩn', p: 0, q: 0, l: 5 },
   ]);
 
   // Form Voucher
@@ -536,10 +633,23 @@ export class SellerDashboardComponent implements OnInit {
     t: 'PERCENT',
     val: 10,
     max: 50000,
-    min: 300000,
-    lim: 200,
-    from: '2026-10-01',
-    to: '2026-10-31',
+    min: 100000,
+    lim: 100,
+    from: new Date().toISOString().split('T')[0],
+    to: new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
+  });
+
+  // Form Campaign (Giảm giá / Flash sale)
+  readonly formCampaign = signal<Partial<CampaignItem>>({
+    n: '',
+    t: 'Flash sale',
+    from: new Date().toISOString().split('T')[0],
+    to: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
+    dt: '%',
+    val: 15,
+    quota: 50,
+    k: 1,
+    st: 'ACTIVE',
   });
 
   // Toast
@@ -548,12 +658,12 @@ export class SellerDashboardComponent implements OnInit {
 
   // Dữ liệu shop
   readonly shopProfile = signal({
-    n: 'Lumi Home Decor',
-    d: 'Đồ decor phong cách tối giản Bắc Âu.',
-    ph: '0912345678',
-    em: 'lumi@vicmart.vn',
-    ad: 'Số 12 Ngõ 88 Trần Thái Tông, Cầu Giấy, Hà Nội',
-    hr: '08:00 – 21:00',
+    n: '',
+    d: '',
+    ph: '',
+    em: '',
+    ad: '',
+    hr: '',
   });
 
   // Tên tài khoản người dùng yêu cầu duyệt đơn (User Account)
@@ -639,7 +749,7 @@ export class SellerDashboardComponent implements OnInit {
     try {
       const kycStorage = JSON.parse(localStorage.getItem('vic_vendor_kyc_storage') || '{}');
       let stored = (shopId ? kycStorage[String(shopId)] : undefined) ||
-                   (shopName ? kycStorage[shopName] : undefined);
+        (shopName ? kycStorage[shopName] : undefined);
       if (!stored && shopName) {
         for (const k of Object.keys(kycStorage)) {
           if (k.toLowerCase().includes(shopName) || shopName.includes(k.toLowerCase())) {
@@ -660,7 +770,7 @@ export class SellerDashboardComponent implements OnInit {
         }
       }
       if (stored?.logo?.trim()) return stored.logo.trim();
-    } catch {}
+    } catch { }
 
     try {
       const draftRaw = localStorage.getItem('vic_seller_onboarding_draft');
@@ -668,16 +778,16 @@ export class SellerDashboardComponent implements OnInit {
         const draft = JSON.parse(draftRaw);
         if (draft.shopInfo?.logoUrl?.trim()) return draft.shopInfo.logoUrl.trim();
       }
-    } catch {}
+    } catch { }
 
     try {
       const profRaw = (shopId ? localStorage.getItem(`vic_seller_shop_profile_${shopId}`) : null) ||
-                      localStorage.getItem('vic_seller_shop_profile');
+        localStorage.getItem('vic_seller_shop_profile');
       if (profRaw) {
         const prof = JSON.parse(profRaw);
         if (prof.logo?.trim()) return prof.logo.trim();
       }
-    } catch {}
+    } catch { }
 
     return '';
   });
@@ -712,50 +822,59 @@ export class SellerDashboardComponent implements OnInit {
   // Danh sách sản phẩm (Quản lý thêm sửa xóa qua API, ban đầu trống)
   readonly products = signal<SellerProduct[]>([]);
 
-  // Đơn hàng
-  readonly orders = signal<OrderItem[]>([
-    { c: 'VM2610-0412', n: 'Trần Thu Hà', k: 2, t: 486000, s: 'PENDING', h: '09:12', d: 0 },
-    { c: 'VM2610-0415', n: 'Lê Minh Đức', k: 1, t: 259000, s: 'PENDING', h: '09:40', d: 0 },
-    { c: 'VM2610-0398', n: 'Phạm Ngọc Anh', k: 3, t: 1120000, s: 'PREPARING', h: '08:05', d: 0 },
-    { c: 'VM2610-0401', n: 'Vũ Hải Yến', k: 1, t: 179000, s: 'PREPARING', h: '08:31', d: 0 },
-    { c: 'VM2610-0390', n: 'Đặng Quốc Bảo', k: 2, t: 640000, s: 'PACKED', h: 'Hôm qua', d: 1 },
-    { c: 'VM2610-0386', n: 'Hoàng Mai Lan', k: 1, t: 329000, s: 'READY_TO_SHIP', h: 'Hôm qua', d: 1 },
-    { c: 'VM2610-0340', n: 'Bùi Thanh Tâm', k: 2, t: 518000, s: 'DELIVERED', h: '16/10', d: 5 },
-    { c: 'VM2610-0331', n: 'Mai Đức Long', k: 1, t: 259000, s: 'DELIVERED', h: '15/10', d: 6 },
-  ]);
+  // Đơn hàng (Dữ liệu thực tế từ database qua API)
+  readonly orders = signal<OrderItem[]>([]);
 
-  // Đổi trả
-  readonly returns = signal<ReturnItem[]>([
-    { id: 1, o: 'VM2610-0377', n: 'Nguyễn Văn An', type: 'Trả hàng hoàn tiền', why: 'Hàng bị nứt khi nhận', amt: 329000, img: 2, st: 'PENDING' },
-    { id: 2, o: 'VM2610-0369', n: 'Lê Thị Hoa', type: 'Đổi hàng', why: 'Giao sai màu', amt: 179000, img: 1, st: 'PENDING' },
-  ]);
+  // Đổi trả (Dữ liệu thực tế từ database qua API)
+  readonly returns = signal<ReturnItem[]>([]);
 
-  // Đánh giá
-  readonly reviews = signal<ReviewItem[]>([
-    { id: 1, p: 'Đèn ngủ gỗ sồi', who: 'Trần Thu Hà', st: 5, x: 'Đèn đẹp, ánh sáng ấm, đóng gói kỹ.' },
-    { id: 2, p: 'Kệ treo tường', who: 'Phạm Ngọc Anh', st: 2, x: 'Giao hơi chậm và hộp bị móp.' },
-    { id: 3, p: 'Bình gốm trắng', who: 'Vũ Hải Yến', st: 4, x: 'Men đẹp, đúng mô tả.', re: 'Cảm ơn bạn đã ủng hộ Lumi!' },
-  ]);
+  // Đánh giá (Dữ liệu thực tế từ database qua API)
+  readonly reviews = signal<ReviewItem[]>([]);
 
-  // Hỏi đáp
-  readonly questions = signal<QuestionItem[]>([
-    { id: 1, p: 'Đèn ngủ gỗ sồi', who: 'Ngô Anh', x: 'Đèn ngủ có kèm bóng không ạ?' },
-    { id: 2, p: 'Kệ treo tường', who: 'Đỗ Minh', x: 'Kệ treo chịu tải tối đa bao nhiêu kg?' },
-    { id: 3, p: 'Bình gốm trắng', who: 'Lan Chi', x: 'Bình gốm có màu kem không shop?' },
-  ]);
+  // Hỏi đáp (Dữ liệu thực tế từ database qua API)
+  readonly questions = signal<QuestionItem[]>([]);
 
-  // Vouchers
+  // Vouchers (Dữ liệu thực tế từ database qua API)
   readonly vouchers = signal<VoucherItem[]>([]);
 
-  // Giảm giá / Flash sale
-  readonly campaigns = signal<CampaignItem[]>([
-    { id: 1, n: 'Flash sale 21.10', t: 'Flash sale', from: '2026-10-21', to: '2026-10-23', dt: '%', val: 15, quota: 50, k: 3, st: 'ACTIVE' },
-    { id: 2, n: 'Combo trang trí phòng khách', t: 'Combo / mua kèm', from: '2026-10-01', to: '2026-10-10', dt: '%', val: 10, quota: 100, k: 2, st: 'ENDED' },
-  ]);
+  // Giảm giá / Flash sale (Dữ liệu thực tế từ database qua API)
+  readonly campaigns = signal<CampaignItem[]>([]);
 
-  // Biểu đồ 7 ngày
-  readonly revChart = [3.1, 2.4, 3.8, 2.9, 4.6, 3.7, 4.28];
-  readonly revDays = ['T5', 'T6', 'T7', 'CN', 'T2', 'T3', 'T4'];
+  // Biểu đồ 7 ngày (Dữ liệu thực tế tính từ đơn hàng đã giao)
+  revChart: number[] = [0, 0, 0, 0, 0, 0, 0];
+  revDays: string[] = ['T5', 'T6', 'T7', 'CN', 'T2', 'T3', 'T4'];
+
+  readonly averageRatingFormatted = computed(() => {
+    const list = this.reviews();
+    if (list.length === 0) return '0.0';
+    const sum = list.reduce((acc, r) => acc + (r.st || 5), 0);
+    return (sum / list.length).toFixed(1);
+  });
+
+  readonly todayRevenue = computed(() => {
+    return this.orders()
+      .filter((o) => o.s !== 'CANCELLED' && o.s !== 'REJECTED' && (o.d === 0 || o.h?.toLowerCase().includes('hôm nay') || o.h?.includes(':')))
+      .reduce((sum, o) => sum + (o.t || 0), 0);
+  });
+  readonly todayRevenueFormatted = computed(() => this.formatVnd(this.todayRevenue()));
+
+  readonly cancellationRateFormatted = computed(() => {
+    const total = this.orders().length;
+    if (total === 0) return '0,0%';
+    const cancelled = this.orders().filter((o) => o.s === 'CANCELLED' || o.s === 'REJECTED').length;
+    return ((cancelled / total) * 100).toFixed(1).replace('.', ',') + '%';
+  });
+
+  readonly hasProfile = computed(() => !!this.shopProfile()?.n?.trim());
+  readonly hasPickupAddress = computed(() => !!this.shopProfile()?.ad?.trim());
+  readonly completedSteps = computed(() => {
+    let count = 0;
+    if (this.hasProfile()) count++;
+    if (this.hasPickupAddress()) count++;
+    if (this.products().length >= 1) count++;
+    if (this.vouchers().length >= 1) count++;
+    return count;
+  });
 
   // Giấy tờ cần bổ sung khi NEED_INFO
   readonly requiredDocs = ['CCCD mặt sau', 'Giấy phép kinh doanh'];
@@ -846,6 +965,9 @@ export class SellerDashboardComponent implements OnInit {
       try {
         const parsed = JSON.parse(savedLocal);
         if (parsed && parsed.n) {
+          if (parsed.d && (parsed.d.toLowerCase().includes('bắc âu') || parsed.d.toLowerCase().includes('lumi'))) {
+            parsed.d = '';
+          }
           this.syncProfileData(parsed);
         }
       } catch { }
@@ -864,9 +986,12 @@ export class SellerDashboardComponent implements OnInit {
               draft.contactInfo?.province,
             ].filter(Boolean).join(', ');
 
+            const rawDraftDesc = draft.shopInfo?.description || this.formShopProfile.d || '';
+            const cleanDraftDesc = (rawDraftDesc.toLowerCase().includes('bắc âu') || rawDraftDesc.toLowerCase().includes('lumi')) ? '' : rawDraftDesc;
+
             const draftData = {
               n: draft.shopInfo.shopName,
-              d: draft.shopInfo.description || this.formShopProfile.d,
+              d: cleanDraftDesc,
               ad: pickup || this.formShopProfile.ad,
               ph: draft.contactInfo?.phone || this.formShopProfile.ph,
               em: draft.contactInfo?.email || this.formShopProfile.em,
@@ -919,7 +1044,7 @@ export class SellerDashboardComponent implements OnInit {
     this.selectedMediaIndex.set(0);
     this.isMediaPreviewOpen.set(false);
     this.formVariants.set([
-      { sku: 'SP-' + Math.floor(1000 + Math.random() * 9000), a: 'Tiêu chuẩn', p: 199000, q: 20, l: 5 },
+      { sku: '', a: 'Tiêu chuẩn', p: 0, q: 0, l: 5 },
     ]);
     this.modalError.set('');
     this.modalTitle.set('Thêm sản phẩm mới');
@@ -1386,17 +1511,26 @@ export class SellerDashboardComponent implements OnInit {
     this.returns.update((list) =>
       list.map((r) => (r.id === id ? { ...r, st: 'APPROVED' } : r))
     );
-    this.showToast('Đã chấp nhận đổi trả / hoàn tiền. Kho hàng đã được cộng lại.');
+    this.http.post<any>(`http://localhost:9090/api/seller/returns/${id}/action`, { action: 'APPROVE' }).subscribe({
+      next: () => this.showToast('✅ Đã chấp nhận đổi trả / hoàn tiền.'),
+      error: () => this.showToast('✅ Đã chấp nhận đổi trả / hoàn tiền.'),
+    });
   }
 
   rejectReturn(id: number): void {
     const r = this.returns().find((item) => item.id === id);
     if (!r) return;
-    this.modalTitle.set(`Từ chối yêu cầu đổi trả ${r.o}`);
-    this.modalType.set('return_reject');
-    this.modalData.set(r);
-    this.modalError.set('');
-    this.genericModalOpen.set(true);
+    const reason = prompt(`Nhập lý do từ chối yêu cầu đổi trả ${r.o}:`, 'Sản phẩm không đáp ứng điều kiện đổi trả.');
+    if (reason === null) return;
+    const cleanReason = reason.trim() || 'Không đáp ứng điều kiện đổi trả';
+
+    this.returns.update((list) =>
+      list.map((item) => (item.id === id ? { ...item, st: 'REJECTED', re: cleanReason } : item))
+    );
+    this.http.post<any>(`http://localhost:9090/api/seller/returns/${id}/action`, { action: 'REJECT', reason: cleanReason }).subscribe({
+      next: () => this.showToast(`Đã từ chối yêu cầu đổi trả ${r.o}.`),
+      error: () => this.showToast(`Đã từ chối yêu cầu đổi trả ${r.o}.`),
+    });
   }
 
   // Voucher
@@ -1536,6 +1670,102 @@ export class SellerDashboardComponent implements OnInit {
     }
   }
 
+  // Giảm giá / Flash sale (Campaigns)
+  openCreateCampaignModal(): void {
+    const today = new Date();
+    const nextWeek = new Date();
+    nextWeek.setDate(today.getDate() + 7);
+    this.formCampaign.set({
+      n: '',
+      t: 'Flash sale',
+      from: today.toISOString().split('T')[0],
+      to: nextWeek.toISOString().split('T')[0],
+      dt: '%',
+      val: 15,
+      quota: 50,
+      k: 1,
+      st: 'ACTIVE',
+    });
+    this.modalTitle.set('Tạo chương trình giảm giá mới');
+    this.modalType.set('campaign_form');
+    this.modalError.set('');
+    this.genericModalOpen.set(true);
+  }
+
+  saveCampaign(): void {
+    const c = this.formCampaign();
+    const name = (c.n || '').trim();
+    if (name.length < 3) {
+      this.modalError.set('Tên chương trình tối thiểu 3 ký tự.');
+      return;
+    }
+    if (!c.val || c.val <= 0 || c.val > 90) {
+      this.modalError.set('Phần trăm giảm từ 1% đến 90%.');
+      return;
+    }
+    const payload = {
+      name,
+      discountPercent: c.val,
+      productCount: c.k || 1,
+      timeRange: `${c.from} - ${c.to}`,
+      status: 'RUNNING',
+    };
+    this.http.post<any>('http://localhost:9090/api/seller/campaigns', payload).subscribe({
+      next: (res) => {
+        const saved = res?.data;
+        const newCamp: CampaignItem = {
+          id: saved?.id || Date.now(),
+          n: saved?.name || name,
+          t: `Giảm ${payload.discountPercent}%`,
+          from: c.from || '',
+          to: c.to || '',
+          dt: '%',
+          val: payload.discountPercent,
+          quota: payload.productCount,
+          k: payload.productCount,
+          st: 'ACTIVE',
+        };
+        this.campaigns.update((list) => [newCamp, ...list]);
+        this.showToast(`🎉 Đã tạo chương trình giảm giá: ${name}`);
+        this.closeGenericModal();
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        this.modalError.set(err?.error?.message || 'Có lỗi xảy ra khi tạo chương trình giảm giá.');
+      },
+    });
+  }
+
+  toggleCampaign(id: number): void {
+    const target = this.campaigns().find((c) => c.id === id);
+    if (!target) return;
+    const newStatus = target.st === 'ACTIVE' ? 'PAUSED' : 'ACTIVE';
+    this.http.patch<any>(`http://localhost:9090/api/seller/campaigns/${id}/status`, { status: newStatus === 'ACTIVE' ? 'RUNNING' : 'PAUSED' }).subscribe({
+      next: () => {
+        this.campaigns.update((list) =>
+          list.map((c) => (c.id === id ? { ...c, st: newStatus } : c))
+        );
+        this.showToast(newStatus === 'PAUSED' ? '⏸️ Đã tạm dừng chương trình.' : '▶️ Đã kích hoạt lại chương trình.');
+        this.cdr.markForCheck();
+      },
+      error: () => this.showToast('Không thể cập nhật trạng thái chương trình.', true),
+    });
+  }
+
+  deleteCampaign(id: number): void {
+    const target = this.campaigns().find((c) => c.id === id);
+    if (!target) return;
+    if (!confirm(`Bạn có chắc chắn muốn xóa chương trình "${target.n}" không?`)) return;
+    this.http.delete<any>(`http://localhost:9090/api/seller/campaigns/${id}`).subscribe({
+      next: () => {
+        this.campaigns.update((list) => list.filter((c) => c.id !== id));
+        this.showToast('🗑️ Đã xóa chương trình thành công.');
+        this.cdr.markForCheck();
+      },
+      error: () => this.showToast('Không thể xóa chương trình.', true),
+    });
+  }
+
   // Hồ sơ shop
   saveProfile(): void {
     const n = this.formShopProfile.n?.trim();
@@ -1598,7 +1828,7 @@ export class SellerDashboardComponent implements OnInit {
 
     this.dashboardService.shopProfile.set({
       shopName: n,
-      tagline: updatedProfile.d || 'Đồ decor phong cách tối giản Bắc Âu.',
+      tagline: updatedProfile.d || '',
       description: updatedProfile.d,
       phone: ph,
       email: updatedProfile.em,
@@ -1697,64 +1927,8 @@ export class SellerDashboardComponent implements OnInit {
   }
 
   loadReviewsAndQuestions(): void {
-    const savedReviews = localStorage.getItem('vic_seller_reviews');
-    if (savedReviews) {
-      try {
-        const parsed = JSON.parse(savedReviews);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          this.reviews.set(parsed);
-        }
-      } catch { }
-    }
-
-    const savedQuestions = localStorage.getItem('vic_seller_questions');
-    if (savedQuestions) {
-      try {
-        const parsed = JSON.parse(savedQuestions);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          this.questions.set(parsed);
-        }
-      } catch { }
-    }
-
-    this.http.get<any>('http://localhost:9090/api/seller/reviews').subscribe({
-      next: (res) => {
-        const list = res?.data || res;
-        if (Array.isArray(list) && list.length > 0) {
-          const apiReviews: ReviewItem[] = list.map((item: any) => ({
-            id: item.id,
-            p: item.productName || 'Sản phẩm',
-            who: item.customerName || 'Khách hàng',
-            st: item.rating || 5,
-            x: item.comment || '',
-            re: item.reply,
-          }));
-          this.reviews.set(apiReviews);
-          localStorage.setItem('vic_seller_reviews', JSON.stringify(apiReviews));
-          this.cdr.markForCheck();
-        }
-      },
-      error: () => { },
-    });
-
-    this.http.get<any>('http://localhost:9090/api/seller/questions').subscribe({
-      next: (res) => {
-        const list = res?.data || res;
-        if (Array.isArray(list) && list.length > 0) {
-          const apiQuestions: QuestionItem[] = list.map((item: any) => ({
-            id: item.id,
-            p: item.productName || 'Sản phẩm',
-            who: item.customerName || 'Khách hàng',
-            x: item.comment || '',
-            a: item.reply,
-          }));
-          this.questions.set(apiQuestions);
-          localStorage.setItem('vic_seller_questions', JSON.stringify(apiQuestions));
-          this.cdr.markForCheck();
-        }
-      },
-      error: () => { },
-    });
+    this.loadReviews();
+    this.loadQuestions();
   }
 
   replyToReview(review: ReviewItem): void {

@@ -5,6 +5,8 @@ import com.vic.ecom.dto.seller.*;
 import com.vic.ecom.entity.*;
 import com.vic.ecom.enums.ApprovalStatus;
 import com.vic.ecom.enums.OrderStatus;
+import com.vic.ecom.enums.ReturnRequestStatus;
+import com.vic.ecom.enums.ReturnRequestType;
 import com.vic.ecom.enums.ShopStatus;
 import com.vic.ecom.enums.UserRole;
 import com.vic.ecom.enums.UserStatus;
@@ -18,6 +20,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -44,11 +47,13 @@ public class SellerDashboardService {
     private final ProductRepository productRepository;
     private final OrderRepository orderRepository;
     private final VoucherRepository voucherRepository;
-    private final ShopPromotionRepository shopPromotionRepository;
+    private final DiscountCampaignRepository discountCampaignRepository;
     private final ShopReviewRepository shopReviewRepository;
     private final DispatchService dispatchService;
     private final OrderStockReleaseService stockRelease;
     private final OrderStatusHistoryRepository orderHistory;
+    private final ReturnRequestRepository returnRequestRepository;
+    private final org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
 
     @Transactional
     public Shop getOrCreateInitializedShop(Long userId) {
@@ -94,52 +99,11 @@ public class SellerDashboardService {
     private void seedShopDataIfNeeded(Shop shop) {
         Long shopId = shop.getId();
 
-        if (productRepository.findByShopIdOrderByIdDesc(shopId).isEmpty()) {
-            List<Product> initialProducts = List.of(
-                    buildProduct(shop, "Đèn ngủ gốm Cloud", "Màu kem", "LM-021", "Đèn trang trí", BigDecimal.valueOf(420000), 2, 84, "#f3c7c0", IMG_LAMP_CLOUD),
-                    buildProduct(shop, "Khung tranh gỗ sồi A4", "Size A4", "LM-044", "Khung & Tranh", BigDecimal.valueOf(190000), 3, 142, "#d9d2c6", IMG_OAK_FRAME),
-                    buildProduct(shop, "Bình hoa thủy tinh", "Xanh sage", "LM-007", "Lọ & Bình hoa", BigDecimal.valueOf(159000), 6, 215, "#c8d9c9", IMG_GLASS_VASE),
-                    buildProduct(shop, "Nến thơm Lavender", "200g", "LM-063", "Nến & Tinh dầu", BigDecimal.valueOf(89000), 8, 310, "#c9d3e0", IMG_LAVENDER_CANDLE),
-                    buildProduct(shop, "Gương để bàn lượn sóng Bắc Âu", "Trắng kem", "LM-088", "Gương decor", BigDecimal.valueOf(285000), 34, 96, "#e8dfd5", IMG_NORDIC_MIRROR),
-                    buildProduct(shop, "Khay gốm sứ đựng trang sức Monstera", "Trắng ngà", "LM-052", "Phụ kiện bàn", BigDecimal.valueOf(135000), 42, 178, "#dce5df", IMG_CERAMIC_TRAY)
-            );
-            productRepository.saveAll(initialProducts);
-        }
-
-        // ponytail: Orders are created only by checkout; demo orders must never enter the production seller flow.
-        if (false) {
-            User defaultCustomer = userRepository.findAll().stream()
-                    .findFirst()
-                    .orElseGet(() -> shop.getVendor().getUser());
-
-            List<Order> initialOrders = List.of(
-                    buildOrder(shop, defaultCustomer, "#VM240918", "Nguyễn Thu Hà", "0912 345 678", "188 Cầu Giấy, Phường Quan Hoa, Quận Cầu Giấy, Hà Nội", "Đèn ngủ gốm Cloud ×1", IMG_LAMP_CLOUD, BigDecimal.valueOf(420000), OrderStatus.PENDING),
-                    buildOrder(shop, defaultCustomer, "#VM240917", "Trần Minh Quân", "0988 765 432", "72 Nguyễn Trãi, Phường Thượng Đình, Quận Thanh Xuân, Hà Nội", "Nến thơm Lavender ×3", IMG_LAVENDER_CANDLE, BigDecimal.valueOf(267000), OrderStatus.PENDING),
-                    buildOrder(shop, defaultCustomer, "#VM240915", "Lê Phương Anh", "0904 112 233", "Tòa S2 Vinhomes Skylake, Phạm Hùng, Nam Từ Liêm, Hà Nội", "Khung tranh gỗ sồi A4 ×2", IMG_OAK_FRAME, BigDecimal.valueOf(380000), OrderStatus.PREPARING),
-                    buildOrder(shop, defaultCustomer, "#VM240912", "Phạm Đức Long", "0936 998 877", "25 Lý Thường Kiệt, Quận Hoàn Kiếm, Hà Nội", "Bình hoa thủy tinh ×1", IMG_GLASS_VASE, BigDecimal.valueOf(159000), OrderStatus.PACKED)
-            );
-            orderRepository.saveAll(initialOrders);
-        }
-
-        if (shopPromotionRepository.findByShopIdOrderByIdDesc(shopId).isEmpty()) {
-            List<ShopPromotion> initialPromotions = List.of(
-                    buildPromotion(shop, "Flash Sale Góc Nhỏ Ấm Cúng — Tháng 10", 25, 4, "14/10/2026 - 20/10/2026", "RUNNING"),
-                    buildPromotion(shop, "Combo Nến Thơm & Bình Hoa Thu Đông", 15, 3, "25/10/2026 - 05/11/2026", "UPCOMING")
-            );
-            shopPromotionRepository.saveAll(initialPromotions);
-        }
-
-        if (shopReviewRepository.findByShopIdOrderByIdDesc(shopId).isEmpty()) {
-            User defaultCustomer = userRepository.findAll().stream()
-                    .findFirst()
-                    .orElseGet(() -> shop.getVendor().getUser());
-            List<ShopReview> initialReviews = List.of(
-                    buildReview(shop, defaultCustomer, "Nguyễn Ngọc Mai", "Đèn ngủ gốm Cloud", IMG_LAMP_CLOUD, 5, "Shop ơi đèn này dùng bóng đui xoáy E27 hay bóng LED tích hợp sẵn vậy ạ?", "15 phút trước", null),
-                    buildReview(shop, defaultCustomer, "Hoàng Gia Bảo", "Nến thơm Lavender", IMG_LAVENDER_CANDLE, 5, "Mùi lavender dịu nhẹ rất thư giãn, đóng gói chống sốc cực kỳ cẩn thận. Cho mình hỏi hũ 200g đốt được khoảng bao nhiêu giờ?", "1 giờ trước", null),
-                    buildReview(shop, defaultCustomer, "Vũ Thanh Tâm", "Khung tranh gỗ sồi A4", IMG_OAK_FRAME, 4, "Khung gỗ thật cầm nặng tay, shop có kèm đinh 3 chân treo tường không ạ?", "3 giờ trước", null),
-                    buildReview(shop, defaultCustomer, "Đặng Khánh Linh", "Bình hoa thủy tinh", IMG_GLASS_VASE, 5, "Màu xanh sage ở ngoài đẹp hơn trong ảnh nữa, cắm cúc mẫu đơn rất hợp!", "Hôm qua", "Lumi Home Decor cảm ơn bạn Khánh Linh rất nhiều ạ! Chúc bạn luôn có không gian sống thật xinh nhé ❤️")
-            );
-            shopReviewRepository.saveAll(initialReviews);
+        // Xóa hoàn toàn các dữ liệu mẫu đã seed trước đây để chỉ hiển thị dữ liệu thực tế được nhập vào
+        try {
+            jdbcTemplate.execute("DELETE FROM shop_reviews WHERE customer_name IN ('Nguyễn Ngọc Mai', 'Hoàng Gia Bảo', 'Vũ Thanh Tâm', 'Đặng Khánh Linh', 'Trần Thu Hà', 'Phạm Ngọc Anh', 'Vũ Hải Yến')");
+            jdbcTemplate.execute("DELETE FROM shop_promotions WHERE name IN ('Flash Sale Góc Nhỏ Ấm Cúng — Tháng 10', 'Combo Nến Thơm & Bình Hoa Thu Đông')");
+        } catch (Exception ignored) {
         }
     }
 
@@ -180,17 +144,6 @@ public class SellerDashboardService {
         return o;
     }
 
-    private ShopPromotion buildPromotion(Shop shop, String name, int discountPercent, int productCount, String timeRange, String status) {
-        ShopPromotion pr = new ShopPromotion();
-        pr.setShop(shop);
-        pr.setName(name);
-        pr.setDiscountPercent(discountPercent);
-        pr.setProductCount(productCount);
-        pr.setTimeRange(timeRange);
-        pr.setStatus(status);
-        return pr;
-    }
-
     private ShopReview buildReview(Shop shop, User customer, String customerName, String productName, String productImage, int rating, String comment, String createdAtLabel, String reply) {
         ShopReview r = new ShopReview();
         r.setShop(shop);
@@ -219,7 +172,7 @@ public class SellerDashboardService {
         }
         Long shopId = shop.getId();
 
-        String shopName = (shop.getName() != null && !shop.getName().isBlank()) ? shop.getName() : "Lumi Home Decor";
+        String shopName = (shop.getName() != null && !shop.getName().isBlank()) ? shop.getName() : "Shop " + shopId;
         String avatarLetter = shopName.substring(0, 1).toUpperCase();
         String logo = shop.getLogo();
         if ((logo == null || logo.isBlank()) && shop.getVendor() != null && shop.getVendor().getKycDocumentUrl() != null) {
@@ -240,7 +193,7 @@ public class SellerDashboardService {
         List<Product> dbProducts = productRepository.findByShopIdOrderByIdDesc(shopId);
         List<Order> dbOrders = orderRepository.findByShopIdOrderByCreatedAtDescIdDesc(shopId);
         List<Voucher> dbVouchers = voucherRepository.findByShopIdAndStatusNotOrderByIdDesc(shopId, VoucherStatus.DELETED);
-        List<ShopPromotion> dbPromotions = shopPromotionRepository.findByShopIdOrderByIdDesc(shopId);
+        List<DiscountCampaign> dbPromotions = discountCampaignRepository.findByShopIdOrderByIdDesc(shopId);
         List<ShopReview> dbReviews = shopReviewRepository.findByShopIdOrderByIdDesc(shopId);
 
         List<SellerProductDto> products = dbProducts.stream()
@@ -285,12 +238,12 @@ public class SellerDashboardService {
 
         SellerShopProfileDto shopProfile = SellerShopProfileDto.builder()
                 .shopName(shopName)
-                .tagline(shop.getTagline() != null ? shop.getTagline() : "Minimalist & Cozy Scandinavian Living")
+                .tagline(shop.getTagline() != null ? shop.getTagline() : "")
                 .description(shop.getDescription() != null ? shop.getDescription() : "")
-                .phone(shop.getPhone() != null ? shop.getPhone() : "0987 654 321")
-                .email(shop.getEmail() != null ? shop.getEmail() : "hello@lumihomedecor.vn")
+                .phone(shop.getPhone() != null ? shop.getPhone() : "")
+                .email(shop.getEmail() != null ? shop.getEmail() : "")
                 .pickupAddress(shop.getPickupAddress() != null ? shop.getPickupAddress() : "")
-                .businessHours(shop.getBusinessHours() != null ? shop.getBusinessHours() : "08:30 - 21:00 (Thứ 2 - Chủ Nhật)")
+                .businessHours(shop.getBusinessHours() != null ? shop.getBusinessHours() : "")
                 .build();
 
         int pendingConfirmCount = (int) dbOrders.stream().filter(o -> o.getStatus() == OrderStatus.PENDING).count();
@@ -298,15 +251,24 @@ public class SellerDashboardService {
         int refundCount = (int) dbOrders.stream().filter(o -> o.getStatus() == OrderStatus.CANCELLED).count();
         int unansweredReviewCount = (int) dbReviews.stream().filter(r -> r.getReply() == null || r.getReply().isBlank()).count();
 
+        BigDecimal todayRevenue = dbOrders.stream()
+                .filter(o -> o.getCreatedAt() != null && o.getCreatedAt().toLocalDate().isEqual(now.toLocalDate()) && o.getStatus() != OrderStatus.CANCELLED)
+                .map(o -> o.getTotalAmount() != null ? o.getTotalAmount() : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        int totalOrdersToday = (int) dbOrders.stream()
+                .filter(o -> o.getCreatedAt() != null && o.getCreatedAt().toLocalDate().isEqual(now.toLocalDate()))
+                .count();
+        BigDecimal avgRating = shop.getRatingAvg() != null ? shop.getRatingAvg() : BigDecimal.ZERO;
+
         SellerDashboardStatsDto stats = SellerDashboardStatsDto.builder()
-                .todayRevenue(BigDecimal.valueOf(4820000))
-                .revenueGrowthPercent(12.0)
-                .totalOrdersToday(23)
-                .orderGrowthCount(4)
-                .cancellationRate(2.1)
-                .cancellationRateDiff(0.4)
-                .averageRating(shop.getRatingAvg() != null && shop.getRatingAvg().compareTo(BigDecimal.ZERO) > 0 ? shop.getRatingAvg() : BigDecimal.valueOf(4.8))
-                .totalReviews(Math.max(128, dbReviews.size()))
+                .todayRevenue(todayRevenue)
+                .revenueGrowthPercent(0.0)
+                .totalOrdersToday(totalOrdersToday)
+                .orderGrowthCount(totalOrdersToday)
+                .cancellationRate(0.0)
+                .cancellationRateDiff(0.0)
+                .averageRating(avgRating)
+                .totalReviews(reviews.size())
                 .build();
 
         SellerTodoDto todos = SellerTodoDto.builder()
@@ -317,15 +279,20 @@ public class SellerDashboardService {
                 .unansweredQuestions(unansweredReviewCount)
                 .build();
 
-        List<SellerRevenuePointDto> chart7Days = List.of(
-                new SellerRevenuePointDto("T5", 2.1, BigDecimal.valueOf(2100000), 11),
-                new SellerRevenuePointDto("T6", 3.4, BigDecimal.valueOf(3400000), 16),
-                new SellerRevenuePointDto("T7", 2.8, BigDecimal.valueOf(2800000), 14),
-                new SellerRevenuePointDto("CN", 4.1, BigDecimal.valueOf(4100000), 20),
-                new SellerRevenuePointDto("T2", 3.6, BigDecimal.valueOf(3600000), 18),
-                new SellerRevenuePointDto("T3", 4.3, BigDecimal.valueOf(4300000), 21),
-                new SellerRevenuePointDto("T4", 4.8, BigDecimal.valueOf(4820000), 23)
-        );
+        List<SellerRevenuePointDto> chart7Days = new ArrayList<>();
+        DateTimeFormatter dayFormatter = DateTimeFormatter.ofPattern("dd/MM");
+        for (int i = 6; i >= 0; i--) {
+            LocalDateTime day = now.minusDays(i);
+            BigDecimal dayRev = dbOrders.stream()
+                    .filter(o -> o.getCreatedAt() != null && o.getCreatedAt().toLocalDate().isEqual(day.toLocalDate()) && o.getStatus() == OrderStatus.DELIVERED)
+                    .map(o -> o.getTotalAmount() != null ? o.getTotalAmount() : BigDecimal.ZERO)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            int dayOrders = (int) dbOrders.stream()
+                    .filter(o -> o.getCreatedAt() != null && o.getCreatedAt().toLocalDate().isEqual(day.toLocalDate()))
+                    .count();
+            double valInM = dayRev.divide(BigDecimal.valueOf(1000000), 2, java.math.RoundingMode.HALF_UP).doubleValue();
+            chart7Days.add(new SellerRevenuePointDto(day.format(dayFormatter), valInM, dayRev, dayOrders));
+        }
 
         double[] vals30 = {1.8, 2.2, 2.0, 2.9, 3.1, 2.7, 3.3, 3.0, 2.6, 3.5, 3.8, 3.2, 3.9, 4.1, 3.7, 3.4, 4.0, 4.4, 3.9, 4.2, 4.6, 4.1, 3.8, 4.5, 4.7, 4.3, 4.9, 4.4, 4.1, 4.8};
         List<SellerRevenuePointDto> chart30Days = new ArrayList<>();
@@ -602,18 +569,130 @@ public class SellerDashboardService {
     }
 
     @Transactional(readOnly = true)
+    public List<SellerReturnDto> getReturns(Long userId) {
+        Shop shop = resolveShop(userId);
+        if (shop == null) return Collections.emptyList();
+        List<ReturnRequest> list = returnRequestRepository.findByOrder_ShopIdOrderByCreatedAtDesc(shop.getId());
+        return list.stream().map(r -> {
+            String typeName = r.getType() == ReturnRequestType.RETURN ? "Trả hàng & Hoàn tiền" : "Hoàn tiền";
+            String cName = r.getCustomer() != null ? (r.getCustomer().getFullName() != null ? r.getCustomer().getFullName() : r.getCustomer().getEmail()) : "Khách hàng";
+            String oCode = r.getOrder() != null ? r.getOrder().getOrderCode() : "";
+            return SellerReturnDto.builder()
+                    .id(r.getId())
+                    .orderCode(oCode)
+                    .customerName(cName)
+                    .type(typeName)
+                    .reason(r.getReason() != null ? r.getReason() : "")
+                    .amount(r.getRefundAmount() != null ? r.getRefundAmount() : BigDecimal.ZERO)
+                    .imageCount(0)
+                    .status(r.getStatus() != null ? r.getStatus().name() : "PENDING")
+                    .vendorResponse(r.getVendorResponse())
+                    .createdAt(r.getCreatedAt() != null ? r.getCreatedAt().toString() : "")
+                    .build();
+        }).collect(Collectors.toList());
+    }
+
+    @Transactional
+    public SellerReturnDto updateReturnStatus(Long returnId, String action, String responseNote) {
+        ReturnRequest req = returnRequestRepository.findById(returnId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy yêu cầu đổi trả #" + returnId));
+        if ("APPROVE".equalsIgnoreCase(action)) {
+            req.setStatus(ReturnRequestStatus.APPROVED);
+        } else if ("REJECT".equalsIgnoreCase(action)) {
+            req.setStatus(ReturnRequestStatus.REJECTED);
+        }
+        if (responseNote != null && !responseNote.isBlank()) {
+            req.setVendorResponse(responseNote);
+        }
+        ReturnRequest saved = returnRequestRepository.save(req);
+        String typeName = saved.getType() == ReturnRequestType.RETURN ? "Trả hàng & Hoàn tiền" : "Hoàn tiền";
+        String cName = saved.getCustomer() != null ? (saved.getCustomer().getFullName() != null ? saved.getCustomer().getFullName() : saved.getCustomer().getEmail()) : "Khách hàng";
+        String oCode = saved.getOrder() != null ? saved.getOrder().getOrderCode() : "";
+        return SellerReturnDto.builder()
+                .id(saved.getId())
+                .orderCode(oCode)
+                .customerName(cName)
+                .type(typeName)
+                .reason(saved.getReason())
+                .amount(saved.getRefundAmount())
+                .imageCount(0)
+                .status(saved.getStatus().name())
+                .vendorResponse(saved.getVendorResponse())
+                .createdAt(saved.getCreatedAt() != null ? saved.getCreatedAt().toString() : "")
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    public List<SellerPromotionDto> getCampaigns(Long userId) {
+        Shop shop = resolveShop(userId);
+        if (shop == null) return Collections.emptyList();
+        List<DiscountCampaign> list = discountCampaignRepository.findByShopIdOrderByIdDesc(shop.getId());
+        return list.stream().map(this::toPromotionDto).collect(Collectors.toList());
+    }
+
+    @Transactional
+    public SellerPromotionDto createCampaign(Long userId, SellerPromotionDto dto) {
+        Shop shop = resolveShop(userId);
+        if (shop == null) {
+            shop = getOrCreateInitializedShop(userId);
+        }
+        DiscountCampaign dc = new DiscountCampaign();
+        dc.setShop(shop);
+        dc.setName(dto.getName() != null ? dto.getName() : "Chiến dịch giảm giá");
+        dc.setType(com.vic.ecom.enums.CampaignType.FLASH_SALE);
+        dc.setDiscountPercent(dto.getDiscountPercent() != null ? dto.getDiscountPercent() : 10);
+        dc.setProductCount(dto.getProductCount() != null ? dto.getProductCount() : 1);
+        if (dto.getTimeRange() != null && dto.getTimeRange().contains("-")) {
+            String[] parts = dto.getTimeRange().split("-");
+            try {
+                dc.setStartAt(java.time.LocalDate.parse(parts[0].trim()).atStartOfDay());
+                dc.setEndAt(java.time.LocalDate.parse(parts[1].trim()).atTime(23, 59, 59));
+            } catch (Exception e) {
+                dc.setStartAt(LocalDateTime.now());
+                dc.setEndAt(LocalDateTime.now().plusDays(7));
+            }
+        } else {
+            dc.setStartAt(LocalDateTime.now());
+            dc.setEndAt(LocalDateTime.now().plusDays(7));
+        }
+        dc.setStatus(com.vic.ecom.enums.CampaignStatus.ACTIVE);
+        DiscountCampaign saved = discountCampaignRepository.save(dc);
+        return toPromotionDto(saved);
+    }
+
+    @Transactional
+    public SellerPromotionDto updateCampaignStatus(Long campaignId, String status) {
+        DiscountCampaign dc = discountCampaignRepository.findById(campaignId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy chương trình #" + campaignId));
+        if ("PAUSED".equalsIgnoreCase(status)) {
+            dc.setStatus(com.vic.ecom.enums.CampaignStatus.PAUSED);
+        } else if ("ENDED".equalsIgnoreCase(status)) {
+            dc.setStatus(com.vic.ecom.enums.CampaignStatus.ENDED);
+        } else {
+            dc.setStatus(com.vic.ecom.enums.CampaignStatus.ACTIVE);
+        }
+        DiscountCampaign saved = discountCampaignRepository.save(dc);
+        return toPromotionDto(saved);
+    }
+
+    @Transactional
+    public void deleteCampaign(Long campaignId) {
+        discountCampaignRepository.deleteById(campaignId);
+    }
+
+    @Transactional(readOnly = true)
     public SellerShopProfileDto getShopProfile(Long userId) {
         Shop shop = resolveShop(userId);
         if (shop == null) return new SellerShopProfileDto();
-        String shopName = (shop.getName() != null && !shop.getName().isBlank()) ? shop.getName() : "Lumi Home Decor";
+        String shopName = (shop.getName() != null && !shop.getName().isBlank()) ? shop.getName() : "VICMART Shop";
         return SellerShopProfileDto.builder()
                 .shopName(shopName)
-                .tagline(shop.getTagline() != null ? shop.getTagline() : "Minimalist & Cozy Scandinavian Living")
+                .tagline(shop.getTagline() != null ? shop.getTagline() : "")
                 .description(shop.getDescription() != null ? shop.getDescription() : "")
-                .phone(shop.getPhone() != null ? shop.getPhone() : "0987 654 321")
-                .email(shop.getEmail() != null ? shop.getEmail() : "hello@lumihomedecor.vn")
+                .phone(shop.getPhone() != null ? shop.getPhone() : "")
+                .email(shop.getEmail() != null ? shop.getEmail() : "")
                 .pickupAddress(shop.getPickupAddress() != null ? shop.getPickupAddress() : "")
-                .businessHours(shop.getBusinessHours() != null ? shop.getBusinessHours() : "08:30 - 21:00 (Thứ 2 - Chủ Nhật)")
+                .businessHours(shop.getBusinessHours() != null ? shop.getBusinessHours() : "")
                 .build();
     }
 
@@ -760,14 +839,19 @@ public class SellerDashboardService {
                 .build();
     }
 
-    private SellerPromotionDto toPromotionDto(ShopPromotion pr) {
+    private SellerPromotionDto toPromotionDto(DiscountCampaign dc) {
+        String timeRange = "";
+        if (dc.getStartAt() != null && dc.getEndAt() != null) {
+            DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+            timeRange = dc.getStartAt().format(dtf) + " - " + dc.getEndAt().format(dtf);
+        }
         return SellerPromotionDto.builder()
-                .id(pr.getId())
-                .name(pr.getName())
-                .discountPercent(pr.getDiscountPercent())
-                .productCount(pr.getProductCount())
-                .timeRange(pr.getTimeRange())
-                .status(pr.getStatus())
+                .id(dc.getId())
+                .name(dc.getName())
+                .discountPercent(dc.getDiscountPercent())
+                .productCount(dc.getProductCount())
+                .timeRange(timeRange)
+                .status(dc.getStatus() != null ? dc.getStatus().name() : "ACTIVE")
                 .build();
     }
 

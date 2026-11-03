@@ -22,6 +22,7 @@ public class ShopResponse {
     private String businessHours;
     private ShopStatus status;
     private BigDecimal ratingAvg;
+    private Long followerCount;
 
     public static ShopResponse fromEntity(Shop shop) {
         if (shop == null) return null;
@@ -50,6 +51,7 @@ public class ShopResponse {
         res.setBusinessHours(shop.getBusinessHours());
         res.setStatus(shop.getStatus());
         res.setRatingAvg(shop.getRatingAvg());
+        res.setFollowerCount(shop.getFollowerCount() != null ? shop.getFollowerCount() : 0L);
         return res;
     }
 }

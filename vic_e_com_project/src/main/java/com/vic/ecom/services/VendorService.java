@@ -6,6 +6,7 @@ import com.vic.ecom.entity.Shop;
 import com.vic.ecom.entity.User;
 import com.vic.ecom.entity.Vendor;
 import com.vic.ecom.entity.VendorViolation;
+import com.vic.ecom.entity.Category;
 import com.vic.ecom.enums.ApprovalStatus;
 import com.vic.ecom.enums.ShopStatus;
 import com.vic.ecom.enums.UserRole;
@@ -14,6 +15,7 @@ import com.vic.ecom.repository.ShopRepository;
 import com.vic.ecom.repository.UserRepository;
 import com.vic.ecom.repository.VendorRepository;
 import com.vic.ecom.repository.VendorViolationRepository;
+import com.vic.ecom.repository.CategoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +33,7 @@ public class VendorService {
     private final ShopRepository shopRepository;
     private final UserRepository userRepository;
     private final VendorViolationRepository vendorViolationRepository;
+    private final CategoryRepository categoryRepository;
 
     public record ShopNameValidationResult(boolean isAvailable, String message) {}
 
@@ -261,6 +264,10 @@ public class VendorService {
         vendor.setKycDocumentUrl(mergedKyc);
         vendor.setApprovalStatus(ApprovalStatus.PENDING);
         vendor.setRejectReason(null);
+        Category category = categoryRepository.findById(req.getPrimaryCategoryId() == null ? -1L : req.getPrimaryCategoryId())
+                .filter(c -> c.getParentId() == null && (c.getStatus() == null || c.getStatus() == com.vic.ecom.enums.CategoryStatus.VISIBLE))
+                .orElseThrow(() -> new IllegalArgumentException("Danh mục kinh doanh phải là danh mục gốc đang hiển thị"));
+        vendor.setPrimaryCategoryId(category.getId());
 
         // 5. Cập nhật Shop
         shop.setVendor(vendor);

@@ -31,7 +31,7 @@ public class ShopController {
     public ResponseEntity<ApiResponse<ShopResponse>> getCurrentShop(Authentication auth) {
         Shop shop = shopResolverService.resolveCurrentShop(auth, null);
         if (shop == null) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.ok(ApiResponse.ok("Chưa có thông tin shop", null));
         }
         return ResponseEntity.ok(ApiResponse.ok("Thông tin shop hiện tại", ShopResponse.fromEntity(shop)));
     }
@@ -62,9 +62,42 @@ public class ShopController {
     }
 
     @GetMapping("/{id}/vouchers")
-    public ResponseEntity<ApiResponse<List<com.vic.ecom.dto.VoucherDtos.Response>>> getVouchersByShopId(@PathVariable Long id) {
-        List<com.vic.ecom.dto.VoucherDtos.Response> vouchers = shopService.getActiveVouchersByShopId(id);
+    public ResponseEntity<ApiResponse<List<com.vic.ecom.dto.VoucherDtos.Response>>> getVouchersByShopId(
+            @PathVariable Long id,
+            @RequestParam(required = false, defaultValue = "false") boolean includeWeb) {
+        List<com.vic.ecom.dto.VoucherDtos.Response> vouchers = shopService.getActiveVouchersByShopId(id, includeWeb);
         return ResponseEntity.ok(ApiResponse.ok("Danh sách voucher hoạt động của gian hàng", vouchers));
+    }
+
+    @GetMapping("/{id}/follow-status")
+    public ResponseEntity<ApiResponse<com.vic.ecom.dto.ShopDtos.FollowStatus>> getFollowStatus(
+            @PathVariable Long id,
+            Authentication auth) {
+        com.vic.ecom.dto.ShopDtos.FollowStatus status = shopService.getFollowStatus(id, auth);
+        return ResponseEntity.ok(ApiResponse.ok("Trạng thái theo dõi gian hàng", status));
+    }
+
+    @PostMapping("/{id}/follow")
+    public ResponseEntity<ApiResponse<com.vic.ecom.dto.ShopDtos.FollowStatus>> toggleFollow(
+            @PathVariable Long id,
+            @RequestBody(required = false) java.util.Map<String, Object> body,
+            Authentication auth) {
+        Boolean isFollowing = null;
+        if (body != null) {
+            if (body.containsKey("isFollowing")) {
+                isFollowing = (Boolean) body.get("isFollowing");
+            } else if (body.containsKey("following")) {
+                isFollowing = (Boolean) body.get("following");
+            }
+        }
+        com.vic.ecom.dto.ShopDtos.FollowStatus status = shopService.toggleFollow(id, auth, isFollowing);
+        return ResponseEntity.ok(ApiResponse.ok(status.isFollowing() ? "Theo dõi gian hàng thành công" : "Bỏ theo dõi gian hàng thành công", status));
+    }
+
+    @GetMapping("/{id}/reviews")
+    public ResponseEntity<ApiResponse<List<com.vic.ecom.dto.ShopDtos.ReviewItem>>> getShopReviews(@PathVariable Long id) {
+        List<com.vic.ecom.dto.ShopDtos.ReviewItem> reviews = shopService.getShopReviews(id);
+        return ResponseEntity.ok(ApiResponse.ok("Danh sách đánh giá của gian hàng", reviews));
     }
 
     @GetMapping("/by-vendor/{vendorId}")

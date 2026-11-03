@@ -12,6 +12,8 @@ public class VendorRegisterRequest {
     @NotBlank(message = "Tên doanh nghiệp / tên kinh doanh không được để trống")
     private String businessName;
 
+    private Long primaryCategoryId;
+
     private String kycDocumentUrl;
 
     // Shop fields

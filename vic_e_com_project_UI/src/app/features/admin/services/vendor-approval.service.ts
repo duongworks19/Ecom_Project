@@ -144,7 +144,7 @@ const SEED_APPLICATIONS: VendorApplication[] = [
     phone: '0912 345 678',
     model: 'Hộ kinh doanh',
     cat: 'Nhà cửa & Đời sống',
-    desc: 'Đồ decor và đèn trang trí phong cách tối giản Bắc Âu, ship toàn quốc.',
+    desc: '',
     pickup: 'Số 12 Ngõ 88 Trần Thái Tông, Cầu Giấy, Hà Nội',
     tax: '0109876543',
     at: '14/10/2026 09:12',

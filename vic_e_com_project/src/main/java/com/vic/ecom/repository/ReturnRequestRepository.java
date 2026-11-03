@@ -9,6 +9,7 @@ import java.util.List;
 
 public interface ReturnRequestRepository extends JpaRepository<ReturnRequest, Long> {
     List<ReturnRequest> findByOrder_IdOrderByCreatedAtDesc(Long orderId);
+    List<ReturnRequest> findByOrder_ShopIdOrderByCreatedAtDesc(Long shopId);
     long countByStatus(ReturnRequestStatus status);
     List<ReturnRequest> findByTypeAndStatusAndCreatedAtGreaterThanEqualAndCreatedAtLessThan(
             ReturnRequestType type, ReturnRequestStatus status, LocalDateTime from, LocalDateTime to);

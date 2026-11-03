@@ -13,6 +13,7 @@ export interface ShopInfo {
   shopName: string;
   businessType: BusinessType;
   primaryCategory: string;
+  primaryCategoryId?: number;
   description: string;
   logoUrl?: string;
 }

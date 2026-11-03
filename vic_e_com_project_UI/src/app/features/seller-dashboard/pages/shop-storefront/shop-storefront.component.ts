@@ -28,6 +28,17 @@ export interface ShopData {
   ratingAvg?: number;
 }
 
+export interface ShopReviewItem {
+  id: number;
+  customerName: string;
+  productName?: string;
+  productImage?: string;
+  rating: number;
+  comment: string;
+  reply?: string;
+  createdAt: string;
+}
+
 import { AddToCartPanelComponent } from '../../../product/components/add-to-cart-panel/add-to-cart-panel.component';
 import { WishlistHeartButtonComponent } from '../../../wishlist/components/wishlist-heart-button/wishlist-heart-button.component';
 
@@ -60,6 +71,8 @@ export class ShopStorefrontComponent implements OnInit {
   readonly activeCategory = signal<string>('ALL');
   readonly searchQuery = signal<string>('');
   readonly isFollowing = signal<boolean>(false);
+  readonly followerCount = signal<number>(0);
+  readonly isFollowingLoading = signal<boolean>(false);
   readonly claimedVouchers = signal<Record<number, boolean>>({});
   readonly selectedProduct = signal<SellerProduct | null>(null);
   readonly toastMessage = signal<string | null>(null);
@@ -71,7 +84,7 @@ export class ShopStorefrontComponent implements OnInit {
       (v) => v.active && v.status === 'ACTIVE' && v.displayStatus !== 'PAUSED' && v.displayStatus !== 'EXPIRED'
     );
   });
-  readonly reviews = this.dashboardService.reviews;
+  readonly reviews = signal<ShopReviewItem[]>([]);
 
   ngOnInit(): void {
     this.route.paramMap.subscribe((params) => {
@@ -88,14 +101,22 @@ export class ShopStorefrontComponent implements OnInit {
     });
   }
 
+  private initShopData(shop: any): void {
+    this.currentShop.set(shop);
+    if (shop && shop.id) {
+      this.loadProductsForShop(shop.id);
+      this.loadVouchersForShop(shop.id);
+      this.loadFollowStatus(shop.id);
+      this.loadShopReviews(shop.id);
+    }
+  }
+
   loadShopById(id: number): void {
     this.isLoading.set(true);
     this.http.get<any>(`http://localhost:9090/api/shops/${id}`).subscribe({
       next: (res) => {
         const shop = res?.data || res;
-        this.currentShop.set(shop);
-        this.loadProductsForShop(id);
-        this.loadVouchersForShop(id);
+        this.initShopData(shop);
       },
       error: () => {
         this.loadCurrentShop();
@@ -105,31 +126,87 @@ export class ShopStorefrontComponent implements OnInit {
 
   loadCurrentShop(): void {
     this.isLoading.set(true);
+    if (!this.authService.isLoggedInSignal()) {
+      this.loadFirstActiveShop();
+      return;
+    }
     this.http.get<any>('http://localhost:9090/api/shops/current').subscribe({
       next: (res) => {
         const shop = res?.data || res;
         if (shop && shop.id) {
-          this.currentShop.set(shop);
-          this.loadProductsForShop(shop.id);
-          this.loadVouchersForShop(shop.id);
+          this.initShopData(shop);
+        } else {
+          this.loadFirstActiveShop();
+        }
+      },
+      error: () => {
+        this.loadFirstActiveShop();
+      },
+    });
+  }
+
+  private loadFirstActiveShop(): void {
+    this.http.get<any>('http://localhost:9090/api/shops').subscribe({
+      next: (shopsRes) => {
+        const list = shopsRes?.data || shopsRes;
+        if (Array.isArray(list) && list.length > 0) {
+          this.initShopData(list[0]);
         } else {
           this.loadFallbackFromStorage();
         }
       },
+      error: () => this.loadFallbackFromStorage(),
+    });
+  }
+
+  private isShopFollowedLocally(shopId: number): boolean {
+    try {
+      const list = JSON.parse(localStorage.getItem('vic_user_followed_shops') || '[]');
+      return Array.isArray(list) && list.includes(shopId);
+    } catch {
+      return false;
+    }
+  }
+
+  private setShopFollowedLocally(shopId: number, followed: boolean): void {
+    try {
+      let list: number[] = JSON.parse(localStorage.getItem('vic_user_followed_shops') || '[]');
+      if (!Array.isArray(list)) list = [];
+      if (followed) {
+        if (!list.includes(shopId)) list.push(shopId);
+      } else {
+        list = list.filter((id) => id !== shopId);
+      }
+      localStorage.setItem('vic_user_followed_shops', JSON.stringify(list));
+    } catch {}
+  }
+
+  loadFollowStatus(shopId: number): void {
+    this.isFollowing.set(this.isShopFollowedLocally(shopId));
+    this.http.get<any>(`http://localhost:9090/api/shops/${shopId}/follow-status`).subscribe({
+      next: (res) => {
+        const data = res?.data || res;
+        if (data) {
+          this.isFollowing.set(this.isShopFollowedLocally(shopId));
+          this.followerCount.set(Number(data.followerCount) || 0);
+        }
+      },
+      error: () => {},
+    });
+  }
+
+  loadShopReviews(shopId: number): void {
+    this.http.get<any>(`http://localhost:9090/api/shops/${shopId}/reviews`).subscribe({
+      next: (res) => {
+        const list = res?.data || res;
+        if (Array.isArray(list)) {
+          this.reviews.set(list);
+        } else {
+          this.reviews.set([]);
+        }
+      },
       error: () => {
-        this.http.get<any>('http://localhost:9090/api/shops').subscribe({
-          next: (shopsRes) => {
-            const list = shopsRes?.data || shopsRes;
-            if (Array.isArray(list) && list.length > 0) {
-              this.currentShop.set(list[0]);
-              this.loadProductsForShop(list[0].id);
-              this.loadVouchersForShop(list[0].id);
-            } else {
-              this.loadFallbackFromStorage();
-            }
-          },
-          error: () => this.loadFallbackFromStorage(),
-        });
+        this.reviews.set([]);
       },
     });
   }
@@ -221,17 +298,11 @@ export class ShopStorefrontComponent implements OnInit {
           }));
           this.shopVouchers.set(mapped);
         } else {
-          const fallback = this.dashboardService.vouchers().filter(
-            (v) => v.active && v.status === 'ACTIVE' && v.displayStatus !== 'PAUSED' && v.displayStatus !== 'EXPIRED'
-          );
-          this.shopVouchers.set(fallback);
+          this.shopVouchers.set([]);
         }
       },
       error: () => {
-        const fallback = this.dashboardService.vouchers().filter(
-          (v) => v.active && v.status === 'ACTIVE' && v.displayStatus !== 'PAUSED' && v.displayStatus !== 'EXPIRED'
-        );
-        this.shopVouchers.set(fallback);
+        this.shopVouchers.set([]);
       },
     });
   }
@@ -241,10 +312,8 @@ export class ShopStorefrontComponent implements OnInit {
     this.dashboardService.loadShopProductsFromStorage();
     this.shopProducts.set(this.dashboardService.products());
     this.checkAndOpenProductQueryParam();
-    const fallback = this.dashboardService.vouchers().filter(
-      (v) => v.active && v.status === 'ACTIVE' && v.displayStatus !== 'PAUSED' && v.displayStatus !== 'EXPIRED'
-    );
-    this.shopVouchers.set(fallback);
+    this.shopVouchers.set([]);
+    this.reviews.set([]);
   }
 
   readonly logoLoadFailed = signal<boolean>(false);
@@ -321,28 +390,42 @@ export class ShopStorefrontComponent implements OnInit {
   });
 
   readonly shopCategory = computed(() => {
-    return this.currentShop()?.description || this.dashboardService.shopProfile().tagline || 'Thời trang & Phụ kiện';
+    const cats = this.categories().filter((c) => c !== 'ALL');
+    return cats.join(', ');
   });
 
   readonly shopPickupAddress = computed(() => {
-    return this.currentShop()?.pickupAddress || this.dashboardService.shopProfile().pickupAddress || 'Toàn quốc';
+    return this.currentShop()?.pickupAddress?.trim() || 'Đang cập nhật';
   });
 
   readonly shopDescription = computed(() => {
-    return this.currentShop()?.description || this.dashboardService.shopProfile().description || 'Gian hàng chính hãng trên sàn thương mại điện tử VIC MART.';
+    const desc = this.currentShop()?.description?.trim();
+    if (desc && !desc.toLowerCase().includes('bắc âu') && !desc.toLowerCase().includes('lumi')) {
+      return desc;
+    }
+    return 'Gian hàng chưa cập nhật phần giới thiệu.';
   });
 
   readonly shopPhone = computed(() => {
-    return this.currentShop()?.phone || this.dashboardService.shopProfile().phone || '1900 6868';
+    return this.currentShop()?.phone?.trim() || 'Đang cập nhật';
   });
 
   readonly shopEmail = computed(() => {
-    return this.currentShop()?.email || this.dashboardService.shopProfile().email || 'cskh@vicmart.vn';
+    return this.currentShop()?.email?.trim() || 'Đang cập nhật';
+  });
+
+  readonly shopBusinessHours = computed(() => {
+    return (this.currentShop() as any)?.businessHours?.trim() || 'Đang cập nhật';
   });
 
   readonly shopRating = computed(() => {
+    const revs = this.reviews();
+    if (revs.length > 0) {
+      const avg = revs.reduce((acc, r) => acc + (Number(r.rating) || 5), 0) / revs.length;
+      return avg.toFixed(1);
+    }
     const r = this.currentShop()?.ratingAvg;
-    return r ? Number(r).toFixed(1) : '5.0';
+    return r ? Number(r).toFixed(1) : null;
   });
 
   readonly products = computed(() => {
@@ -375,12 +458,47 @@ export class ShopStorefrontComponent implements OnInit {
   });
 
   toggleFollow(): void {
-    this.isFollowing.update((v) => !v);
-    this.showToast(
-      this.isFollowing()
-        ? `Đã theo dõi gian hàng ${this.shopName()}!`
-        : `Đã bỏ theo dõi gian hàng ${this.shopName()}`
-    );
+    const shop = this.currentShop();
+    if (!shop || !shop.id) return;
+
+    if (!this.authService.isLoggedInSignal()) {
+      this.showToast('Vui lòng đăng nhập để theo dõi gian hàng!');
+      this.router.navigate(['/login']);
+      return;
+    }
+
+    if (this.isFollowingLoading()) return;
+    this.isFollowingLoading.set(true);
+
+    const currentlyFollowing = this.isFollowing();
+    this.http.post<any>(`http://localhost:9090/api/shops/${shop.id}/follow`, { isFollowing: currentlyFollowing }).subscribe({
+      next: (res) => {
+        this.isFollowingLoading.set(false);
+        const data = res?.data || res;
+        const newFollowingState = !currentlyFollowing;
+        this.setShopFollowedLocally(shop.id, newFollowingState);
+        this.isFollowing.set(newFollowingState);
+        if (data && data.followerCount != null) {
+          this.followerCount.set(Number(data.followerCount));
+        } else {
+          this.followerCount.update((c) => newFollowingState ? c + 1 : Math.max(0, c - 1));
+        }
+        this.showToast(
+          newFollowingState
+            ? `Đã theo dõi gian hàng ${this.shopName()}!`
+            : `Đã bỏ theo dõi gian hàng ${this.shopName()}`
+        );
+      },
+      error: (err) => {
+        this.isFollowingLoading.set(false);
+        if (err.status === 401) {
+          this.showToast('Vui lòng đăng nhập để theo dõi gian hàng!');
+          this.router.navigate(['/login']);
+        } else {
+          this.showToast('Không thể cập nhật theo dõi gian hàng. Vui lòng thử lại.');
+        }
+      },
+    });
   }
 
   claimVoucher(id: number, code: string): void {

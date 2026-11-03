@@ -533,6 +533,7 @@ export class SellerOnboardingService {
       pickupAddress: `${curr.contactInfo.detailedAddress}, ${curr.contactInfo.ward}, ${curr.contactInfo.district}, ${curr.contactInfo.province}`,
       phone: curr.contactInfo.phone,
       email: curr.contactInfo.email,
+      primaryCategoryId: curr.shopInfo.primaryCategoryId,
     };
 
     // Lưu ảnh KYC và logo vào storage dùng chung giữa Seller và Admin

@@ -101,15 +101,15 @@
     <div class="form-group">
       <span class="form-label required">Danh mục sản phẩm chính</span>
       <div class="chips-grid">
-        @for (cat of categories; track cat) {
+        @for (cat of categories(); track cat.id) {
           <button
             type="button"
             class="chip-btn"
-            [class.active]="shopInfo.primaryCategory === cat"
+            [class.active]="shopInfo.primaryCategoryId === +cat.id"
             (click)="selectCategory(cat)"
             [disabled]="readOnly"
           >
-            {{ cat }}
+            {{ cat.name }}
           </button>
         }
       </div>

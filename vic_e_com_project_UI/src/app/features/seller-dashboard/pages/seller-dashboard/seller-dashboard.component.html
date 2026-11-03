@@ -214,23 +214,23 @@
         <div class="kpis">
           <div class="kpi">
             <span>Doanh thu hôm nay</span>
-            <b>4.280.000đ</b>
-            <small>+12% so với hôm qua · đơn đã giao</small>
+            <b>{{ todayRevenueFormatted() }}</b>
+            <small>Đơn hàng trong ngày</small>
           </div>
           <div class="kpi">
-            <span>Đơn hàng hôm nay</span>
-            <b>{{ orders().length + 2 }}</b>
+            <span>Đơn hàng</span>
+            <b>{{ orders().length }}</b>
             <small>{{ pendingOrderCount() }} chờ xác nhận</small>
           </div>
           <div class="kpi">
             <span>Tỷ lệ hủy</span>
-            <b>3,2%</b>
-            <small>30 ngày gần nhất</small>
+            <b>{{ cancellationRateFormatted() }}</b>
+            <small>Tổng số {{ orders().length }} đơn</small>
           </div>
           <div class="kpi">
             <span>Đánh giá trung bình</span>
-            <b>4,8 ★</b>
-            <small>126 đánh giá</small>
+            <b>{{ averageRatingFormatted() }} ★</b>
+            <small>{{ reviews().length }} đánh giá</small>
           </div>
         </div>
 
@@ -253,12 +253,12 @@
       <!-- Cột phải -->
       <div>
         <div class="box">
-          <h2>Hoàn thiện gian hàng <span class="tag">2/4</span></h2>
-          <div class="bar"><i style="width: 50%"></i></div>
-          <div class="ck d"><s>✓</s>Hồ sơ shop</div>
-          <div class="ck d"><s>✓</s>Địa chỉ kho lấy hàng</div>
-          <div class="ck"><s></s>Đăng 5 sản phẩm (đã có {{ products().length }})</div>
-          <div class="ck"><s></s>Tạo voucher đầu tiên</div>
+          <h2>Hoàn thiện gian hàng <span class="tag">{{ completedSteps() }}/4</span></h2>
+          <div class="bar"><i [style.width.%]="(completedSteps() / 4) * 100"></i></div>
+          <div class="ck" [class.d]="hasProfile()"><s>{{ hasProfile() ? '✓' : '' }}</s>Hồ sơ shop</div>
+          <div class="ck" [class.d]="hasPickupAddress()"><s>{{ hasPickupAddress() ? '✓' : '' }}</s>Địa chỉ kho lấy hàng</div>
+          <div class="ck" [class.d]="products().length >= 1"><s>{{ products().length >= 1 ? '✓' : '' }}</s>Đăng sản phẩm (đã có {{ products().length }})</div>
+          <div class="ck" [class.d]="vouchers().length >= 1"><s>{{ vouchers().length >= 1 ? '✓' : '' }}</s>Tạo voucher đầu tiên (đã có {{ vouchers().length }})</div>
         </div>
 
         <!-- Sắp hết hàng -->
@@ -273,6 +273,8 @@
             <span class="tag warn">Còn {{ s.q }}</span>
             <button class="btn sm" (click)="setView('inv')">Nhập kho</button>
           </div>
+          } @empty {
+          <p style="color: var(--mute); margin: 0; font-size: 13px;">Tất cả sản phẩm đều đủ số lượng tồn kho.</p>
           }
         </div>
 
@@ -289,6 +291,9 @@
             <button class="btn sm" (click)="setView('qa')">Trả lời</button>
           </div>
           }
+          }
+          @if (unrepliedQuestionCount() === 0 && pendingReturnCount() === 0) {
+          <p style="color: var(--mute); margin: 0; font-size: 13px;">Không có câu hỏi hay yêu cầu đổi trả cần xử lý.</p>
           }
         </div>
       </div>
@@ -514,6 +519,10 @@
         <button class="btn sm" (click)="rejectReturn(r.id)">Từ chối</button>
         }
       </div>
+      } @empty {
+      <div style="padding: 32px; text-align: center; color: var(--muted); font-size: 14px;">
+        Chưa có yêu cầu đổi trả / hoàn tiền nào.
+      </div>
       }
     </div>
     }
@@ -564,7 +573,10 @@
     <div class="hd">
       <div>
         <h1 style="font-size: 28px">Chương trình giảm giá</h1>
-        <p class="sub">Flash sale, combo và mua kèm theo khung thời gian.</p>
+        <p class="sub">Flash sale, combo và khuyến mãi theo khung thời gian.</p>
+      </div>
+      <div class="quick" style="margin-bottom: 24px">
+        <button class="btn p" (click)="openCreateCampaignModal()">+ Tạo chương trình</button>
       </div>
     </div>
 
@@ -573,12 +585,23 @@
       <div class="row">
         <div class="g">
           <b>{{ c.n }}</b>
-          <span class="m">{{ c.t }} · {{ c.from }} đến {{ c.to }} · {{ c.k }} biến thể · Giảm {{ c.val }}{{ c.dt
+          <span class="m">{{ c.t }} · {{ c.from }} đến {{ c.to }} · {{ c.k }} sản phẩm áp dụng · Giảm {{ c.val }}{{ c.dt
             }}</span>
         </div>
         <span class="tag" [class.ok]="c.st === 'ACTIVE'" [class.warn]="c.st === 'PAUSED'">
           {{ c.st === 'ACTIVE' ? 'Đang chạy' : (c.st === 'PAUSED' ? 'Tạm dừng' : 'Đã kết thúc') }}
         </span>
+
+        @if (c.st !== 'ENDED') {
+        <button class="btn sm" (click)="toggleCampaign(c.id)">
+          {{ c.st === 'ACTIVE' ? 'Tạm dừng' : 'Tiếp tục' }}
+        </button>
+        }
+        <button class="btn sm" (click)="deleteCampaign(c.id)">Xóa</button>
+      </div>
+      } @empty {
+      <div style="padding: 32px; text-align: center; color: var(--muted); font-size: 14px;">
+        Chưa có chương trình giảm giá nào. Hãy bấm <b>"+ Tạo chương trình"</b> để tạo khuyến mãi cho gian hàng!
       </div>
       }
     </div>
@@ -609,6 +632,10 @@
         <button class="btn sm" (click)="replyToReview(r)">Phản hồi</button>
         }
       </div>
+      } @empty {
+      <div style="padding: 32px; text-align: center; color: var(--muted); font-size: 14px;">
+        Chưa có đánh giá nào từ khách hàng cho các sản phẩm của gian hàng.
+      </div>
       }
     </div>
     }
@@ -637,6 +664,10 @@
         } @else {
         <button class="btn sm" (click)="answerQuestion(q)">Trả lời</button>
         }
+      </div>
+      } @empty {
+      <div style="padding: 32px; text-align: center; color: var(--muted); font-size: 14px;">
+        Chưa có câu hỏi nào từ khách hàng về sản phẩm của gian hàng.
       </div>
       }
     </div>
@@ -999,29 +1030,25 @@
     @if (modalType() === 'order_detail') {
     <span class="tag" [class.ok]="modalData()?.s === 'DELIVERED'" [class.warn]="modalData()?.s === 'PENDING'">
       {{ modalData()?.s === 'PENDING' ? 'Chờ xác nhận' : (modalData()?.s === 'PREPARING' ? 'Đang chuẩn bị' :
-      (modalData()?.s === 'PACKED' ? 'Đã đóng gói' : (modalData()?.s === 'READY_TO_SHIP' ? 'Sẵn sàng giao' : 'Đã
-      giao'))) }}
+      (modalData()?.s === 'PACKED' ? 'Đã đóng gói' : (modalData()?.s === 'READY_TO_SHIP' ? 'Sẵn sàng giao' : (modalData()?.s === 'CANCELLED' ? 'Đã hủy' : 'Đã giao')))) }}
     </span>
 
-    <p style="font-size: 14px; margin: 12px 0;">
-      <b>{{ modalData()?.n }}</b> · 0912 345 678<br />
-      Địa chỉ giao: Số 45 Nguyễn Chí Thanh, Đống Đa, Hà Nội<br />
-      Phương thức thanh toán: COD (Thu tiền khi nhận hàng)<br />
-      Vận chuyển: {{ modalData()?.s === 'READY_TO_SHIP' || modalData()?.s === 'DELIVERED' ? 'Đã điều phối bưu tá
-      VICMART' : 'Chưa điều phối shipper' }}
+    <p style="font-size: 14px; margin: 12px 0; line-height: 1.6;">
+      <b>Khách hàng:</b> {{ modalData()?.n }}@if (modalData()?.ph) { · {{ modalData()?.ph }} }<br />
+      @if (modalData()?.ad) {
+      <b>Địa chỉ nhận:</b> {{ modalData()?.ad }}<br />
+      }
+      <b>Phương thức thanh toán:</b> COD (Thu tiền khi nhận hàng)<br />
+      <b>Vận chuyển:</b> {{ modalData()?.s === 'READY_TO_SHIP' || modalData()?.s === 'DELIVERED' ? 'Đã bàn giao bưu tá VICMART' : 'Chờ người bán đóng gói' }}
     </p>
 
     <div class="row">
       <div class="g">Sản phẩm đặt mua ({{ modalData()?.k }} món)</div>
-      <b>{{ formatVnd(modalData()?.t - 30000) }}</b>
+      <b>{{ formatVnd(modalData()?.t || 0) }}</b>
     </div>
     <div class="row">
-      <div class="g m">Phí vận chuyển</div>
-      <b>30.000đ</b>
-    </div>
-    <div class="row">
-      <div class="g"><b>Tổng cộng</b></div>
-      <b>{{ formatVnd(modalData()?.t) }}</b>
+      <div class="g"><b>Tổng thanh toán</b></div>
+      <b>{{ formatVnd(modalData()?.t || 0) }}</b>
     </div>
 
     <div style="display: flex; justify-content: flex-end; margin-top: 18px;">
@@ -1063,6 +1090,40 @@
     <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px;">
       <button class="btn" type="button" (click)="closeGenericModal()">Đóng</button>
       <button class="btn p" type="button" (click)="saveVoucher()">Lưu voucher</button>
+    </div>
+    }
+
+    <!-- FORM CAMPAIGN -->
+    @if (modalType() === 'campaign_form') {
+    <div class="g2">
+      <label style="display: block; margin-top: 12px; font-size: 13px; font-weight: 600;">
+        Tên chương trình *
+        <input class="inp" type="text" [(ngModel)]="formCampaign().n" placeholder="VD: Flash sale cuối tuần" maxlength="100" />
+      </label>
+
+      <label style="display: block; margin-top: 12px; font-size: 13px; font-weight: 600;">
+        Phần trăm giảm (%) *
+        <input class="inp" type="number" [(ngModel)]="formCampaign().val" min="1" max="90" />
+      </label>
+
+      <label style="display: block; margin-top: 12px; font-size: 13px; font-weight: 600;">
+        Từ ngày *
+        <input class="inp" type="date" [(ngModel)]="formCampaign().from" />
+      </label>
+
+      <label style="display: block; margin-top: 12px; font-size: 13px; font-weight: 600;">
+        Đến ngày *
+        <input class="inp" type="date" [(ngModel)]="formCampaign().to" />
+      </label>
+    </div>
+
+    @if (modalError()) {
+    <div class="err" style="margin-top: 10px;" role="alert">{{ modalError() }}</div>
+    }
+
+    <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px;">
+      <button class="btn" type="button" (click)="closeGenericModal()">Đóng</button>
+      <button class="btn p" type="button" (click)="saveCampaign()">Lưu chương trình</button>
     </div>
     }
   </div>
