@@ -128,17 +128,22 @@ export class SellerOverviewComponent implements OnInit {
 
     if (target.s === 'PREPARING') {
       nextSt = 'PACKED';
-      action = 'PACK';
+      action = 'MARK_PACKED';
     } else if (target.s === 'PACKED') {
       nextSt = 'READY_TO_SHIP';
-      action = 'SHIP';
+      action = 'START_SHIPPING';
     }
 
     if (nextSt !== target.s) {
       this.orders.update((list) =>
         list.map((o) => (o.c === code ? { ...o, s: nextSt } : o))
       );
-      this.ordersApi.updateOrderStatus(code, action).subscribe({ next: () => {}, error: () => {} });
+      this.ordersApi.updateOrderStatus(code, action).subscribe({
+        error: () => {
+          this.orders.update((list) => list.map((o) => (o.c === code ? { ...o, s: target.s } : o)));
+          this.store.showToast(`Không thể lưu trạng thái đơn ${code}.`, true);
+        },
+      });
       if (nextSt === 'PACKED') {
         this.store.showToast(`Đã đóng gói ${code}.`);
       } else if (nextSt === 'READY_TO_SHIP') {

@@ -15,8 +15,6 @@ import com.vic.ecom.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -337,7 +335,12 @@ public class SellerDashboardService {
 
     @Transactional
     public SellerRecentOrderDto handleQuickAction(String orderCode, OrderQuickActionRequest request) {
-        Shop shop = getOrCreateInitializedShop(null);
+        return handleQuickAction(orderCode, request, null);
+    }
+
+    @Transactional
+    public SellerRecentOrderDto handleQuickAction(String orderCode, OrderQuickActionRequest request, Long userId) {
+        Shop shop = getOrCreateInitializedShop(userId);
         String action = request.getAction() != null ? request.getAction() : "";
 
         Optional<Order> orderOpt = orderRepository.findByOrderCode(orderCode);
@@ -345,15 +348,12 @@ public class SellerDashboardService {
             orderOpt = orderRepository.findByOrderCode("#" + orderCode);
         }
 
-        Order order = orderOpt.orElseGet(() -> {
-            Order newOrder = new Order();
-            newOrder.setShopId(shop.getId());
-            newOrder.setOrderCode(orderCode);
-            newOrder.setReceiverName("Khách hàng");
-            newOrder.setProductSummary("Sản phẩm");
-            newOrder.setTotalAmount(BigDecimal.ZERO);
-            return newOrder;
-        });
+        Order order = orderOpt.orElseThrow(() ->
+                new IllegalArgumentException("Không tìm thấy đơn hàng với mã: " + orderCode));
+
+        if (shop != null && order.getShopId() != null && !shop.getId().equals(order.getShopId())) {
+            throw new IllegalArgumentException("Đơn hàng không thuộc gian hàng của tài khoản này");
+        }
 
         if ("CONFIRM".equalsIgnoreCase(action)) {
             OrderStatus previous = order.getStatus();
@@ -367,14 +367,6 @@ public class SellerDashboardService {
             OrderStatus previous = order.getStatus();
             order.setStatus(OrderStatus.READY_TO_SHIP);
             saveOrderHistory(order, previous, OrderStatus.READY_TO_SHIP, actorUserId(order, shop), "Vendor chuyển đơn sang chờ điều phối");
-            if (TransactionSynchronizationManager.isSynchronizationActive()) {
-                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                    @Override
-                    public void afterCommit() {
-                        dispatchService.dispatchPendingOrders();
-                    }
-                });
-            }
         } else if ("APPROVE_REFUND".equalsIgnoreCase(action) || "CANCEL".equalsIgnoreCase(action)) {
             if (order.getId() != null && order.getStatus() != OrderStatus.CANCELLED && order.getStatus() != OrderStatus.REJECTED) {
                 order.setStatus(OrderStatus.CANCELLED);
@@ -383,6 +375,9 @@ public class SellerDashboardService {
         }
 
         Order saved = orderRepository.save(order);
+        if ("START_SHIPPING".equalsIgnoreCase(action)) {
+            dispatchService.dispatchPendingOrders();
+        }
         return toOrderDto(saved);
     }
 
