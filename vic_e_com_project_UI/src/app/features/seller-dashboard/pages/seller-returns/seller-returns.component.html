@@ -1,0 +1,26 @@
+<div class="hd">
+  <div>
+    <h1 style="font-size: 28px">Đổi trả / Hoàn tiền</h1>
+    <p class="sub">Khi chấp nhận, hệ thống hoàn tiền cho khách và tự động cộng lại tồn kho.</p>
+  </div>
+</div>
+
+<div class="box">
+  @for (r of returns(); track r.id) {
+    <div class="row">
+      <div class="g">
+        <b>{{ r.o }} · {{ r.type }}</b>
+        <span class="m">{{ r.n }} · {{ r.why }} · {{ r.img }} ảnh minh chứng</span>
+      </div>
+      <b>{{ formatVnd(r.amt) }}</b>
+      <span class="tag" [class.warn]="r.st === 'PENDING'" [class.ok]="r.st === 'APPROVED'" [class.no]="r.st === 'REJECTED'">
+        {{ r.st === 'PENDING' ? 'Chờ xử lý' : (r.st === 'APPROVED' ? 'Đã chấp nhận' : 'Đã từ chối') }}
+      </span>
+
+      @if (r.st === 'PENDING') {
+        <button class="btn sm" style="background: var(--on); color: var(--on-t);" (click)="approveReturn(r.id)">Chấp nhận</button>
+        <button class="btn sm" (click)="rejectReturn(r.id)">Từ chối</button>
+      }
+    </div>
+  }
+</div>

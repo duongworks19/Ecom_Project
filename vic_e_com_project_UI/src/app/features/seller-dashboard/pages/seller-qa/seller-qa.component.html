@@ -1,0 +1,25 @@
+<div class="hd">
+  <div>
+    <h1 style="font-size: 28px">Hỏi đáp sản phẩm</h1>
+    <p class="sub">Tư vấn nhanh chóng để khách hàng tự tin đặt đơn ngay.</p>
+  </div>
+</div>
+
+<div class="box">
+  @for (q of questions(); track q.id) {
+    <div class="row">
+      <div class="g">
+        <span class="m">{{ q.p }} · {{ q.who }}</span>
+        <b>{{ q.x }}</b>
+        @if (q.a) {
+          <span class="m" style="color: var(--ok); margin-top: 4px;">Trả lời: {{ q.a }}</span>
+        }
+      </div>
+      @if (q.a) {
+        <span class="tag ok">Đã trả lời</span>
+      } @else {
+        <button class="btn sm" (click)="answerQuestion(q)">Trả lời</button>
+      }
+    </div>
+  }
+</div>

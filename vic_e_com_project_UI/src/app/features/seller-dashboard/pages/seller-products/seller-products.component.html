@@ -1,0 +1,92 @@
+<div class="hd">
+  <div>
+    <h1 style="font-size: 28px">Quản lý sản phẩm</h1>
+    <p class="sub">{{ filteredProducts().length }} sản phẩm trong gian hàng của bạn.</p>
+  </div>
+  <div class="quick" style="margin-bottom: 24px">
+    <button class="btn p" (click)="openCreateProductModal()">+ Thêm sản phẩm</button>
+  </div>
+</div>
+
+<!-- Tabs lọc và tìm kiếm -->
+<div class="quick" style="margin-bottom: 16px; align-items: center">
+  <button class="chip" [class.active]="productFilterStatus() === 'ALL'" (click)="productFilterStatus.set('ALL')">
+    Tất cả ({{ allProductCount() }})
+  </button>
+  <button class="chip" [class.active]="productFilterStatus() === 'VISIBLE'" (click)="productFilterStatus.set('VISIBLE')">
+    Đang bán ({{ visibleProductCount() }})
+  </button>
+  <button class="chip" [class.active]="productFilterStatus() === 'HIDDEN'" (click)="productFilterStatus.set('HIDDEN')">
+    Đã ẩn ({{ hiddenProductCount() }})
+  </button>
+  <button class="chip" [class.active]="productFilterStatus() === 'DRAFT'" (click)="productFilterStatus.set('DRAFT')">
+    Nháp ({{ draftProductCount() }})
+  </button>
+
+  <input
+    class="inp"
+    type="search"
+    aria-label="Tìm kiếm sản phẩm"
+    placeholder="Tìm kiếm sản phẩm, SKU…"
+    [ngModel]="searchQuery()"
+    (ngModelChange)="searchQuery.set($event)"
+    style="width: 240px; margin: 0 0 0 auto; border-radius: 9999px"
+  />
+</div>
+
+<!-- Danh sách sản phẩm -->
+<div class="box">
+  @if (filteredProducts().length > 0) {
+    @for (p of filteredProducts(); track p.id) {
+      <div class="row">
+        <div class="g">
+          <b>{{ p.n }}</b>
+          <span class="m">{{ p.c }} · {{ p.v.length }} biến thể · đã bán {{ p.sold }}</span>
+        </div>
+
+        <span class="m">
+          {{ formatVnd(getMinPrice(p)) }}
+          @if (getMaxPrice(p) > getMinPrice(p)) {
+            – {{ formatVnd(getMaxPrice(p)) }}
+          }
+        </span>
+
+        <span class="tag" [class.warn]="p.v && p.v.length > 0 && p.v[0].q <= p.v[0].l">
+          Kho {{ getTotalStock(p) }}
+        </span>
+
+        <span class="tag" [class.ok]="p.s === 'VISIBLE'" [class.warn]="p.s === 'HIDDEN' || p.s === 'DRAFT'">
+          {{ p.s === 'VISIBLE' ? 'Đang bán' : (p.s === 'HIDDEN' ? 'Đã ẩn' : 'Nháp') }}
+        </span>
+
+        <button class="btn sm" (click)="openEditProductModal(p)">Sửa</button>
+        <button class="btn sm" (click)="toggleProductVisibility(p)">
+          {{ p.s === 'VISIBLE' ? 'Ẩn' : 'Hiện' }}
+        </button>
+        <button class="btn sm" style="color: var(--err)" (click)="confirmDeleteProduct(p)">Xóa</button>
+      </div>
+    }
+  } @else {
+    <div style="padding: 48px 16px; text-align: center;">
+      <div style="font-size: 44px; margin-bottom: 12px;">📦</div>
+      <h3 style="font-size: 17px; font-weight: 700; margin: 0 0 6px; color: var(--ink);">Gian hàng chưa có sản phẩm nào</h3>
+      <p style="margin: 0 0 20px; color: var(--mute); font-size: 14px;">Bắt đầu đăng tải sản phẩm đầu tiên của bạn để sẵn sàng bán hàng trên VIC MART!</p>
+      <button class="btn p" (click)="openCreateProductModal()">+ Thêm sản phẩm đầu tiên</button>
+    </div>
+  }
+</div>
+
+<app-seller-product-modal
+  [isOpen]="productModalOpen()"
+  [product]="editingProduct()"
+  [categories]="dbCategories()"
+  (close)="closeProductModal()"
+  (save)="handleSaveProduct($event)"
+></app-seller-product-modal>
+
+<app-seller-delete-product-dialog
+  [isOpen]="deleteConfirmOpen()"
+  [product]="deleteProductTarget()"
+  (close)="closeDeleteConfirm()"
+  (confirm)="executeDeleteProduct($event)"
+></app-seller-delete-product-dialog>

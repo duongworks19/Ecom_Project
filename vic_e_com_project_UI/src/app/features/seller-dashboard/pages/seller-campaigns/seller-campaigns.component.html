@@ -1,0 +1,20 @@
+<div class="hd">
+  <div>
+    <h1 style="font-size: 28px">Chương trình giảm giá</h1>
+    <p class="sub">Flash sale, combo và mua kèm theo khung thời gian.</p>
+  </div>
+</div>
+
+<div class="box">
+  @for (c of campaigns(); track c.id) {
+    <div class="row">
+      <div class="g">
+        <b>{{ c.n }}</b>
+        <span class="m">{{ c.t }} · {{ c.from }} đến {{ c.to }} · {{ c.k }} biến thể · Giảm {{ c.val }}{{ c.dt }}</span>
+      </div>
+      <span class="tag" [class.ok]="c.st === 'ACTIVE'" [class.warn]="c.st === 'PAUSED'">
+        {{ c.st === 'ACTIVE' ? 'Đang chạy' : (c.st === 'PAUSED' ? 'Tạm dừng' : 'Đã kết thúc') }}
+      </span>
+    </div>
+  }
+</div>
