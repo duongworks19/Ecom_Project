@@ -1,0 +1,87 @@
+<section class="card shop-card-section" aria-label="Thông tin gian hàng">
+  <div class="shop-card-grid">
+    <!-- Left: Shop identity & action buttons -->
+    <div class="shop-brand-col">
+      <div class="avatar-wrapper">
+        <a [routerLink]="['/shop', shopId]" class="avatar-link" [title]="shop()?.name || shopName">
+          @if (shop()?.logo && !logoLoadFailed()) {
+            <img
+              [src]="shop()?.logo"
+              [alt]="shop()?.name || shopName"
+              class="shop-avatar-img"
+              (error)="logoLoadFailed.set(true)"
+            />
+          } @else {
+            <div class="avatar-letter">{{ avatarLetter() }}</div>
+          }
+        </a>
+        <span class="badge-favorite">Yêu thích</span>
+      </div>
+
+      <div class="shop-brand-info">
+        <h3 class="shop-title">
+          <a [routerLink]="['/shop', shopId]">{{ shop()?.name || shopName }}</a>
+        </h3>
+
+        <div class="status-indicator">
+          <span class="dot-online"></span>
+          <span class="status-text">Đang hoạt động</span>
+        </div>
+
+        <div class="actions-row">
+          <button
+            type="button"
+            class="action-btn btn-follow"
+            [class.active]="isFollowing()"
+            [disabled]="isFollowLoading()"
+            (click)="toggleFollow()"
+          >
+            @if (isFollowing()) {
+              <span>✓ Đang theo dõi</span>
+            } @else {
+              <span>+ Theo dõi</span>
+            }
+          </button>
+
+          <a [routerLink]="['/shop', shopId]" class="action-btn btn-view-shop">
+            <svg viewBox="0 0 20 20" fill="currentColor" class="shop-icon" aria-hidden="true">
+              <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+            </svg>
+            <span>Xem Shop</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Stats grid (backed by real backend data) -->
+    <div class="shop-stats-col">
+      <div class="stat-entry">
+        <span class="stat-label">Đánh giá</span>
+        <span class="stat-value">{{ reviewCount() | number }}</span>
+      </div>
+
+      <div class="stat-entry">
+        <span class="stat-label">Điểm shop</span>
+        <span class="stat-value">{{ (shop()?.ratingAvg || 5.0) | number:'1.1-1' }} ★</span>
+      </div>
+
+      <div class="stat-entry">
+        <span class="stat-label">Sản phẩm</span>
+        <span class="stat-value">{{ productCount() | number }}</span>
+      </div>
+
+      <div class="stat-entry">
+        <span class="stat-label">Người theo dõi</span>
+        <span class="stat-value">{{ (shop()?.followerCount || 0) | number }}</span>
+      </div>
+
+      @if (shop()?.pickupAddress) {
+        <div class="stat-entry full-span">
+          <span class="stat-label">Kho hàng</span>
+          <span class="stat-value text-normal" [title]="shop()?.pickupAddress">{{ shop()?.pickupAddress }}</span>
+        </div>
+      }
+    </div>
+  </div>
+</section>
+

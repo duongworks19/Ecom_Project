@@ -1,4 +1,4 @@
-﻿package com.vic.ecom.services;
+package com.vic.ecom.services;
 
 import com.vic.ecom.dto.VoucherDtos;
 import com.vic.ecom.dto.seller.*;
@@ -71,7 +71,7 @@ public class SellerDashboardService {
             s.setVendor(vendor);
             s.setName(vendor.getBusinessName() != null && !vendor.getBusinessName().isBlank()
                     ? vendor.getBusinessName() : "Shop " + userId);
-            s.setDescription("Gian hĂ ng má»›i");
+            s.setDescription("Gian hàng mới");
             s.setStatus(ShopStatus.ACTIVE);
             return shopRepository.save(s);
         }
@@ -88,7 +88,7 @@ public class SellerDashboardService {
             Shop s = new Shop();
             s.setVendor(vendor);
             s.setName(vendor.getBusinessName());
-            s.setDescription("Gian hĂ ng cá»§a " + user.getFullName());
+            s.setDescription("Gian hàng của " + user.getFullName());
             s.setStatus(ShopStatus.ACTIVE);
             return shopRepository.save(s);
         }
@@ -99,10 +99,10 @@ public class SellerDashboardService {
     private void seedShopDataIfNeeded(Shop shop) {
         Long shopId = shop.getId();
 
-        // XĂ³a hoĂ n toĂ n cĂ¡c dá»¯ liá»‡u máº«u Ä‘Ă£ seed trÆ°á»›c Ä‘Ă¢y Ä‘á»ƒ chá»‰ hiá»ƒn thá»‹ dá»¯ liá»‡u thá»±c táº¿ Ä‘Æ°á»£c nháº­p vĂ o
+        // Xóa hoàn toàn các dữ liệu mẫu đã seed trước đây để chỉ hiển thị dữ liệu thực tế được nhập vào
         try {
-            jdbcTemplate.execute("DELETE FROM shop_reviews WHERE customer_name IN ('Nguyá»…n Ngá»c Mai', 'HoĂ ng Gia Báº£o', 'VÅ© Thanh TĂ¢m', 'Äáº·ng KhĂ¡nh Linh', 'Tráº§n Thu HĂ ', 'Pháº¡m Ngá»c Anh', 'VÅ© Háº£i Yáº¿n')");
-            jdbcTemplate.execute("DELETE FROM shop_promotions WHERE name IN ('Flash Sale GĂ³c Nhá» áº¤m CĂºng â€” ThĂ¡ng 10', 'Combo Náº¿n ThÆ¡m & BĂ¬nh Hoa Thu ÄĂ´ng')");
+            jdbcTemplate.execute("DELETE FROM shop_reviews WHERE customer_name IN ('Nguyễn Ngọc Mai', 'Hoàng Gia Bảo', 'Vũ Thanh Tâm', 'Đặng Khánh Linh', 'Trần Thu Hà', 'Phạm Ngọc Anh', 'Vũ Hải Yến')");
+            jdbcTemplate.execute("DELETE FROM shop_promotions WHERE name IN ('Flash Sale Góc Nhỏ Ấm Cúng — Tháng 10', 'Combo Nến Thơm & Bình Hoa Thu Đông')");
         } catch (Exception ignored) {
         }
     }
@@ -161,14 +161,14 @@ public class SellerDashboardService {
     @Transactional
     public SellerDashboardResponse getDashboardData(Long userId) {
         if (userId == null) {
-            throw new IllegalArgumentException("KhĂ´ng xĂ¡c Ä‘á»‹nh Ä‘Æ°á»£c tĂ i khoáº£n ngÆ°á»i bĂ¡n");
+            throw new IllegalArgumentException("Không xác định được tài khoản người bán");
         }
         Vendor vendor = vendorRepository.findByUserId(userId)
                 .filter(v -> v.getApprovalStatus() == ApprovalStatus.APPROVED)
-                .orElseThrow(() -> new IllegalArgumentException("TĂ i khoáº£n chÆ°a cĂ³ gian hĂ ng Ä‘Æ°á»£c phĂª duyá»‡t"));
+                .orElseThrow(() -> new IllegalArgumentException("Tài khoản chưa có gian hàng được phê duyệt"));
         Shop shop = vendor.getShop();
         if (shop == null || shop.getStatus() != ShopStatus.ACTIVE) {
-            throw new IllegalArgumentException("KhĂ´ng tĂ¬m tháº¥y gian hĂ ng Ä‘ang hoáº¡t Ä‘á»™ng cá»§a tĂ i khoáº£n");
+            throw new IllegalArgumentException("Không tìm thấy gian hàng đang hoạt động của tài khoản");
         }
         Long shopId = shop.getId();
 
@@ -314,8 +314,8 @@ public class SellerDashboardService {
                 .shopAvatarLetter(avatarLetter)
                 .shopLogo(logo)
                 .adminApproved(isApproved)
-                .greetingTitle("ChĂ o " + shopName.split(" ")[0] + ", hĂ´m nay cĂ³ " + urgentTasks + " viá»‡c cáº§n xá»­ lĂ½")
-                .currentDateText("Thá»© TÆ°, 14/10/2026 Â· Xá»­ lĂ½ Ä‘Æ¡n má»›i trÆ°á»›c 17:00 Ä‘á»ƒ giao trong ngĂ y.")
+                .greetingTitle("Chào " + shopName.split(" ")[0] + ", hôm nay có " + urgentTasks + " việc cần xử lý")
+                .currentDateText("Thứ Tư, 14/10/2026 · Xử lý đơn mới trước 17:00 để giao trong ngày.")
                 .totalUrgentTasks(urgentTasks)
                 .unreadNotifications(6)
                 .completedSteps(completedSteps)
@@ -349,8 +349,8 @@ public class SellerDashboardService {
             Order newOrder = new Order();
             newOrder.setShopId(shop.getId());
             newOrder.setOrderCode(orderCode);
-            newOrder.setReceiverName("KhĂ¡ch hĂ ng");
-            newOrder.setProductSummary("Sáº£n pháº©m");
+            newOrder.setReceiverName("Khách hàng");
+            newOrder.setProductSummary("Sản phẩm");
             newOrder.setTotalAmount(BigDecimal.ZERO);
             return newOrder;
         });
@@ -358,15 +358,15 @@ public class SellerDashboardService {
         if ("CONFIRM".equalsIgnoreCase(action)) {
             OrderStatus previous = order.getStatus();
             order.setStatus(OrderStatus.PREPARING);
-            saveOrderHistory(order, previous, OrderStatus.PREPARING, actorUserId(order, shop), "Vendor xĂ¡c nháº­n vĂ  báº¯t Ä‘áº§u chuáº©n bá»‹ hĂ ng");
+            saveOrderHistory(order, previous, OrderStatus.PREPARING, actorUserId(order, shop), "Vendor xác nhận và bắt đầu chuẩn bị hàng");
         } else if ("MARK_PACKED".equalsIgnoreCase(action)) {
             OrderStatus previous = order.getStatus();
             order.setStatus(OrderStatus.PACKED);
-            saveOrderHistory(order, previous, OrderStatus.PACKED, actorUserId(order, shop), "Vendor Ä‘Ă£ Ä‘Ă³ng gĂ³i Ä‘Æ¡n hĂ ng");
+            saveOrderHistory(order, previous, OrderStatus.PACKED, actorUserId(order, shop), "Vendor đã đóng gói đơn hàng");
         } else if ("START_SHIPPING".equalsIgnoreCase(action)) {
             OrderStatus previous = order.getStatus();
             order.setStatus(OrderStatus.READY_TO_SHIP);
-            saveOrderHistory(order, previous, OrderStatus.READY_TO_SHIP, actorUserId(order, shop), "Vendor chuyá»ƒn Ä‘Æ¡n sang chá» Ä‘iá»u phá»‘i");
+            saveOrderHistory(order, previous, OrderStatus.READY_TO_SHIP, actorUserId(order, shop), "Vendor chuyển đơn sang chờ điều phối");
             if (TransactionSynchronizationManager.isSynchronizationActive()) {
                 TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                     @Override
@@ -441,8 +441,8 @@ public class SellerDashboardService {
 
         Product product = new Product();
         product.setShop(shop);
-        product.setName(request.getName() != null ? request.getName().trim() : "Sáº£n pháº©m má»›i");
-        product.setCategory(request.getCategory() != null && !request.getCategory().isBlank() ? request.getCategory().trim() : "ÄĂ¨n trang trĂ­");
+        product.setName(request.getName() != null ? request.getName().trim() : "Sản phẩm mới");
+        product.setCategory(request.getCategory() != null && !request.getCategory().isBlank() ? request.getCategory().trim() : "Đèn trang trí");
         product.setImageUrl(request.getImageUrl() != null && !request.getImageUrl().isBlank()
                 ? request.getImageUrl()
                 : IMG_LAMP_CLOUD);
@@ -450,7 +450,7 @@ public class SellerDashboardService {
         product.setStatus(stock <= 10 ? "LOW_STOCK" : "VISIBLE");
 
         ProductVariant pv = new ProductVariant();
-        pv.setVariantName(request.getVariant() != null && !request.getVariant().isBlank() ? request.getVariant().trim() : "TiĂªu chuáº©n");
+        pv.setVariantName(request.getVariant() != null && !request.getVariant().isBlank() ? request.getVariant().trim() : "Tiêu chuẩn");
         pv.setSku(request.getSku() != null && !request.getSku().isBlank()
                 ? request.getSku().trim().toUpperCase()
                 : "LM-" + (100 + new Random().nextInt(900)));
@@ -470,7 +470,7 @@ public class SellerDashboardService {
     @Transactional
     public SellerReviewQuestionDto replyReview(Long reviewId, String replyText) {
         ShopReview review = shopReviewRepository.findById(reviewId)
-                .orElseThrow(() -> new IllegalArgumentException("KhĂ´ng tĂ¬m tháº¥y Ä‘Ă¡nh giĂ¡/cĂ¢u há»i vá»›i id: " + reviewId));
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đánh giá/câu hỏi với id: " + reviewId));
         review.setReply(replyText != null ? replyText.trim() : "");
         ShopReview saved = shopReviewRepository.save(review);
         return toReviewDto(saved);
@@ -574,8 +574,8 @@ public class SellerDashboardService {
         if (shop == null) return Collections.emptyList();
         List<ReturnRequest> list = returnRequestRepository.findByOrder_ShopIdOrderByCreatedAtDesc(shop.getId());
         return list.stream().map(r -> {
-            String typeName = r.getType() == ReturnRequestType.RETURN ? "Tráº£ hĂ ng & HoĂ n tiá»n" : "HoĂ n tiá»n";
-            String cName = r.getCustomer() != null ? (r.getCustomer().getFullName() != null ? r.getCustomer().getFullName() : r.getCustomer().getEmail()) : "KhĂ¡ch hĂ ng";
+            String typeName = r.getType() == ReturnRequestType.RETURN ? "Trả hàng & Hoàn tiền" : "Hoàn tiền";
+            String cName = r.getCustomer() != null ? (r.getCustomer().getFullName() != null ? r.getCustomer().getFullName() : r.getCustomer().getEmail()) : "Khách hàng";
             String oCode = r.getOrder() != null ? r.getOrder().getOrderCode() : "";
             return SellerReturnDto.builder()
                     .id(r.getId())
@@ -595,7 +595,7 @@ public class SellerDashboardService {
     @Transactional
     public SellerReturnDto updateReturnStatus(Long returnId, String action, String responseNote) {
         ReturnRequest req = returnRequestRepository.findById(returnId)
-                .orElseThrow(() -> new IllegalArgumentException("KhĂ´ng tĂ¬m tháº¥y yĂªu cáº§u Ä‘á»•i tráº£ #" + returnId));
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy yêu cầu đổi trả #" + returnId));
         if ("APPROVE".equalsIgnoreCase(action)) {
             req.setStatus(ReturnRequestStatus.APPROVED);
         } else if ("REJECT".equalsIgnoreCase(action)) {
@@ -605,8 +605,8 @@ public class SellerDashboardService {
             req.setVendorResponse(responseNote);
         }
         ReturnRequest saved = returnRequestRepository.save(req);
-        String typeName = saved.getType() == ReturnRequestType.RETURN ? "Tráº£ hĂ ng & HoĂ n tiá»n" : "HoĂ n tiá»n";
-        String cName = saved.getCustomer() != null ? (saved.getCustomer().getFullName() != null ? saved.getCustomer().getFullName() : saved.getCustomer().getEmail()) : "KhĂ¡ch hĂ ng";
+        String typeName = saved.getType() == ReturnRequestType.RETURN ? "Trả hàng & Hoàn tiền" : "Hoàn tiền";
+        String cName = saved.getCustomer() != null ? (saved.getCustomer().getFullName() != null ? saved.getCustomer().getFullName() : saved.getCustomer().getEmail()) : "Khách hàng";
         String oCode = saved.getOrder() != null ? saved.getOrder().getOrderCode() : "";
         return SellerReturnDto.builder()
                 .id(saved.getId())
@@ -638,7 +638,7 @@ public class SellerDashboardService {
         }
         DiscountCampaign dc = new DiscountCampaign();
         dc.setShop(shop);
-        dc.setName(dto.getName() != null ? dto.getName() : "Chiáº¿n dá»‹ch giáº£m giĂ¡");
+        dc.setName(dto.getName() != null ? dto.getName() : "Chiến dịch giảm giá");
         dc.setType(com.vic.ecom.enums.CampaignType.FLASH_SALE);
         dc.setDiscountPercent(dto.getDiscountPercent() != null ? dto.getDiscountPercent() : 10);
         dc.setProductCount(dto.getProductCount() != null ? dto.getProductCount() : 1);
@@ -663,7 +663,7 @@ public class SellerDashboardService {
     @Transactional
     public SellerPromotionDto updateCampaignStatus(Long campaignId, String status) {
         DiscountCampaign dc = discountCampaignRepository.findById(campaignId)
-                .orElseThrow(() -> new IllegalArgumentException("KhĂ´ng tĂ¬m tháº¥y chÆ°Æ¡ng trĂ¬nh #" + campaignId));
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy chương trình #" + campaignId));
         if ("PAUSED".equalsIgnoreCase(status)) {
             dc.setStatus(com.vic.ecom.enums.CampaignStatus.PAUSED);
         } else if ("ENDED".equalsIgnoreCase(status)) {
@@ -702,7 +702,7 @@ public class SellerDashboardService {
         int stock = p.getVariants() != null ? p.getVariants().stream().mapToInt(v -> v.getStockQty() != null ? v.getStockQty() : 0).sum() : 0;
         int soldCount = p.getVariants() != null ? p.getVariants().stream().mapToInt(v -> v.getSoldCount() != null ? v.getSoldCount() : 0).sum() : 0;
         String sku = firstVariant != null ? firstVariant.getSku() : "";
-        String variantName = firstVariant != null ? firstVariant.getVariantName() : "Máº·c Ä‘á»‹nh";
+        String variantName = firstVariant != null ? firstVariant.getVariantName() : "Mặc định";
         String color = firstVariant != null ? firstVariant.getThumbnailColor() : null;
 
         return SellerProductDto.builder()
@@ -744,58 +744,58 @@ public class SellerDashboardService {
 
         switch (statusStr) {
             case "PENDING":
-                statusLabel = "Chá» xĂ¡c nháº­n";
+                statusLabel = "Chờ xác nhận";
                 badgeClass = "w";
-                actionText = "XĂ¡c nháº­n";
+                actionText = "Xác nhận";
                 actionStyle = "red";
                 nextAction = "CONFIRM";
                 break;
             case "CONFIRMED":
-                statusLabel = "ÄĂ£ xĂ¡c nháº­n";
+                statusLabel = "Đã xác nhận";
                 badgeClass = "o";
-                actionText = "Chuáº©n bá»‹ hĂ ng";
+                actionText = "Chuẩn bị hàng";
                 actionStyle = "outline";
                 nextAction = "PREPARE";
                 break;
             case "PREPARING":
-                statusLabel = "Äang chuáº©n bá»‹";
+                statusLabel = "Đang chuẩn bị";
                 badgeClass = "o";
-                actionText = "ÄĂ£ Ä‘Ă³ng gĂ³i";
+                actionText = "Đã đóng gói";
                 actionStyle = "outline";
                 nextAction = "MARK_PACKED";
                 break;
             case "PACKED":
-                statusLabel = "ÄĂ£ Ä‘Ă³ng gĂ³i";
+                statusLabel = "Đã đóng gói";
                 badgeClass = "g";
-                actionText = "Giao váº­n chuyá»ƒn";
+                actionText = "Giao vận chuyển";
                 actionStyle = "outline";
                 nextAction = "START_SHIPPING";
                 break;
             case "SHIPPING":
-                statusLabel = "Äang giao hĂ ng";
+                statusLabel = "Đang giao hàng";
                 badgeClass = "g";
-                actionText = "Chi tiáº¿t";
+                actionText = "Chi tiết";
                 actionStyle = "outline";
                 nextAction = "VIEW_DETAIL";
                 break;
             case "DELIVERED":
-                statusLabel = "Giao thĂ nh cĂ´ng";
+                statusLabel = "Giao thành công";
                 badgeClass = "g";
-                actionText = "Chi tiáº¿t";
+                actionText = "Chi tiết";
                 actionStyle = "outline";
                 nextAction = "VIEW_DETAIL";
                 break;
             case "CANCELLED":
-                statusLabel = "ÄĂ£ há»§y";
+                statusLabel = "Đã hủy";
                 badgeClass = "r";
-                actionText = "Chi tiáº¿t";
+                actionText = "Chi tiết";
                 actionStyle = "outline";
                 nextAction = "VIEW_DETAIL";
                 break;
             default:
                 statusLabel = statusStr;
                 badgeClass = "o";
-                actionText = "Chi tiáº¿t";
+                actionText = "Chi tiết";
                 actionStyle = "outline";
                 nextAction = "VIEW_DETAIL";
         }
@@ -806,7 +806,7 @@ public class SellerDashboardService {
 
         String customerName = o.getReceiverName() != null && !o.getReceiverName().isBlank()
                 ? o.getReceiverName()
-                : (o.getCustomer() != null ? o.getCustomer().getFullName() : "KhĂ¡ch hĂ ng");
+                : (o.getCustomer() != null ? o.getCustomer().getFullName() : "Khách hàng");
 
         String customerPhone = o.getReceiverPhone() != null && !o.getReceiverPhone().isBlank()
                 ? o.getReceiverPhone()
@@ -814,7 +814,7 @@ public class SellerDashboardService {
 
         String summary = o.getProductSummary() != null && !o.getProductSummary().isBlank()
                 ? o.getProductSummary()
-                : (o.getItems() != null && !o.getItems().isEmpty() ? o.getItems().get(0).getProductName() + " Ă—" + o.getItems().get(0).getQuantity() : "ÄÆ¡n hĂ ng");
+                : (o.getItems() != null && !o.getItems().isEmpty() ? o.getItems().get(0).getProductName() + " ×" + o.getItems().get(0).getQuantity() : "Đơn hàng");
 
         String image = o.getProductImage() != null && !o.getProductImage().isBlank()
                 ? o.getProductImage()
@@ -862,12 +862,12 @@ public class SellerDashboardService {
         }
         return SellerReviewQuestionDto.builder()
                 .id(r.getId())
-                .customerName(cName != null ? cName : "KhĂ¡ch hĂ ng")
-                .productName(r.getProductName() != null ? r.getProductName() : "Sáº£n pháº©m cá»§a shop")
+                .customerName(cName != null ? cName : "Khách hàng")
+                .productName(r.getProductName() != null ? r.getProductName() : "Sản phẩm của shop")
                 .productImage(r.getProductImage() != null ? r.getProductImage() : IMG_LAMP_CLOUD)
                 .rating(r.getRating() != null ? r.getRating() : 5)
                 .comment(r.getComment())
-                .createdAt(r.getCreatedAtLabel() != null ? r.getCreatedAtLabel() : "Vá»«a xong")
+                .createdAt(r.getCreatedAtLabel() != null ? r.getCreatedAtLabel() : "Vừa xong")
                 .productId(r.getProductId())
                 .type(r.getType() != null ? r.getType() : "REVIEW")
                 .reviewImage(r.getReviewImage())

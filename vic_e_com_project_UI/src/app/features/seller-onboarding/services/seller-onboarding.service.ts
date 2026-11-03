@@ -384,19 +384,19 @@ export class SellerOnboardingService {
       if (compact.includes(rCompact)) {
         return {
           isAvailable: false,
-          message: 'TÃªn gian hÃ ng chá»©a tá»« khÃ³a nháº¡y cáº£m hoáº·c trÃ¹ng vá»›i tÃªn sÃ n khÃ¡c, vui lÃ²ng chá»n tÃªn khÃ¡c',
+          message: 'Tên gian hàng chứa từ khóa nhạy cảm hoặc trùng với tên sàn khác, vui lòng chọn tên khác',
         };
       }
     }
 
     const phrases = [
-      'tai xiu', 'taixiu', 'tÃ i xá»‰u', 'co bac', 'cá» báº¡c', 'danh bac', 'Ä‘Ã¡nh báº¡c', 'lo de', 'lÃ´ Ä‘á»', 'casino',
-      'lua dao', 'lá»«a Ä‘áº£o', 'scam', 'scammer', 'ma tuy', 'ma tÃºy', 'can sa', 'cáº§n sa', 'thuoc phien', 'thuá»‘c phiá»‡n',
-      'gai goi', 'gÃ¡i gá»i', 'khoa than', 'khá»a thÃ¢n', 'khieu dam', 'khiÃªu dÃ¢m', 'dam dang', 'dÃ¢m Ä‘Ã£ng',
-      'kich duc', 'kÃ­ch dá»¥c', 'do choi nguoi lon', 'Ä‘á»“ chÆ¡i ngÆ°á»i lá»›n', 'sex toy', 'sextoy', 'massage 18', '18+',
-      'suc vat', 'sÃºc váº­t', 'vu khi', 'vÅ© khÃ­', 'sung dan', 'sÃºng Ä‘áº¡n', 'chat no', 'cháº¥t ná»•',
-      'du ma', 'Ä‘á»¥ mÃ¡', 'du me', 'Ä‘á»¥ máº¹', 'dit me', 'Ä‘á»‹t máº¹', 'vai lon', 'vÃ£i lá»“n', 'di cho', 'Ä‘Ä© chÃ³',
-      'con di', 'con Ä‘Ä©', 'ban dam', 'bÃ¡n dÃ¢m', 'lam tinh', 'lÃ m tÃ¬nh', 'thu dam', 'thá»§ dÃ¢m'
+      'tai xiu', 'taixiu', 'tài xỉu', 'co bac', 'cờ bạc', 'danh bac', 'đánh bạc', 'lo de', 'lô đề', 'casino',
+      'lua dao', 'lừa đảo', 'scam', 'scammer', 'ma tuy', 'ma túy', 'can sa', 'cần sa', 'thuoc phien', 'thuốc phiện',
+      'gai goi', 'gái gọi', 'khoa than', 'khỏa thân', 'khieu dam', 'khiêu dâm', 'dam dang', 'dâm đãng',
+      'kich duc', 'kích dục', 'do choi nguoi lon', 'đồ chơi người lớn', 'sex toy', 'sextoy', 'massage 18', '18+',
+      'suc vat', 'súc vật', 'vu khi', 'vũ khí', 'sung dan', 'súng đạn', 'chat no', 'chất nổ',
+      'du ma', 'đụ má', 'du me', 'đụ mẹ', 'dit me', 'địt mẹ', 'vai lon', 'vãi lồn', 'di cho', 'đĩ chó',
+      'con di', 'con đĩ', 'ban dam', 'bán dâm', 'lam tinh', 'làm tình', 'thu dam', 'thủ dâm'
     ];
 
     for (const p of phrases) {
@@ -404,13 +404,13 @@ export class SellerOnboardingService {
       if (lower.includes(p) || unaccented.includes(pUnacc)) {
         return {
           isAvailable: false,
-          message: 'TÃªn gian hÃ ng chá»©a tá»« ngá»¯ nháº¡y cáº£m, vi pháº¡m chuáº©n má»±c cá»§a sÃ n',
+          message: 'Tên gian hàng chứa từ ngữ nhạy cảm, vi phạm chuẩn mực của sàn',
         };
       }
     }
 
     const exactTokens = new Set([
-      'Ä‘á»‹t', 'Ä‘á»¥', 'Ä‘Ã¹', 'lá»“n', 'cáº·c', 'buá»“i', 'dÃ¢m', 'Ä‘Ä©',
+      'địt', 'đụ', 'đù', 'lồn', 'cặc', 'buồi', 'dâm', 'đĩ',
       'fuck', 'fck', 'fuk', 'bitch', 'dick', 'pussy', 'asshole', 'cunt', 'bastard', 'nigger',
       'porn', 'xxx', 'sex', 'nude'
     ]);
@@ -420,24 +420,24 @@ export class SellerOnboardingService {
       if (exactTokens.has(tok)) {
         return {
           isAvailable: false,
-          message: 'TÃªn gian hÃ ng chá»©a tá»« ngá»¯ thÃ´ tá»¥c, nháº¡y cáº£m khÃ´ng Ä‘Ãºng chuáº©n má»±c',
+          message: 'Tên gian hàng chứa từ ngữ thô tục, nhạy cảm không đúng chuẩn mực',
         };
       }
     }
 
-    return { isAvailable: true, message: 'TÃªn gian hÃ ng há»£p lá»‡ vÃ  kháº£ dá»¥ng!' };
+    return { isAvailable: true, message: 'Tên gian hàng hợp lệ và khả dụng!' };
   }
 
   private removeVietnameseDiacritics(str: string): string {
     return str
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
-      .replace(/Ä‘/g, 'd')
+      .replace(/đ/g, 'd')
       .replace(/Ä/g, 'd');
   }
 
   /**
-   * Cáº­p nháº­t thÃ´ng tin tá»«ng bÆ°á»›c & tá»± Ä‘á»™ng lÆ°u nhÃ¡p
+   * Cập nhật thông tin từng bước & tự động lưu nháp
    */
   updateShopInfo(info: ShopInfo): void {
     const curr = this.application();
@@ -470,7 +470,7 @@ export class SellerOnboardingService {
   }
 
   /**
-   * LÆ°u nhÃ¡p vÃ o LocalStorage vÃ  Ä‘á»“ng bá»™ ngáº§m lÃªn server
+   * Lưu nháp vào LocalStorage và đồng bộ ngầm lên server
    */
   saveDraftLocally(data: VendorApplicationData): void {
     this.isSavingDraft.set(true);
@@ -843,14 +843,13 @@ export class SellerOnboardingService {
     );
   }
 
-  /**
-   * Äáº·t tráº¡ng thÃ¡i thá»­ nghiá»‡m cho demo/kiá»ƒm thá»­ (DRAFT, PENDING, REVISION_NEEDED, APPROVED, REJECTED)
+  /** Đặt trạng thái thử nghiệm cho demo/kiểm thử (DRAFT, PENDING, REVISION_NEEDED, APPROVED, REJECTED)
    */
   setDemoStatus(status: ApplicationStatus, feedback?: string): void {
     const updated: VendorApplicationData = {
       ...this.application(),
       status,
-      adminFeedback: feedback || (status === 'REVISION_NEEDED' ? 'áº¢nh máº·t sau CCCD bá»‹ lÃ³a Ã¡nh sÃ¡ng, vui lÃ²ng táº£i láº¡i áº£nh rÃµ nÃ©t.' : ''),
+      adminFeedback: feedback || (status === 'REVISION_NEEDED' ? 'Ảnh mặt sau CCCD bị lóa ánh sáng, vui lòng tải lại ảnh rõ nét.' : ''),
     };
     this.application.set(updated);
     this.currentStatus.set(status);

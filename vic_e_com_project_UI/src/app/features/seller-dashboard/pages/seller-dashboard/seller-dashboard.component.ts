@@ -186,12 +186,14 @@ export class SellerDashboardComponent implements OnInit {
     });
     this.ordersApi.getOrders().subscribe({
       next: (orders: any) => {
-        if (orders) this.store.orders.set(orders);
+        const list = orders?.data || orders;
+        if (Array.isArray(list)) this.store.orders.set(list);
       },
     });
     this.returnsApi.getReturns().subscribe({
       next: (returns: any) => {
-        if (returns) this.store.returns.set(returns);
+        const list = returns?.data || returns;
+        if (Array.isArray(list)) this.store.returns.set(list);
       },
     });
     this.qaReviewsApi.getReviews().subscribe({

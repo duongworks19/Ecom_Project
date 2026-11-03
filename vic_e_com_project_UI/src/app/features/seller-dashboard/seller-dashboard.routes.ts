@@ -1,4 +1,4 @@
-﻿import { Routes } from '@angular/router';
+import { Routes } from '@angular/router';
 import { SellerDashboardComponent } from './pages/seller-dashboard/seller-dashboard.component';
 
 export const SELLER_DASHBOARD_ROUTES: Routes = [
@@ -17,7 +17,7 @@ export const SELLER_DASHBOARD_ROUTES: Routes = [
           import('./pages/seller-overview/seller-overview.component').then(
             (m) => m.SellerOverviewComponent
           ),
-        title: 'Tá»•ng quan â€” VICMART SELLER',
+        title: 'Tổng quan — VICMART SELLER',
       },
       {
         path: 'orders',
@@ -25,7 +25,7 @@ export const SELLER_DASHBOARD_ROUTES: Routes = [
           import('./pages/seller-orders/seller-orders.component').then(
             (m) => m.SellerOrdersComponent
           ),
-        title: 'Táº¥t cáº£ Ä‘Æ¡n hĂ ng â€” VICMART SELLER',
+        title: 'Tất cả đơn hàng — VICMART SELLER',
       },
       {
         path: 'returns',
@@ -33,7 +33,7 @@ export const SELLER_DASHBOARD_ROUTES: Routes = [
           import('./pages/seller-returns/seller-returns.component').then(
             (m) => m.SellerReturnsComponent
           ),
-        title: 'Äá»•i tráº£ / HoĂ n tiá»n â€” VICMART SELLER',
+        title: 'Đổi trả / Hoàn tiền — VICMART SELLER',
       },
       {
         path: 'products',
@@ -41,7 +41,7 @@ export const SELLER_DASHBOARD_ROUTES: Routes = [
           import('./pages/seller-products/seller-products.component').then(
             (m) => m.SellerProductsComponent
           ),
-        title: 'Danh sĂ¡ch sáº£n pháº©m â€” VICMART SELLER',
+        title: 'Danh sách sản phẩm — VICMART SELLER',
       },
       {
         path: 'inventory',
@@ -49,7 +49,7 @@ export const SELLER_DASHBOARD_ROUTES: Routes = [
           import('./pages/seller-inventory/seller-inventory.component').then(
             (m) => m.SellerInventoryComponent
           ),
-        title: 'Kho hĂ ng â€” VICMART SELLER',
+        title: 'Kho hàng — VICMART SELLER',
       },
       { path: 'inv', redirectTo: 'inventory', pathMatch: 'full' },
       {
@@ -58,7 +58,7 @@ export const SELLER_DASHBOARD_ROUTES: Routes = [
           import('./pages/seller-vouchers/seller-vouchers.component').then(
             (m) => m.SellerVouchersComponent
           ),
-        title: 'Voucher cá»§a shop â€” VICMART SELLER',
+        title: 'Voucher của shop — VICMART SELLER',
       },
       {
         path: 'campaigns',
@@ -66,7 +66,7 @@ export const SELLER_DASHBOARD_ROUTES: Routes = [
           import('./pages/seller-campaigns/seller-campaigns.component').then(
             (m) => m.SellerCampaignsComponent
           ),
-        title: 'ChÆ°Æ¡ng trĂ¬nh giáº£m giĂ¡ â€” VICMART SELLER',
+        title: 'Chương trình giảm giá — VICMART SELLER',
       },
       { path: 'camps', redirectTo: 'campaigns', pathMatch: 'full' },
       {
@@ -75,7 +75,7 @@ export const SELLER_DASHBOARD_ROUTES: Routes = [
           import('./pages/seller-reviews/seller-reviews.component').then(
             (m) => m.SellerReviewsComponent
           ),
-        title: 'ÄĂ¡nh giĂ¡ khĂ¡ch hĂ ng â€” VICMART SELLER',
+        title: 'Đánh giá khách hàng — VICMART SELLER',
       },
       {
         path: 'qa',
@@ -83,7 +83,7 @@ export const SELLER_DASHBOARD_ROUTES: Routes = [
           import('./pages/seller-qa/seller-qa.component').then(
             (m) => m.SellerQaComponent
           ),
-        title: 'Há»i Ä‘Ă¡p khĂ¡ch hĂ ng â€” VICMART SELLER',
+        title: 'Hỏi đáp khách hàng — VICMART SELLER',
       },
       {
         path: 'profile',
@@ -91,7 +91,7 @@ export const SELLER_DASHBOARD_ROUTES: Routes = [
           import('./pages/seller-profile/seller-profile.component').then(
             (m) => m.SellerProfileComponent
           ),
-        title: 'Há»“ sÆ¡ gian hĂ ng â€” VICMART SELLER',
+        title: 'Hồ sơ gian hàng — VICMART SELLER',
       },
     ],
   },

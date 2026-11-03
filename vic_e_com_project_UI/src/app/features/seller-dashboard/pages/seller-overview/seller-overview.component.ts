@@ -92,7 +92,10 @@ export class SellerOverviewComponent implements OnInit {
 
   private refreshOverviewData(): void {
     this.ordersApi.getOrders().subscribe({
-      next: (orders) => { if (orders) this.store.orders.set(orders); },
+      next: (orders: any) => {
+        const list = orders?.data || orders;
+        if (Array.isArray(list)) this.store.orders.set(list);
+      },
       error: () => {},
     });
     this.productService.getProducts().subscribe({

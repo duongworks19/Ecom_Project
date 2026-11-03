@@ -29,6 +29,8 @@ export class SellerProfileComponent implements OnInit {
   readonly shopProfile = this.store.shopProfile;
   readonly currentShopId = this.store.currentShopId;
   readonly logoLoadFailed = signal<boolean>(false);
+  readonly uploadingLogo = signal<boolean>(false);
+  readonly logoPreview = signal<string>('');
 
   readonly formShopProfile = {
     n: 'Lumi Home Decor',
@@ -55,7 +57,8 @@ export class SellerProfileComponent implements OnInit {
   });
 
   readonly shopLogo = computed(() => {
-    if (this.formShopProfile.logo?.trim()) return this.formShopProfile.logo.trim();
+    const preview = this.logoPreview().trim();
+    if (preview) return preview;
     const directLogo = this.shopProfile()?.logo?.trim();
     if (directLogo) return directLogo;
     return '';
@@ -82,6 +85,7 @@ export class SellerProfileComponent implements OnInit {
           };
           this.shopProfile.set(mapped);
           Object.assign(this.formShopProfile, mapped);
+          this.logoPreview.set(mapped.logo);
         }
       },
       error: () => {},
@@ -100,13 +104,28 @@ export class SellerProfileComponent implements OnInit {
         this.store.showToast('⚠️ Dung lượng file tối đa là 5MB.', true);
         return;
       }
-      const reader = new FileReader();
-      reader.onload = (e: any) => {
-        const base64 = e.target.result;
-        this.formShopProfile.logo = base64;
-        this.logoLoadFailed.set(false);
-      };
-      reader.readAsDataURL(file);
+      const previewUrl = URL.createObjectURL(file);
+      this.formShopProfile.logo = previewUrl;
+      this.logoPreview.set(previewUrl);
+      this.logoLoadFailed.set(false);
+      this.uploadingLogo.set(true);
+      this.shopApi.uploadLogo(file).subscribe({
+        next: (url) => {
+          this.uploadingLogo.set(false);
+          if (!url) {
+            this.store.showToast('Không nhận được URL ảnh từ Cloudinary.', true);
+            return;
+          }
+          this.formShopProfile.logo = url;
+          this.logoPreview.set(url);
+          this.logoLoadFailed.set(false);
+          this.store.showToast('Đã tải logo lên Cloudinary. Hãy bấm Lưu thay đổi.');
+        },
+        error: () => {
+          this.uploadingLogo.set(false);
+          this.store.showToast('Không thể tải logo lên Cloudinary.', true);
+        },
+      });
     }
   }
 
@@ -136,8 +155,13 @@ export class SellerProfileComponent implements OnInit {
       phone: updated.ph,
       email: updated.em,
       pickupAddress: updated.ad,
-      logoUrl: updated.logo,
+      logo: updated.logo,
     };
+
+    if (this.uploadingLogo()) {
+      this.store.showToast('Vui lòng chờ logo tải lên xong rồi lưu thay đổi.', true);
+      return;
+    }
 
     this.shopApi.updateCurrentShop(payload).subscribe({
       next: () => this.store.showToast('✅ Đã lưu thay đổi hồ sơ gian hàng thành công!'),
