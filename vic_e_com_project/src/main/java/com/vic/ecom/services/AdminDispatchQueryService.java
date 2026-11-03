@@ -49,6 +49,8 @@ public class AdminDispatchQueryService {
     public AdminDispatchDtos.Page<AdminDispatchDtos.Item> items(String status, int page, int size) {
         List<Order> all = orders.findAll();
         List<AdminDispatchDtos.Item> result = all.stream()
+                .filter(order -> order.getStatus() == OrderStatus.READY_TO_SHIP
+                        || shipments.existsByOrder_Id(order.getId()))
                 .map(this::item)
                 .filter(i -> status == null || status.isBlank() || i.displayStatus().equals(status)).toList();
         int from = Math.min(page * size, result.size());

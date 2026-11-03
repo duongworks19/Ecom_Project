@@ -38,9 +38,15 @@ public class SellerOrderController {
     @PostMapping("/{orderCode}/action")
     public ResponseEntity<ApiResponse<SellerRecentOrderDto>> quickActionOrder(
             @PathVariable String orderCode,
-            @RequestBody OrderQuickActionRequest request
+            @RequestBody OrderQuickActionRequest request,
+            Authentication authentication
     ) {
-        SellerRecentOrderDto result = sellerDashboardService.handleQuickAction(orderCode, request);
+        String principal = authentication != null ? authentication.getName() : null;
+        Long userId = principal == null ? null : userRepository.findByEmail(principal)
+                .or(() -> userRepository.findByPhone(principal))
+                .map(User::getId)
+                .orElse(null);
+        SellerRecentOrderDto result = sellerDashboardService.handleQuickAction(orderCode, request, userId);
         return ResponseEntity.ok(ApiResponse.ok("Cập nhật trạng thái đơn hàng thành công", result));
     }
 }

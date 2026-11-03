@@ -17,7 +17,7 @@
     <div>
       <h3 style="margin: 0 0 6px; font-size: 16px;">Logo gian hàng</h3>
       <label class="btn sm" style="cursor: pointer;">
-        Thay đổi logo
+        {{ uploadingLogo() ? 'Đang tải logo...' : 'Thay đổi logo' }}
         <input type="file" hidden accept="image/*" (change)="onLogoFileSelect($event)" />
       </label>
     </div>

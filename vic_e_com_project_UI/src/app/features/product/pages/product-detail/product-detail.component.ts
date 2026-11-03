@@ -16,6 +16,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { CartStateService } from '../../../cart/services/cart-state.service';
 import { CartApiService } from '../../../cart/services/cart-api.service';
 import { WishlistStateService } from '../../../wishlist/services/wishlist-state.service';
+import { ShopInfoCardComponent } from '../../components/shop-info-card/shop-info-card.component';
 
 export interface ProductVariantItem {
   variantId?: number;
@@ -75,7 +76,7 @@ export interface QuestionItem {
 @Component({
   selector: 'app-product-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, DecimalPipe, RouterLink],
+  imports: [CommonModule, FormsModule, DecimalPipe, RouterLink, ShopInfoCardComponent],
   templateUrl: './product-detail.component.html',
   styleUrl: './product-detail.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

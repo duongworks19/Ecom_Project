@@ -1,4 +1,4 @@
-﻿import { Routes } from '@angular/router';
+import { Routes } from '@angular/router';
 import { SellerLandingComponent } from './pages/seller-landing/seller-landing.component';
 import { SellerWizardComponent } from './pages/seller-wizard/seller-wizard.component';
 import { SellerStatusComponent } from './pages/seller-status/seller-status.component';
@@ -17,19 +17,19 @@ export const SELLER_ONBOARDING_ROUTES: Routes = [
   {
     path: 'onboarding',
     component: SellerLandingComponent,
-    title: 'BĂ¡n hĂ ng cĂ¹ng VIC MART â€” 0Ä‘ PhĂ­ khá»Ÿi táº¡o',
+    title: 'Bán hàng cùng VIC MART — 0đ Phí khởi tạo',
   },
   {
     path: 'register',
     canActivate: [requireLoginForOnboardingGuard],
     component: SellerWizardComponent,
-    title: 'ÄÄƒng kĂ½ gian hĂ ng má»›i â€” VIC MART',
+    title: 'Đăng ký gian hàng mới — VIC MART',
   },
   {
     path: 'status',
     canActivate: [requireLoginForOnboardingGuard],
     component: SellerStatusComponent,
-    title: 'Tráº¡ng thĂ¡i há»“ sÆ¡ ngÆ°á»i bĂ¡n â€” VIC MART',
+    title: 'Trạng thái hồ sơ người bán — VIC MART',
   },
   {
     path: 'revision',
@@ -38,7 +38,7 @@ export const SELLER_ONBOARDING_ROUTES: Routes = [
       import('./pages/seller-revision/seller-revision.component').then(
         (m) => m.SellerRevisionComponent
       ),
-    title: 'Bá»• sung thĂ´ng tin há»“ sÆ¡ â€” VIC MART',
+    title: 'Bổ sung thông tin hồ sơ — VIC MART',
   },
   {
     path: 'dashboard',
@@ -106,7 +106,7 @@ export const SELLER_ONBOARDING_ROUTES: Routes = [
       import('../seller-dashboard/pages/shop-storefront/shop-storefront.component').then(
         (m) => m.ShopStorefrontComponent
       ),
-    title: 'Trang chá»§ gian hĂ ng â€” VIC MART',
+    title: 'Trang chủ gian hàng — VIC MART',
   },
   {
     path: 'shop',
@@ -114,6 +114,6 @@ export const SELLER_ONBOARDING_ROUTES: Routes = [
       import('../seller-dashboard/pages/shop-storefront/shop-storefront.component').then(
         (m) => m.ShopStorefrontComponent
       ),
-    title: 'Trang chá»§ gian hĂ ng â€” VIC MART',
+    title: 'Trang chủ gian hàng — VIC MART',
   },
 ];

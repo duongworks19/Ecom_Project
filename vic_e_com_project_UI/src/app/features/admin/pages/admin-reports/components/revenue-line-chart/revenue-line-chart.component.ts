@@ -25,8 +25,18 @@ export class RevenueLineChartComponent {
   }
 
   getY(val: number): number {
-    return 190 - (val / 20) * 160;
+    const safeAmount = Number(val) || 0;
+  const topPadding = 30;    
+  const bottomY = 190;      
+  const chartHeight = bottomY - topPadding;
+  return bottomY - (safeAmount / this.maxVal) * chartHeight;
   }
+
+  get maxVal(): number {
+  const allValues = this.trendPoints.flatMap(p => [p.currentAmount || 0, p.previousAmount || 0]);
+  const max = Math.max(...allValues, 20); 
+  return Math.ceil(max / 5) * 5; 
+}
 
   get currentPolyline(): string {
     return this.trendPoints.map((pt, i) => `${this.getX(i)},${this.getY(pt.currentAmount)}`).join(' ');

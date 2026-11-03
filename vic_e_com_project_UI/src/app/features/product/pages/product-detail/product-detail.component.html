@@ -1,4 +1,4 @@
-﻿<div class="product-page-container">
+<div class="product-page-container">
   <!-- 1. Top Header Bar -->
   <header class="detail-header">
     <div class="header-inner">
@@ -397,6 +397,9 @@
           }
         </div>
       </section>
+
+      <!-- Shop Information Banner (Khung thông tin gian hàng) -->
+      <app-shop-info-card [shopId]="prod.shopId" [shopName]="prod.shopName"></app-shop-info-card>
 
       <!-- 5. Bình luận & hỏi đáp Section -->
       <section class="card qa-card" id="qa-section">
