@@ -71,8 +71,41 @@ public class CustomerCheckoutService {
 
     private CampaignProduct activeCampaign(ProductVariant v) { LocalDateTime now = LocalDateTime.now(); return campaigns.findFirstByVariant_IdAndCampaign_StatusAndCampaign_StartAtBeforeAndCampaign_EndAtAfterOrderByIdDesc(v.getId(), com.vic.ecom.enums.CampaignStatus.ACTIVE, now, now).orElse(null); }
     private BigDecimal campaignPrice(ProductVariant v, CampaignProduct c) { if (c == null) return v.getPrice(); return c.getDiscountType() == VoucherDiscountType.PERCENT ? v.getPrice().multiply(BigDecimal.ONE.subtract(c.getDiscountValue().divide(BigDecimal.valueOf(100)))) : v.getPrice().subtract(c.getDiscountValue()).max(BigDecimal.ZERO); }
-    private ShopBlock block(List<Line> lines, List<CheckoutDtos.VoucherInput> inputs) { Shop shop = lines.get(0).variant.getProduct().getShop(); BigDecimal subtotal = lines.stream().map(l -> l.unitPrice.multiply(BigDecimal.valueOf(l.quantity))).reduce(BigDecimal.ZERO, BigDecimal::add); Voucher voucher = findVoucher(shop.getId(), inputs); BigDecimal discount = voucher == null ? BigDecimal.ZERO : discount(voucher, subtotal); BigDecimal total = subtotal.add(SHIPPING_FEE_FLAT).subtract(discount).max(BigDecimal.ZERO); return new ShopBlock(shop, lines, subtotal, voucher, discount, total); }
-    private Voucher findVoucher(Long shopId, List<CheckoutDtos.VoucherInput> inputs) { if (inputs == null) return null; long count = inputs.stream().filter(i -> i.shopId() != null && i.shopId().equals(shopId)).count(); if (count > 1) throw CustomerAccountException.unprocessable("MULTIPLE_VOUCHERS", "Mỗi shop chỉ được dùng một voucher", "vouchers"); return inputs.stream().filter(i -> shopId.equals(i.shopId())).findFirst().map(i -> vouchers.findByShopIdAndCodeIgnoreCase(shopId, i.code()).orElseThrow(() -> CustomerAccountException.unprocessable("INVALID_VOUCHER", "Voucher không hợp lệ cho shop", "vouchers"))).map(v -> valid(v) ? v : null).orElse(null); }
+    private ShopBlock block(List<Line> lines, List<CheckoutDtos.VoucherInput> inputs) { Shop shop = lines.get(0).variant.getProduct().getShop(); BigDecimal subtotal = lines.stream().map(l -> l.unitPrice.multiply(BigDecimal.valueOf(l.quantity))).reduce(BigDecimal.ZERO, BigDecimal::add); Voucher voucher = findVoucher(shop, inputs); BigDecimal discount = voucher == null ? BigDecimal.ZERO : discount(voucher, subtotal); BigDecimal total = subtotal.add(SHIPPING_FEE_FLAT).subtract(discount).max(BigDecimal.ZERO); return new ShopBlock(shop, lines, subtotal, voucher, discount, total); }
+    private Voucher findVoucher(Shop shop, List<CheckoutDtos.VoucherInput> inputs) {
+        if (inputs == null || shop == null) return null;
+        Long shopId = shop.getId();
+        long count = inputs.stream().filter(i -> i.shopId() != null && i.shopId().equals(shopId)).count();
+        if (count > 1) throw CustomerAccountException.unprocessable("MULTIPLE_VOUCHERS", "Mỗi shop chỉ được dùng một voucher", "vouchers");
+        return inputs.stream().filter(i -> shopId.equals(i.shopId())).findFirst().map(i -> {
+            String code = i.code() != null ? i.code().trim() : "";
+            if (code.isBlank()) return null;
+
+            // 1. Voucher của chính shop này
+            Optional<Voucher> shopV = vouchers.findByShopIdAndCodeIgnoreCase(shopId, code);
+            if (shopV.isPresent()) {
+                return shopV.get();
+            }
+
+            // 2. Voucher của Web / Sàn (shop_id is null)
+            Optional<Voucher> webV = vouchers.findByShopIsNullAndCodeIgnoreCase(code);
+            if (webV.isPresent()) {
+                return webV.get();
+            }
+
+            // 3. Kiểm tra xem mã này có thuộc gian hàng KHÁC không
+            Optional<Voucher> otherV = vouchers.findFirstByCodeIgnoreCase(code);
+            if (otherV.isPresent()) {
+                Shop otherShop = otherV.get().getShop();
+                if (otherShop != null && !otherShop.getId().equals(shopId)) {
+                    throw CustomerAccountException.unprocessable("INVALID_VOUCHER",
+                            "Voucher \"" + code + "\" thuộc gian hàng " + otherShop.getName() + ", không thể áp dụng cho mặt hàng của " + shop.getName(), "vouchers");
+                }
+            }
+
+            throw CustomerAccountException.unprocessable("INVALID_VOUCHER", "Mã voucher \"" + code + "\" không hợp lệ hoặc đã hết hạn", "vouchers");
+        }).map(v -> valid(v) ? v : null).orElse(null);
+    }
     private boolean valid(Voucher v) { LocalDateTime now = LocalDateTime.now(); if (v.getStatus() != VoucherStatus.ACTIVE || now.isBefore(v.getStartAt()) || now.isAfter(v.getEndAt()) || v.getUsedCount() >= v.getUsageLimit()) throw CustomerAccountException.unprocessable("INVALID_VOUCHER", "Voucher chưa đủ điều kiện sử dụng", "vouchers"); return true; }
     private BigDecimal discount(Voucher v, BigDecimal subtotal) { if (subtotal.compareTo(v.getMinOrderAmount()) < 0) throw CustomerAccountException.unprocessable("VOUCHER_MINIMUM_NOT_MET", "Chưa đạt giá trị đơn tối thiểu của voucher", "vouchers"); BigDecimal d = v.getDiscountType() == VoucherDiscountType.PERCENT ? subtotal.multiply(v.getValue()).divide(BigDecimal.valueOf(100)) : v.getValue(); if (v.getMaxDiscount() != null) d = d.min(v.getMaxDiscount()); return d.min(subtotal).max(BigDecimal.ZERO); }
     private String orderCode() { return "VC" + System.currentTimeMillis() + UUID.randomUUID().toString().substring(0, 4).toUpperCase(Locale.ROOT); }

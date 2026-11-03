@@ -67,3 +67,21 @@ export const VOUCHER_ERROR_CODES = new Set([
   'MULTIPLE_VOUCHERS',
 ]);
 
+export interface CheckoutAvailableVoucher {
+  id: number;
+  code: string;
+  discountType: 'PERCENT' | 'FIXED';
+  value: number;
+  maxDiscount?: number;
+  minOrderAmount: number;
+  usageLimit?: number;
+  usedCount?: number;
+  startAt?: string;
+  endAt?: string;
+  status?: string;
+  displayStatus?: string;
+  shopId?: number | null;
+  shopName?: string;
+  scope?: 'SHOP' | 'WEB' | string;
+}
+

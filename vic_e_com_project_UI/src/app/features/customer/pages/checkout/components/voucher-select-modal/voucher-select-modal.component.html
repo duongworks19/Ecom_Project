@@ -1,0 +1,271 @@
+@if (isOpen()) {
+  <div class="modal-backdrop" (click)="onClose()"></div>
+
+  <div class="modal-container" role="dialog" aria-modal="true" aria-labelledby="voucher-modal-title">
+    <!-- Header -->
+    <div class="modal-header">
+      <div class="modal-header__info">
+        <h3 id="voucher-modal-title" class="modal-title">Chọn Voucher Giảm Giá</h3>
+        <p class="modal-subtitle">
+          Áp dụng cho đơn hàng từ <span class="shop-highlight">{{ shopName() }}</span>
+        </p>
+      </div>
+      <button
+        type="button"
+        class="modal-close-btn"
+        aria-label="Đóng"
+        (click)="onClose()"
+      >
+        ×
+      </button>
+    </div>
+
+    <!-- Error Banner -->
+    @if (errorMessage()) {
+      <div class="error-banner" role="alert">
+        <span class="error-icon">⚠️</span>
+        <span class="error-text">{{ errorMessage() }}</span>
+      </div>
+    }
+
+    <!-- Manual Input Row -->
+    <div class="manual-input-section">
+      <div class="manual-input-row">
+        <input
+          type="text"
+          class="manual-input"
+          placeholder="Nhập mã voucher (Shop hoặc VICMART)"
+          [ngModel]="manualCode()"
+          (ngModelChange)="manualCode.set($event)"
+          (keydown.enter)="onManualApply()"
+        />
+        <button
+          type="button"
+          class="btn-manual-apply"
+          [disabled]="!manualCode().trim()"
+          (click)="onManualApply()"
+        >
+          Áp dụng
+        </button>
+      </div>
+    </div>
+
+    <div class="modal-body">
+      <!-- Info notice -->
+      <div class="scope-notice">
+        <span class="notice-icon">💡</span>
+        <span class="notice-text">
+          Voucher của shop chỉ áp dụng khi mua hàng của <strong>{{ shopName() }}</strong>. Voucher VICMART áp dụng cho toàn bộ đơn hàng.
+        </span>
+      </div>
+
+      <!-- Section 1: Shop Vouchers -->
+      <div class="voucher-section">
+        <div class="section-heading">
+          <span class="heading-badge heading-badge--shop">VOUCHER SHOP</span>
+          <span class="heading-title">Mã giảm giá của {{ shopName() }}</span>
+        </div>
+
+        @if (shopVouchers().length === 0) {
+          <div class="empty-section">
+            Shop chưa có mã giảm giá khả dụng lúc này.
+          </div>
+        } @else {
+          <div class="voucher-list">
+            @for (v of shopVouchers(); track v.id) {
+              <div
+                class="voucher-ticket"
+                [class.voucher-ticket--selected]="isSelected(v.code)"
+                [class.voucher-ticket--disabled]="!isEligible(v)"
+                (click)="onSelectVoucher(v)"
+              >
+                <!-- Ticket Left Stub -->
+                <div class="ticket-stub ticket-stub--shop">
+                  <div class="stub-tag">SHOP</div>
+                  <div class="stub-value">
+                    @if (v.discountType === 'PERCENT') {
+                      <span class="value-num">{{ v.value }}%</span>
+                      <span class="value-unit">GIẢM</span>
+                    } @else {
+                      <span class="value-num">{{ v.value | vndCurrency }}</span>
+                      <span class="value-unit">GIẢM</span>
+                    }
+                  </div>
+                </div>
+
+                <!-- Ticket Main Body -->
+                <div class="ticket-body">
+                  <div class="ticket-header">
+                    <span class="ticket-code">{{ v.code }}</span>
+                    @if (isSelected(v.code)) {
+                      <span class="selected-badge">Đang áp dụng</span>
+                    }
+                  </div>
+
+                  <div class="ticket-desc">
+                    @if (v.discountType === 'PERCENT') {
+                      Giảm {{ v.value }}%
+                      @if (v.maxDiscount) {
+                        (tối đa {{ v.maxDiscount | vndCurrency }})
+                      }
+                    } @else {
+                      Giảm {{ v.value | vndCurrency }}
+                    }
+                  </div>
+
+                  <div class="ticket-condition">
+                    Đơn tối thiểu: <strong>{{ (v.minOrderAmount || 0) | vndCurrency }}</strong>
+                  </div>
+
+                  @if (v.endAt) {
+                    <div class="ticket-expiry">
+                      HSD: {{ formatDate(v.endAt) }}
+                    </div>
+                  }
+
+                  @if (!isEligible(v)) {
+                    <div class="ticket-ineligible-hint">
+                      Mua thêm {{ remainingForEligibility(v) | vndCurrency }} để áp dụng mã này
+                    </div>
+                  }
+                </div>
+
+                <!-- Ticket Action / Radio -->
+                <div class="ticket-action">
+                  @if (isSelected(v.code)) {
+                    <button
+                      type="button"
+                      class="btn-ticket-action btn-ticket-action--active"
+                      (click)="$event.stopPropagation(); onRemove()"
+                    >
+                      Bỏ chọn
+                    </button>
+                  } @else {
+                    <button
+                      type="button"
+                      class="btn-ticket-action btn-ticket-action--apply"
+                      [disabled]="!isEligible(v)"
+                      (click)="$event.stopPropagation(); onSelectVoucher(v)"
+                    >
+                      Dùng mã
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Section 2: Web / Platform Vouchers -->
+      <div class="voucher-section">
+        <div class="section-heading">
+          <span class="heading-badge heading-badge--web">VICMART TOÀN SÀN</span>
+          <span class="heading-title">Mã giảm giá từ VICMART</span>
+        </div>
+
+        @if (webVouchers().length === 0) {
+          <div class="empty-section">
+            Hiện không có voucher toàn sàn nào khả dụng.
+          </div>
+        } @else {
+          <div class="voucher-list">
+            @for (v of webVouchers(); track v.id) {
+              <div
+                class="voucher-ticket"
+                [class.voucher-ticket--selected]="isSelected(v.code)"
+                [class.voucher-ticket--disabled]="!isEligible(v)"
+                (click)="onSelectVoucher(v)"
+              >
+                <!-- Ticket Left Stub -->
+                <div class="ticket-stub ticket-stub--web">
+                  <div class="stub-tag">VICMART</div>
+                  <div class="stub-value">
+                    @if (v.discountType === 'PERCENT') {
+                      <span class="value-num">{{ v.value }}%</span>
+                      <span class="value-unit">GIẢM</span>
+                    } @else {
+                      <span class="value-num">{{ v.value | vndCurrency }}</span>
+                      <span class="value-unit">GIẢM</span>
+                    }
+                  </div>
+                </div>
+
+                <!-- Ticket Main Body -->
+                <div class="ticket-body">
+                  <div class="ticket-header">
+                    <span class="ticket-code">{{ v.code }}</span>
+                    @if (isSelected(v.code)) {
+                      <span class="selected-badge">Đang áp dụng</span>
+                    }
+                  </div>
+
+                  <div class="ticket-desc">
+                    @if (v.discountType === 'PERCENT') {
+                      Giảm {{ v.value }}%
+                      @if (v.maxDiscount) {
+                        (tối đa {{ v.maxDiscount | vndCurrency }})
+                      }
+                    } @else {
+                      Giảm {{ v.value | vndCurrency }}
+                    }
+                  </div>
+
+                  <div class="ticket-condition">
+                    Đơn tối thiểu: <strong>{{ (v.minOrderAmount || 0) | vndCurrency }}</strong>
+                  </div>
+
+                  @if (v.endAt) {
+                    <div class="ticket-expiry">
+                      HSD: {{ formatDate(v.endAt) }}
+                    </div>
+                  }
+
+                  @if (!isEligible(v)) {
+                    <div class="ticket-ineligible-hint">
+                      Mua thêm {{ remainingForEligibility(v) | vndCurrency }} để áp dụng mã này
+                    </div>
+                  }
+                </div>
+
+                <!-- Ticket Action / Radio -->
+                <div class="ticket-action">
+                  @if (isSelected(v.code)) {
+                    <button
+                      type="button"
+                      class="btn-ticket-action btn-ticket-action--active"
+                      (click)="$event.stopPropagation(); onRemove()"
+                    >
+                      Bỏ chọn
+                    </button>
+                  } @else {
+                    <button
+                      type="button"
+                      class="btn-ticket-action btn-ticket-action--apply"
+                      [disabled]="!isEligible(v)"
+                      (click)="$event.stopPropagation(); onSelectVoucher(v)"
+                    >
+                      Dùng mã
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="modal-footer">
+      @if (selectedCode()) {
+        <button type="button" class="btn-clear-voucher" (click)="onRemove()">
+          Bỏ chọn voucher
+        </button>
+      }
+      <button type="button" class="btn-done" (click)="onClose()">
+        Xong
+      </button>
+    </div>
+  </div>
+}

@@ -7,14 +7,44 @@ import lombok.Getter;
 import lombok.Setter;
 import java.time.LocalDateTime;
 
-@Entity @Table(name = "discount_campaigns") @Getter @Setter
+@Entity
+@Table(name = "discount_campaigns")
+@Getter
+@Setter
 public class DiscountCampaign {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
-    @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "shop_id", nullable = false) private Shop shop;
-    @Enumerated(EnumType.STRING) @Column(nullable = false, length = 20) private CampaignType type;
-    @Column(name = "start_at", nullable = false) private LocalDateTime startAt;
-    @Column(name = "end_at", nullable = false) private LocalDateTime endAt;
-    @Enumerated(EnumType.STRING) @Column(nullable = false, length = 20) private CampaignStatus status;
-    @Column(nullable = false, updatable = false) private LocalDateTime createdAt = LocalDateTime.now();
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "shop_id", nullable = false)
+    private Shop shop;
+
+    @Column(length = 255, columnDefinition = "VARCHAR(255) DEFAULT 'Chương trình giảm giá'")
+    private String name = "Chương trình giảm giá";
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20, columnDefinition = "VARCHAR(20) DEFAULT 'FLASH_SALE'")
+    private CampaignType type = CampaignType.FLASH_SALE;
+
+    @Column(name = "discount_percent", columnDefinition = "INT DEFAULT 10")
+    private Integer discountPercent = 10;
+
+    @Column(name = "product_count", columnDefinition = "INT DEFAULT 1")
+    private Integer productCount = 1;
+
+    @Column(name = "start_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    private LocalDateTime startAt = LocalDateTime.now();
+
+    @Column(name = "end_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    private LocalDateTime endAt = LocalDateTime.now().plusDays(7);
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20, columnDefinition = "VARCHAR(20) DEFAULT 'ACTIVE'")
+    private CampaignStatus status = CampaignStatus.ACTIVE;
+
+    @Column(name = "created_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP", updatable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
+
     public DiscountCampaign() {}
 }

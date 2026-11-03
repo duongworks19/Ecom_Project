@@ -134,6 +134,11 @@ export class SellerDashboardComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    const role = this.authService.getRole()?.toUpperCase();
+    if (role === 'ADMIN' || role === 'ROLE_ADMIN') {
+      void this.router.navigateByUrl('/admin');
+      return;
+    }
     this.detectApprovedRole();
     this.loadStoreInitialData();
   }
@@ -142,7 +147,7 @@ export class SellerDashboardComponent implements OnInit {
     try {
       const role = this.authService.currentRoleSignal();
       if (role === 'ADMIN' || role === 'ROLE_ADMIN') {
-        this.store.shopStatus.set('APPROVED');
+        void this.router.navigateByUrl('/admin');
         return;
       }
       const draftRaw = localStorage.getItem('seller_onboarding_draft') || localStorage.getItem('vic_seller_onboarding_draft');

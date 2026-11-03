@@ -198,14 +198,13 @@ export const INITIAL_SELLER_NOTIFICATIONS: SellerNotification[] = [
 ];
 
 export const INITIAL_SHOP_PROFILE: SellerShopProfile = {
-  shopName: 'Lumi Home Decor',
-  tagline: 'Minimalist & Cozy Scandinavian Living',
-  description:
-    'Chuyên phụ kiện trang trí nhà cửa phong cách Bắc Âu tối giản: đèn gốm thủ công, nến thơm tinh dầu thiên nhiên, bình hoa thủy tinh và khung tranh gỗ sồi tự nhiên.',
-  phone: '0987 654 321',
-  email: 'hello@lumihomedecor.vn',
-  pickupAddress: 'Số 45 Ngõ 82 Dịch Vọng Hậu, Quận Cầu Giấy, Hà Nội',
-  businessHours: '08:30 - 21:00 (Thứ 2 - Chủ Nhật)',
+  shopName: '',
+  tagline: '',
+  description: '',
+  phone: '',
+  email: '',
+  pickupAddress: '',
+  businessHours: '08:00 – 21:00',
 };
 
 export function createDefaultSellerDashboardData(): SellerDashboardData {

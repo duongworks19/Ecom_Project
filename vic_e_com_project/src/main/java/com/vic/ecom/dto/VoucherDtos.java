@@ -89,7 +89,10 @@ public final class VoucherDtos {
             LocalDateTime endAt,
             VoucherStatus status,
             LocalDateTime createdAt,
-            String displayStatus
+            String displayStatus,
+            Long shopId,
+            String shopName,
+            String scope
     ) {
         public static Response from(Voucher v, String displayStatus) {
             return new Response(
@@ -105,7 +108,10 @@ public final class VoucherDtos {
                     v.getEndAt(),
                     v.getStatus(),
                     v.getCreatedAt(),
-                    displayStatus
+                    displayStatus,
+                    v.getShop() != null ? v.getShop().getId() : null,
+                    v.getShop() != null ? v.getShop().getName() : "VICMART",
+                    v.getShop() != null ? "SHOP" : "WEB"
             );
         }
     }

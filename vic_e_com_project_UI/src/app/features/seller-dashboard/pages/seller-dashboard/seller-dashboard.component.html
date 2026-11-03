@@ -1,4 +1,4 @@
-<!-- Header top bar -->
+﻿<!-- Header top bar -->
 <header class="top">
   <a routerLink="/seller/dashboard" class="brand" aria-label="VICMART Seller Center">
     <span class="dot">P</span>
@@ -6,14 +6,14 @@
     <span class="tagk">SELLER</span>
   </a>
   <span class="sp"></span>
-  <a [routerLink]="currentShopId() ? ['/shop', currentShopId()] : ['/shop']" class="pill hide-m">Xem shop như khách</a>
-  <a routerLink="/" class="pill hide-m">Trang mua sắm</a>
-  <button class="pill bell" type="button" aria-label="Thông báo, 6 chưa đọc">
-    🔔<i>{{ totalTodoCount() }}</i>
+  <a [routerLink]="currentShopId() ? ['/shop', currentShopId()] : ['/shop']" class="pill hide-m">Xem shop nhÆ° khĂ¡ch</a>
+  <a routerLink="/" class="pill hide-m">Trang mua sáº¯m</a>
+  <button class="pill bell" type="button" aria-label="ThĂ´ng bĂ¡o, 6 chÆ°a Ä‘á»c">
+    đŸ””<i>{{ totalTodoCount() }}</i>
   </button>
   <div class="me-wrap">
     <button type="button" class="me" (click)="toggleUserMenu($event)" [attr.aria-expanded]="userMenuOpen()"
-      [title]="'Tài khoản: ' + userAccountName() + ' · Gian hàng: ' + shopName()">
+      [title]="'TĂ i khoáº£n: ' + userAccountName() + ' Â· Gian hĂ ng: ' + shopName()">
       <span class="av" [class.has-img]="shopLogo() && !logoLoadFailed()">
         @if (shopLogo() && !logoLoadFailed()) {
         <img [src]="shopLogo()" [alt]="shopName()" class="seller-logo-img" (error)="onLogoError()" />
@@ -22,24 +22,24 @@
         }
       </span>
       <span class="t hide-m">{{ userAccountName() }}</span>
-      <span class="caret" [class.open]="userMenuOpen()">▾</span>
+      <span class="caret" [class.open]="userMenuOpen()">â–¾</span>
     </button>
 
     @if (userMenuOpen()) {
     <div class="user-dropdown" role="menu">
       <div class="user-dropdown-header">
         <div class="user-dropdown-name">{{ userAccountName() }}</div>
-        <div class="user-dropdown-shop">Gian hàng: <b>{{ shopName() }}</b></div>
+        <div class="user-dropdown-shop">Gian hĂ ng: <b>{{ shopName() }}</b></div>
       </div>
       <div class="user-dropdown-divider"></div>
       <a class="user-dropdown-item" [routerLink]="currentShopId() ? ['/shop', currentShopId()] : ['/shop']"
         (click)="closeUserMenu()">
-        <span class="item-icon">🏪</span>
-        <span>Xem shop như khách</span>
+        <span class="item-icon">đŸª</span>
+        <span>Xem shop nhÆ° khĂ¡ch</span>
       </a>
       <a class="user-dropdown-item" routerLink="/" (click)="closeUserMenu()">
-        <span class="item-icon">🛍️</span>
-        <span>Trang mua sắm</span>
+        <span class="item-icon">đŸ›ï¸</span>
+        <span>Trang mua sáº¯m</span>
       </a>
       <div class="user-dropdown-divider"></div>
       <button type="button" class="user-dropdown-item danger" (click)="onLogout()">
@@ -49,7 +49,7 @@
           <polyline points="16 17 21 12 16 7"></polyline>
           <line x1="21" y1="12" x2="9" y2="12"></line>
         </svg>
-        <span>Đăng xuất</span>
+        <span>ÄÄƒng xuáº¥t</span>
       </button>
     </div>
     }
@@ -58,32 +58,32 @@
 
 <div class="shell">
   <!-- Side navigation -->
-  <nav class="side" aria-label="Menu người bán">
-    <h6>TỔNG QUAN</h6>
+  <nav class="side" aria-label="Menu ngÆ°á»i bĂ¡n">
+    <h6>Tá»”NG QUAN</h6>
     <a routerLink="/seller/dashboard/overview" routerLinkActive="on" [routerLinkActiveOptions]="{ exact: false }">
-      <span>Tổng quan</span>
+      <span>Tá»•ng quan</span>
     </a>
 
-    <h6>ĐƠN HÀNG</h6>
+    <h6>ÄÆ N HĂ€NG</h6>
     <a routerLink="/seller/dashboard/orders" routerLinkActive="on">
-      <span>Tất cả đơn</span>
+      <span>Táº¥t cáº£ Ä‘Æ¡n</span>
       @if (openOrdersCount() > 0) {
       <em>{{ openOrdersCount() }}</em>
       }
     </a>
     <a routerLink="/seller/dashboard/returns" routerLinkActive="on">
-      <span>Đổi trả / Hoàn tiền</span>
+      <span>Äá»•i tráº£ / HoĂ n tiá»n</span>
       @if (pendingReturnCount() > 0) {
       <em>{{ pendingReturnCount() }}</em>
       }
     </a>
 
-    <h6>SẢN PHẨM</h6>
+    <h6>Sáº¢N PHáº¨M</h6>
     <a routerLink="/seller/dashboard/products" routerLinkActive="on">
-      <span>Danh sách sản phẩm</span>
+      <span>Danh sĂ¡ch sáº£n pháº©m</span>
     </a>
     <a routerLink="/seller/dashboard/inventory" routerLinkActive="on">
-      <span>Kho hàng</span>
+      <span>Kho hĂ ng</span>
       @if (lowStockItems().length > 0) {
       <em>{{ lowStockItems().length }}</em>
       }
@@ -91,110 +91,109 @@
 
     <h6>MARKETING</h6>
     <a routerLink="/seller/dashboard/vouchers" routerLinkActive="on">
-      <span>Voucher của shop</span>
+      <span>Voucher cá»§a shop</span>
     </a>
     <a routerLink="/seller/dashboard/campaigns" routerLinkActive="on">
-      <span>Chương trình giảm giá</span>
+      <span>ChÆ°Æ¡ng trĂ¬nh giáº£m giĂ¡</span>
     </a>
 
-    <h6>CHĂM SÓC KHÁCH HÀNG</h6>
+    <h6>CHÄ‚M SĂ“C KHĂCH HĂ€NG</h6>
     <a routerLink="/seller/dashboard/reviews" routerLinkActive="on">
-      <span>Đánh giá</span>
+      <span>ÄĂ¡nh giĂ¡</span>
       @if (unrepliedReviewCount() > 0) {
       <em>{{ unrepliedReviewCount() }}</em>
       }
     </a>
     <a routerLink="/seller/dashboard/qa" routerLinkActive="on">
-      <span>Hỏi đáp</span>
+      <span>Há»i Ä‘Ă¡p</span>
       @if (unrepliedQuestionCount() > 0) {
       <em>{{ unrepliedQuestionCount() }}</em>
       }
     </a>
 
-    <h6>CÀI ĐẶT</h6>
+    <h6>CĂ€I Äáº¶T</h6>
     <a routerLink="/account/profile">
-      <span>Hồ sơ tài khoản ({{ userAccountName() }})</span>
+      <span>Há»“ sÆ¡ tĂ i khoáº£n ({{ userAccountName() }})</span>
     </a>
     <a routerLink="/seller/dashboard/profile" routerLinkActive="on">
-      <span>Hồ sơ gian hàng ({{ shopName() }})</span>
+      <span>Há»“ sÆ¡ gian hĂ ng ({{ shopName() }})</span>
     </a>
   </nav>
 
   <!-- Main content -->
   <main>
-    <!-- NẾU GIAN HÀNG ĐÃ DUYỆT (APPROVED) -->
+    <!-- Náº¾U GIAN HĂ€NG ÄĂƒ DUYá»†T (APPROVED) -->
     @if (shopStatus() === 'APPROVED') {
     <router-outlet></router-outlet>
     } @else {
     @if (shopStatus() === 'PENDING' || shopStatus() === 'RESUBMITTED') {
     <section class="state">
-      <span class="tag info">{{ shopStatus() === 'RESUBMITTED' ? 'Đã gửi bổ sung' : 'Chờ duyệt' }}</span>
-      <h1>{{ shopStatus() === 'RESUBMITTED' ? 'Đã nhận bổ sung của bạn' : 'Hồ sơ đang chờ Admin duyệt' }}</h1>
+      <span class="tag info">{{ shopStatus() === 'RESUBMITTED' ? 'ÄĂ£ gá»­i bá»• sung' : 'Chá» duyá»‡t' }}</span>
+      <h1>{{ shopStatus() === 'RESUBMITTED' ? 'ÄĂ£ nháº­n bá»• sung cá»§a báº¡n' : 'Há»“ sÆ¡ Ä‘ang chá» Admin duyá»‡t' }}</h1>
       <p class="sub">
-        {{ shopStatus() === 'RESUBMITTED' ? 'Admin chỉ cần kiểm tra lại các mục bạn vừa nộp, những mục đã đạt được giữ nguyên.' : 'Thường mất 1–2 ngày làm việc. Chúng tôi sẽ thông báo ngay khi có kết quả.' }}
+        {{ shopStatus() === 'RESUBMITTED' ? 'Admin chá»‰ cáº§n kiá»ƒm tra láº¡i cĂ¡c má»¥c báº¡n vá»«a ná»™p, nhá»¯ng má»¥c Ä‘Ă£ Ä‘áº¡t Ä‘Æ°á»£c giá»¯
+        nguyĂªn.' : 'ThÆ°á»ng máº¥t 1â€“2 ngĂ y lĂ m viá»‡c. ChĂºng tĂ´i sáº½ thĂ´ng bĂ¡o ngay khi cĂ³ káº¿t quáº£.' }}
       </p>
       <div class="steps">
-        <span class="d">✓ Đã gửi hồ sơ</span>
-        <span class="c">Admin xem xét</span>
-        <span>Bắt đầu bán</span>
+        <span class="d">âœ“ ÄĂ£ gá»­i há»“ sÆ¡</span>
+        <span class="c">Admin xem xĂ©t</span>
+        <span>Báº¯t Ä‘áº§u bĂ¡n</span>
       </div>
     </section>
     } @else if (shopStatus() === 'NEED_INFO') {
     <section class="state">
-      <span class="tag warn">Cần bổ sung</span>
-      <h1>Admin cần thêm giấy tờ từ bạn</h1>
-      <p class="sub">Hạn bổ sung: 28/10/2026. Bạn chỉ cần nộp các mục dưới đây, không phải đăng ký lại.</p>
-      <div class="note warn"><b>Lời nhắn từ Admin:</b> Thiếu CCCD mặt sau, vui lòng bổ sung kèm giấy phép kinh doanh.
+      <span class="tag warn">Cáº§n bá»• sung</span>
+      <h1>Admin cáº§n thĂªm giáº¥y tá» tá»« báº¡n</h1>
+      <p class="sub">Háº¡n bá»• sung: 28/10/2026. Báº¡n chá»‰ cáº§n ná»™p cĂ¡c má»¥c dÆ°á»›i Ä‘Ă¢y, khĂ´ng pháº£i Ä‘Äƒng kĂ½ láº¡i.</p>
+      <div class="note warn"><b>Lá»i nháº¯n tá»« Admin:</b> Thiáº¿u CCCD máº·t sau, vui lĂ²ng bá»• sung kĂ¨m giáº¥y phĂ©p kinh doanh.
       </div>
 
       <div class="steps">
-        <span class="d">✓ Đã gửi hồ sơ</span>
-        <span class="c">Admin xem xét</span>
-        <span>Bắt đầu bán</span>
+        <span class="d">âœ“ ÄĂ£ gá»­i há»“ sÆ¡</span>
+        <span class="c">Admin xem xĂ©t</span>
+        <span>Báº¯t Ä‘áº§u bĂ¡n</span>
       </div>
 
       @for (r of requiredDocs; track r) {
       <div class="row">
         <div class="g">
           <b>{{ r }}</b>
-          <span class="m">{{ uploadedFiles()[r] ? '✓ ' + uploadedFiles()[r] : 'Chưa có tệp · JPG, PNG hoặc PDF, tối đa 5MB' }}</span>
+          <span class="m">{{ uploadedFiles()[r] ? 'âœ“ ' + uploadedFiles()[r] : 'ChÆ°a cĂ³ tá»‡p Â· JPG, PNG hoáº·c PDF, tá»‘i Ä‘a
+            5MB' }}</span>
         </div>
         <label class="btn sm">
-          {{ uploadedFiles()[r] ? 'Đổi tệp' : 'Chọn tệp' }}
+          {{ uploadedFiles()[r] ? 'Äá»•i tá»‡p' : 'Chá»n tá»‡p' }}
           <input type="file" hidden (change)="onFileSelect($event, r)" accept=".jpg,.jpeg,.png,.pdf" />
         </label>
       </div>
       }
 
       <div style="margin-top: 14px">
-        <button class="btn p" type="button" (click)="submitAdditionalDocs()">Gửi bổ sung</button>
+        <button class="btn p" type="button" (click)="submitAdditionalDocs()">Gá»­i bá»• sung</button>
       </div>
     </section>
     } @else if (shopStatus() === 'REJECTED') {
     <section class="state">
-      <span class="tag no">Bị từ chối</span>
-      <h1>Hồ sơ chưa được duyệt</h1>
-      <div class="note no"><b>Lý do:</b> Thông tin chủ shop không khớp với giấy tờ KYC.</div>
-      <p class="sub">Bạn có thể chỉnh sửa thông tin rồi gửi lại hồ sơ.</p>
-      <button class="btn p" type="button" routerLink="/seller/register">Chỉnh sửa và đăng ký lại</button>
+      <span class="tag no">Bá»‹ tá»« chá»‘i</span>
+      <h1>Há»“ sÆ¡ chÆ°a Ä‘Æ°á»£c duyá»‡t</h1>
+      <div class="note no"><b>LĂ½ do:</b> ThĂ´ng tin chá»§ shop khĂ´ng khá»›p vá»›i giáº¥y tá» KYC.</div>
+      <p class="sub">Báº¡n cĂ³ thá»ƒ chá»‰nh sá»­a thĂ´ng tin rá»“i gá»­i láº¡i há»“ sÆ¡.</p>
+      <button class="btn p" type="button" routerLink="/seller/register">Chá»‰nh sá»­a vĂ  Ä‘Äƒng kĂ½ láº¡i</button>
     </section>
     } @else if (shopStatus() === 'LOCKED') {
     <section class="state">
-      <span class="tag no">Bị khóa</span>
-      <h1>Gian hàng tạm thời bị khóa</h1>
-      <div class="note no"><b>Lý do:</b> Phát hiện đăng bán sản phẩm vi phạm chính sách cấm (bán hàng giả, hàng nhái).
+      <span class="tag no">Bá»‹ khĂ³a</span>
+      <h1>Gian hĂ ng táº¡m thá»i bá»‹ khĂ³a</h1>
+      <div class="note no"><b>LĂ½ do:</b> PhĂ¡t hiá»‡n Ä‘Äƒng bĂ¡n sáº£n pháº©m vi pháº¡m chĂ­nh sĂ¡ch cáº¥m (bĂ¡n hĂ ng giáº£, hĂ ng nhĂ¡i).
       </div>
-      <p class="sub">Đơn đang xử lý vẫn cần hoàn tất. Liên hệ hỗ trợ để được xem xét mở khóa.</p>
-      <button class="btn" type="button" (click)="showToast('Mở cổng khiếu nại & hỗ trợ gian hàng')">Liên hệ hỗ
-        trợ</button>
+      <p class="sub">ÄÆ¡n Ä‘ang xá»­ lĂ½ váº«n cáº§n hoĂ n táº¥t. LiĂªn há»‡ há»— trá»£ Ä‘á»ƒ Ä‘Æ°á»£c xem xĂ©t má»Ÿ khĂ³a.</p>
+      <button class="btn" type="button" (click)="showToast('Má»Ÿ cá»•ng khiáº¿u náº¡i & há»— trá»£ gian hĂ ng')">LiĂªn há»‡ há»—
+        trá»£</button>
     </section>
     }
     }
   </main>
 </div>
 
-<!-- TOAST THÔNG BÁO TOÀN CỤC -->
-<app-seller-toast
-  [message]="toastMessage()"
-  [isError]="isToastError()"
-></app-seller-toast>
+<!-- TOAST THĂ”NG BĂO TOĂ€N Cá»¤C -->
+<app-seller-toast [message]="toastMessage()" [isError]="isToastError()"></app-seller-toast>
