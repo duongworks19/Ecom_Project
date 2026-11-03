@@ -50,112 +50,56 @@ export const SELLER_ONBOARDING_ROUTES: Routes = [
   },
   {
     path: 'overview',
-    redirectTo: 'dashboard',
+    redirectTo: 'dashboard/overview',
     pathMatch: 'full',
   },
   {
     path: 'orders',
-    canActivate: [sellerGatekeeperGuard],
-    loadComponent: () =>
-      import('../seller-dashboard/pages/seller-dashboard/seller-dashboard.component').then(
-        (m) => m.SellerDashboardComponent
-      ),
-    data: { view: 'orders' },
-    title: 'Tất cả đơn hàng — VICMART SELLER',
+    redirectTo: 'dashboard/orders',
+    pathMatch: 'full',
   },
   {
     path: 'returns',
-    canActivate: [sellerGatekeeperGuard],
-    loadComponent: () =>
-      import('../seller-dashboard/pages/seller-dashboard/seller-dashboard.component').then(
-        (m) => m.SellerDashboardComponent
-      ),
-    data: { view: 'returns' },
-    title: 'Đổi trả / Hoàn tiền — VICMART SELLER',
+    redirectTo: 'dashboard/returns',
+    pathMatch: 'full',
   },
   {
     path: 'products',
-    canActivate: [sellerGatekeeperGuard],
-    loadComponent: () =>
-      import('../seller-dashboard/pages/seller-dashboard/seller-dashboard.component').then(
-        (m) => m.SellerDashboardComponent
-      ),
-    data: { view: 'products' },
-    title: 'Danh sách sản phẩm — VICMART SELLER',
+    redirectTo: 'dashboard/products',
+    pathMatch: 'full',
   },
   {
     path: 'inventory',
-    canActivate: [sellerGatekeeperGuard],
-    loadComponent: () =>
-      import('../seller-dashboard/pages/seller-dashboard/seller-dashboard.component').then(
-        (m) => m.SellerDashboardComponent
-      ),
-    data: { view: 'inv' },
-    title: 'Kho hàng — VICMART SELLER',
+    redirectTo: 'dashboard/inventory',
+    pathMatch: 'full',
   },
-  { path: 'inv', redirectTo: 'inventory', pathMatch: 'full' },
+  { path: 'inv', redirectTo: 'dashboard/inventory', pathMatch: 'full' },
   {
     path: 'vouchers',
-    canActivate: [sellerGatekeeperGuard],
-    loadComponent: () =>
-      import('../seller-dashboard/pages/seller-dashboard/seller-dashboard.component').then(
-        (m) => m.SellerDashboardComponent
-      ),
-    data: { view: 'vouchers' },
-    title: 'Voucher của shop — VICMART SELLER',
+    redirectTo: 'dashboard/vouchers',
+    pathMatch: 'full',
   },
   {
     path: 'campaigns',
-    canActivate: [sellerGatekeeperGuard],
-    loadComponent: () =>
-      import('../seller-dashboard/pages/seller-dashboard/seller-dashboard.component').then(
-        (m) => m.SellerDashboardComponent
-      ),
-    data: { view: 'camps' },
-    title: 'Chương trình giảm giá — VICMART SELLER',
+    redirectTo: 'dashboard/campaigns',
+    pathMatch: 'full',
   },
-  { path: 'camps', redirectTo: 'campaigns', pathMatch: 'full' },
+  { path: 'camps', redirectTo: 'dashboard/campaigns', pathMatch: 'full' },
   {
     path: 'reviews',
-    canActivate: [sellerGatekeeperGuard],
-    loadComponent: () =>
-      import('../seller-dashboard/pages/seller-dashboard/seller-dashboard.component').then(
-        (m) => m.SellerDashboardComponent
-      ),
-    data: { view: 'reviews' },
-    title: 'Đánh giá khách hàng — VICMART SELLER',
+    redirectTo: 'dashboard/reviews',
+    pathMatch: 'full',
   },
   {
     path: 'qa',
-    canActivate: [sellerGatekeeperGuard],
-    loadComponent: () =>
-      import('../seller-dashboard/pages/seller-dashboard/seller-dashboard.component').then(
-        (m) => m.SellerDashboardComponent
-      ),
-    data: { view: 'qa' },
-    title: 'Hỏi đáp khách hàng — VICMART SELLER',
+    redirectTo: 'dashboard/qa',
+    pathMatch: 'full',
   },
   {
     path: 'profile',
-    canActivate: [sellerGatekeeperGuard],
-    loadComponent: () =>
-      import('../seller-dashboard/pages/seller-dashboard/seller-dashboard.component').then(
-        (m) => m.SellerDashboardComponent
-      ),
-    data: { view: 'profile' },
-    title: 'Hồ sơ gian hàng — VICMART SELLER',
+    redirectTo: 'dashboard/profile',
+    pathMatch: 'full',
   },
-  { path: 'dashboard/orders', redirectTo: 'orders', pathMatch: 'full' },
-  { path: 'dashboard/returns', redirectTo: 'returns', pathMatch: 'full' },
-  { path: 'dashboard/products', redirectTo: 'products', pathMatch: 'full' },
-  { path: 'dashboard/inventory', redirectTo: 'inventory', pathMatch: 'full' },
-  { path: 'dashboard/inv', redirectTo: 'inventory', pathMatch: 'full' },
-  { path: 'dashboard/vouchers', redirectTo: 'vouchers', pathMatch: 'full' },
-  { path: 'dashboard/campaigns', redirectTo: 'campaigns', pathMatch: 'full' },
-  { path: 'dashboard/camps', redirectTo: 'campaigns', pathMatch: 'full' },
-  { path: 'dashboard/reviews', redirectTo: 'reviews', pathMatch: 'full' },
-  { path: 'dashboard/qa', redirectTo: 'qa', pathMatch: 'full' },
-  { path: 'dashboard/profile', redirectTo: 'profile', pathMatch: 'full' },
   {
     path: 'shop/:id',
     loadComponent: () =>

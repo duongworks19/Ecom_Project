@@ -224,3 +224,77 @@ export interface SellerDashboardData {
   reviews?: SellerReviewQuestion[];
   shopProfile?: SellerShopProfile;
 }
+
+export interface SellerCategoryOption {
+  id: number;
+  name: string;
+  displayName: string;
+  parentId?: number | null;
+  level: number;
+}
+
+export interface OrderItem {
+  c: string; // Mã đơn
+  n: string; // Tên khách
+  k: number; // Số lượng món
+  t: number; // Tổng tiền
+  s: 'PENDING' | 'PREPARING' | 'PACKED' | 'READY_TO_SHIP' | 'DELIVERED' | 'REJECTED';
+  h: string; // Thời gian
+  d?: number; // Ngày
+}
+
+export interface ReturnItem {
+  id: number;
+  o: string;
+  n: string;
+  type: string;
+  why: string;
+  amt: number;
+  img: number;
+  st: 'PENDING' | 'APPROVED' | 'REJECTED';
+  re?: string;
+}
+
+export interface ReviewItem {
+  id: number;
+  p: string;
+  who: string;
+  st: number;
+  x: string;
+  re?: string;
+}
+
+export interface QuestionItem {
+  id: number;
+  p: string;
+  who: string;
+  x: string;
+  a?: string;
+}
+
+export interface VoucherItem {
+  id?: number;
+  code: string;
+  t: 'PERCENT' | 'FIXED';
+  val: number;
+  max: number;
+  min: number;
+  lim: number;
+  used: number;
+  from: string;
+  to: string;
+  st: 'ACTIVE' | 'PAUSED' | 'EXPIRED' | 'DELETED';
+}
+
+export interface CampaignItem {
+  id: number;
+  n: string;
+  t: string;
+  from: string;
+  to: string;
+  dt: '%' | 'đ';
+  val: number;
+  quota: number;
+  k: number;
+  st: 'ACTIVE' | 'PAUSED' | 'ENDED';
+}

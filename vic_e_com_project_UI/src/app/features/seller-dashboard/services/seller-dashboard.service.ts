@@ -1,3 +1,4 @@
+import { environment } from '../../../../environments/environment';
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { catchError, map, of } from 'rxjs';
@@ -31,8 +32,8 @@ import {
 })
 export class SellerDashboardService {
   private readonly http = inject(HttpClient);
-  private readonly API_URL = 'http://localhost:9090/api/seller/dashboard';
-  private readonly VOUCHERS_API_URL = 'http://localhost:9090/api/seller/vouchers';
+  private readonly API_URL = `${environment.apiUrl}/seller/dashboard`;
+  private readonly VOUCHERS_API_URL = `${environment.apiUrl}/seller/vouchers`;
 
   readonly dashboard = signal<SellerDashboardData>(
     createDefaultSellerDashboardData()

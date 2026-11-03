@@ -1,0 +1,141 @@
+<div class="image-uploader-section" style="margin-top: 14px;">
+  <div class="section-header-row">
+    <label class="section-title">
+      Ảnh đại diện & Media sản phẩm
+    </label>
+    @if (mediaList.length > 0 || imageUrl) {
+      <button type="button" class="btn-clear-all" (click)="clearImage()">
+        Gỡ tất cả
+      </button>
+    }
+  </div>
+
+  <!-- Ảnh chính đang được chọn -->
+  @if (mediaList.length > 0 && (mediaList[selectedIndex] || mediaList[0]); as mainMedia) {
+    <div
+      class="form-main-media"
+      (click)="openPreview(selectedIndex)"
+      role="button"
+      tabindex="0"
+      title="Nhấn để xem phóng to (Lightbox)"
+      aria-label="Nhấn xem phóng to"
+    >
+      @if (mainMedia.type === 'VIDEO') {
+        <video [src]="mainMedia.url" muted autoplay loop playsinline></video>
+      } @else {
+        <img [src]="mainMedia.url" alt="Ảnh chính sản phẩm" (error)="onImageError()" />
+      }
+      <div class="main-media-overlay">
+        <span class="zoom-pill">Phóng to</span>
+      </div>
+      <span class="media-type-pill">
+        {{ mainMedia.type === 'VIDEO' ? '🎥 Video' : '🖼️ Ảnh' }} · {{ selectedIndex + 1 }}/{{ mediaList.length }}
+      </span>
+    </div>
+  } @else if (imageUrl) {
+    <div
+      class="form-main-media"
+      (click)="openPreview(0)"
+      role="button"
+      tabindex="0"
+      title="Nhấn để xem phóng to (Lightbox)"
+      aria-label="Nhấn xem phóng to"
+    >
+      <img [src]="imageUrl" alt="Ảnh sản phẩm" (error)="onImageError()" />
+      <div class="main-media-overlay">
+        <span class="zoom-pill">Phóng to</span>
+      </div>
+    </div>
+  }
+
+  <!-- Danh sách Thumbnails media -->
+  @if (mediaList.length > 0) {
+    <div class="media-thumbnails-container">
+      <div class="media-thumbnails-list">
+        @for (media of mediaList; track media.url; let i = $index) {
+          <div
+            class="media-thumbnail-item"
+            [class.active]="i === selectedIndex"
+            (click)="selectMedia(i)"
+            role="button"
+            tabindex="0"
+            [attr.aria-label]="'Chọn media ' + (i + 1)"
+          >
+            @if (media.type === 'VIDEO') {
+              <video [src]="media.url" muted preload="metadata"></video>
+              <span class="thumb-video-badge" title="Video">▶</span>
+            } @else {
+              <img [src]="media.url" [alt]="'Thumbnail media ' + (i + 1)" loading="lazy" />
+            }
+
+            <div class="thumbnail-actions" (click)="$event.stopPropagation()">
+              <button
+                type="button"
+                class="thumb-btn thumb-move"
+                (click)="moveMedia(i, -1)"
+                [disabled]="i === 0"
+                title="Chuyển lên trước"
+                aria-label="Chuyển lên trước"
+              >
+                ‹
+              </button>
+              <button
+                type="button"
+                class="thumb-btn thumb-move"
+                (click)="moveMedia(i, 1)"
+                [disabled]="i === mediaList.length - 1"
+                title="Chuyển xuống sau"
+                aria-label="Chuyển xuống sau"
+              >
+                ›
+              </button>
+              <button
+                type="button"
+                class="thumb-btn thumb-delete"
+                (click)="removeMedia(i)"
+                title="Xóa media này"
+                aria-label="Xóa media"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Nhập link ảnh URL -->
+  <div class="media-url-input-row">
+    <input
+      class="inp"
+      type="text"
+      style="flex: 1;"
+      [ngModel]="imageUrl"
+      (ngModelChange)="onUrlChange($event)"
+      placeholder="Dán link ảnh hoặc video tại đây (https://...)"
+    />
+    @if (imageUrl) {
+      <button type="button" class="btn sm" (click)="clearImage()">Gỡ ảnh</button>
+    }
+  </div>
+
+  <!-- Tải ảnh trực tiếp từ máy -->
+  <div class="media-upload-action-row">
+    <label class="btn sm upload-btn">
+      <span>📁</span> Chọn ảnh / video từ máy tính
+      <input
+        type="file"
+        accept="image/*,video/*"
+        multiple
+        (change)="onMultipleMediaSelected($event)"
+        style="display: none;"
+      />
+    </label>
+    @if (mediaUploading()) {
+      <span class="uploading-status">Đang tải...</span>
+    } @else {
+      <span class="upload-tip">Hỗ trợ JPG, PNG, WEBP, MP4...</span>
+    }
+  </div>
+</div>

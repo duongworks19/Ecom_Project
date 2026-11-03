@@ -1,0 +1,39 @@
+<div class="scrim" [class.on]="isOpen" role="dialog" aria-modal="true">
+  <div class="modal">
+    <h2>Tạo voucher mới cho Shop</h2>
+
+    <div class="g2">
+      <label style="display: block; margin-top: 12px; font-size: 13px; font-weight: 600;">
+        Mã voucher *
+        <input class="inp" type="text" [(ngModel)]="formVoucher().code" placeholder="VD: SALE10" maxlength="20" />
+      </label>
+
+      <label style="display: block; margin-top: 12px; font-size: 13px; font-weight: 600;">
+        Loại giảm
+        <select class="inp" [(ngModel)]="formVoucher().t">
+          <option value="PERCENT">Giảm theo %</option>
+          <option value="FIXED">Giảm số tiền cố định</option>
+        </select>
+      </label>
+
+      <label style="display: block; margin-top: 12px; font-size: 13px; font-weight: 600;">
+        Giá trị giảm *
+        <input class="inp" type="number" [(ngModel)]="formVoucher().val" min="1" />
+      </label>
+
+      <label style="display: block; margin-top: 12px; font-size: 13px; font-weight: 600;">
+        Đơn tối thiểu (đ)
+        <input class="inp" type="number" [(ngModel)]="formVoucher().min" min="0" />
+      </label>
+    </div>
+
+    @if (error()) {
+      <div class="err" style="margin-top: 10px;" role="alert">{{ error() }}</div>
+    }
+
+    <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px;">
+      <button class="btn" type="button" (click)="close.emit()">Đóng</button>
+      <button class="btn p" type="button" (click)="submit()">Lưu voucher</button>
+    </div>
+  </div>
+</div>
