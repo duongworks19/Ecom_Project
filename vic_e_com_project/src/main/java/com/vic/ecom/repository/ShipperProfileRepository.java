@@ -14,6 +14,8 @@ import java.util.List;
 public interface ShipperProfileRepository extends JpaRepository<ShipperProfile, Long> {
     Optional<ShipperProfile> findByUserId(Long userId);
 
+    boolean existsByLicensePlate(String licensePlate);
+
     @Query("select p from ShipperProfile p join fetch p.user u where u.role = com.vic.ecom.enums.UserRole.SHIPPER " +
             "and (:status = 'ALL' or (:status = 'LOCKED' and u.status = com.vic.ecom.enums.UserStatus.LOCKED) " +
             "or (:status <> 'LOCKED' and u.status = com.vic.ecom.enums.UserStatus.ACTIVE and str(p.workStatus) = :status)) " +
