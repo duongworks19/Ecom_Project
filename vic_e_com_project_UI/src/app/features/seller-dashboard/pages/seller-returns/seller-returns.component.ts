@@ -1,10 +1,10 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  OnInit,
   inject,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReturnItem } from '../../models/seller-dashboard.model';
 import { SellerDashboardStore } from '../../services/seller-dashboard.store';
 import { SellerReturnsApiService } from '../../services/seller-returns-api.service';
 
@@ -16,11 +16,23 @@ import { SellerReturnsApiService } from '../../services/seller-returns-api.servi
   styleUrl: './seller-returns.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SellerReturnsComponent {
+export class SellerReturnsComponent implements OnInit {
   readonly store = inject(SellerDashboardStore);
   private readonly returnsApi = inject(SellerReturnsApiService);
 
   readonly returns = this.store.returns;
+
+  ngOnInit(): void {
+    this.returnsApi.getReturns().subscribe({
+      next: (res) => {
+        const list = res?.data || res || [];
+        if (Array.isArray(list)) {
+          this.store.setReturns(list);
+        }
+      },
+      error: () => {},
+    });
+  }
 
   formatVnd(amount: number): string {
     return (amount || 0).toLocaleString('vi-VN') + 'đ';
@@ -37,6 +49,9 @@ export class SellerReturnsComponent {
   rejectReturn(id: number): void {
     const r = this.returns().find((item) => item.id === id);
     if (!r) return;
+    this.returns.update((list) =>
+      list.map((item) => (item.id === id ? { ...item, st: 'REJECTED' as const } : item))
+    );
     this.returnsApi.rejectReturn(id).subscribe({ next: () => {}, error: () => {} });
     this.store.showToast(`Từ chối yêu cầu đổi trả ${r.o}`);
   }

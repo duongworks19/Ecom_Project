@@ -264,10 +264,14 @@ public class VendorService {
         vendor.setKycDocumentUrl(mergedKyc);
         vendor.setApprovalStatus(ApprovalStatus.PENDING);
         vendor.setRejectReason(null);
-        Category category = categoryRepository.findById(req.getPrimaryCategoryId() == null ? -1L : req.getPrimaryCategoryId())
-                .filter(c -> c.getParentId() == null && (c.getStatus() == null || c.getStatus() == com.vic.ecom.enums.CategoryStatus.VISIBLE))
-                .orElseThrow(() -> new IllegalArgumentException("Danh mục kinh doanh phải là danh mục gốc đang hiển thị"));
-        vendor.setPrimaryCategoryId(category.getId());
+        if (req.getPrimaryCategoryId() != null) {
+            Category category = categoryRepository.findById(req.getPrimaryCategoryId())
+                    .filter(c -> c.getStatus() == null || c.getStatus() == com.vic.ecom.enums.CategoryStatus.VISIBLE)
+                    .orElseThrow(() -> new IllegalArgumentException("Danh mục kinh doanh phải là danh mục đang hiển thị"));
+            vendor.setPrimaryCategoryId(category.getId());
+        } else if (vendor.getPrimaryCategoryId() == null) {
+            throw new IllegalArgumentException("Vui lòng chọn danh mục sản phẩm chính");
+        }
 
         // 5. Cập nhật Shop
         shop.setVendor(vendor);

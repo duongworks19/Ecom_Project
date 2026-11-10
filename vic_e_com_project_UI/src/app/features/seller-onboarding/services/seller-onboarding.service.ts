@@ -75,6 +75,31 @@ export class SellerOnboardingService {
     } catch { }
   }
 
+  private safeSetDraft(data: VendorApplicationData): void {
+    try {
+      localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(data));
+    } catch {
+      try {
+        localStorage.removeItem('vic_admin_vendor_applications_v2');
+        localStorage.removeItem('vic_vendor_kyc_storage');
+        const lightData: VendorApplicationData = {
+          ...data,
+          shopInfo: {
+            ...data.shopInfo,
+            logoUrl: data.shopInfo?.logoUrl?.startsWith('data:image') ? '' : data.shopInfo?.logoUrl || '',
+          },
+          kycInfo: {
+            ...data.kycInfo,
+            idCardFrontUrl: data.kycInfo?.idCardFrontUrl?.startsWith('data:image') ? '' : data.kycInfo?.idCardFrontUrl || '',
+            idCardBackUrl: data.kycInfo?.idCardBackUrl?.startsWith('data:image') ? '' : data.kycInfo?.idCardBackUrl || '',
+            businessLicenseUrl: data.kycInfo?.businessLicenseUrl?.startsWith('data:image') ? '' : data.kycInfo?.businessLicenseUrl || '',
+          },
+        };
+        localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(lightData));
+      } catch { }
+    }
+  }
+
   private getInitialState(): VendorApplicationData {
     return {
       shopInfo: {
@@ -212,7 +237,7 @@ export class SellerOnboardingService {
         try {
           const kycStorage = JSON.parse(localStorage.getItem('vic_vendor_kyc_storage') || '{}');
           const shopKey = (v.shop?.name || v.businessName || curr.shopInfo?.shopName || '').trim().toLowerCase();
-          const stored = kycStorage[shopKey] || kycStorage[String(v.id)] || kycStorage['latest_user_submission'];
+          const stored = (shopKey ? kycStorage[shopKey] : undefined) || kycStorage[String(v.id)];
           if (stored) {
             if (!frontUrl && stored.front) frontUrl = stored.front;
             if (!backUrl && stored.back) backUrl = stored.back;
@@ -250,7 +275,7 @@ export class SellerOnboardingService {
         };
 
         this.application.set(updated);
-        localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(updated));
+        this.safeSetDraft(updated);
 
         // Nếu đã được duyệt (APPROVED), tự động kích hoạt quyền VENDOR trên giao diện
         return updated;
@@ -476,7 +501,7 @@ export class SellerOnboardingService {
     this.isSavingDraft.set(true);
     this.application.set(data);
     this.currentStatus.set(data.status);
-    localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(data));
+    this.safeSetDraft(data);
     this.dashboardService.syncFromOnboarding(data);
 
     // Lưu ảnh KYC và logo vào persistent storage
@@ -490,6 +515,9 @@ export class SellerOnboardingService {
           license: data.kycInfo?.businessLicenseUrl || '',
           idNumber: data.kycInfo?.idCardNumber || '',
           logo: data.shopInfo?.logoUrl || '',
+          description: data.shopInfo?.description || '',
+          primaryCategory: data.shopInfo?.primaryCategory || '',
+          phone: data.contactInfo?.phone || '',
           updatedAt: new Date().toISOString(),
         };
         localStorage.setItem('vic_vendor_kyc_storage', JSON.stringify(kycStorage));
@@ -514,13 +542,16 @@ export class SellerOnboardingService {
       updatedAt: new Date().toISOString(),
     };
 
-    // Đóng gói toàn bộ giấy tờ KYC thành chuỗi JSON để lưu trọn vẹn vào DB
+    // Đóng gói toàn bộ giấy tờ KYC và thông tin gian hàng thành chuỗi JSON để lưu trọn vẹn vào DB
     const kycDocsPayload = JSON.stringify({
       front: curr.kycInfo.idCardFrontUrl || '',
       back: curr.kycInfo.idCardBackUrl || '',
       license: curr.kycInfo.businessLicenseUrl || '',
       idNumber: curr.kycInfo.idCardNumber || '',
       logo: curr.shopInfo.logoUrl || '',
+      description: curr.shopInfo.description || '',
+      primaryCategory: curr.shopInfo.primaryCategory || '',
+      phone: curr.contactInfo.phone || '',
     });
 
     const registerReq = {
@@ -546,6 +577,9 @@ export class SellerOnboardingService {
         license: curr.kycInfo.businessLicenseUrl || '',
         idNumber: curr.kycInfo.idCardNumber || '',
         logo: curr.shopInfo.logoUrl || '',
+        description: curr.shopInfo.description || '',
+        primaryCategory: curr.shopInfo.primaryCategory || '',
+        phone: curr.contactInfo.phone || '',
         updatedAt: new Date().toISOString(),
       };
       if (shopKey) kycStorage[shopKey] = kycData;
@@ -574,8 +608,10 @@ export class SellerOnboardingService {
         } catch { }
 
         // Giữ lại draft với trạng thái PENDING để các màn hình khác nhận diện được
-        localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(payload));
-        localStorage.removeItem('vic_seller_products');
+        this.safeSetDraft(payload);
+        try {
+          localStorage.removeItem('vic_seller_products');
+        } catch { }
         window.dispatchEvent(new Event('storage'));
         this.dashboardService.syncFromOnboarding(payload);
         this.dashboardService.products.set([]);
@@ -647,12 +683,12 @@ export class SellerOnboardingService {
       detailedAddress: revisionData.contactInfo?.detailedAddress || curr.contactInfo?.detailedAddress || '',
     };
 
-    // Lấy ảnh KYC đã lưu trước đó để không bị mất ảnh cũ
+    // Lấy ảnh KYC đã lưu trước đó của chính shop này để không bị mất ảnh cũ
     let prevKyc: any = {};
     try {
       const kycStorage = JSON.parse(localStorage.getItem('vic_vendor_kyc_storage') || '{}');
       const shopKey = mergedShopInfo.shopName.toLowerCase();
-      prevKyc = kycStorage[shopKey] || kycStorage['latest_user_submission'] || {};
+      prevKyc = (shopKey ? kycStorage[shopKey] : undefined) || {};
     } catch { }
 
     const mergedKycInfo: KycInfo = {
@@ -701,6 +737,9 @@ export class SellerOnboardingService {
       license: mergedKycInfo.businessLicenseUrl || '',
       idNumber: mergedKycInfo.idCardNumber || '',
       logo: mergedShopInfo.logoUrl || '',
+      description: mergedShopInfo.description || '',
+      primaryCategory: mergedShopInfo.primaryCategory || '',
+      phone: mergedContactInfo.phone || '',
     });
 
     const updateReq = {
@@ -713,6 +752,7 @@ export class SellerOnboardingService {
       pickupAddress: `${mergedContactInfo.detailedAddress}, ${mergedContactInfo.ward || ''}, ${mergedContactInfo.district || ''}, ${mergedContactInfo.province || ''}`.replace(/^,\s*|,\s*$/g, ''),
       phone: mergedContactInfo.phone,
       email: mergedContactInfo.email,
+      primaryCategoryId: mergedShopInfo.primaryCategoryId,
     };
 
     // Lưu KYC dùng chung giữa Seller và Admin
@@ -725,10 +765,13 @@ export class SellerOnboardingService {
         license: mergedKycInfo.businessLicenseUrl || '',
         idNumber: mergedKycInfo.idCardNumber || '',
         logo: mergedShopInfo.logoUrl || '',
+        description: mergedShopInfo.description || '',
+        primaryCategory: mergedShopInfo.primaryCategory || '',
+        phone: mergedContactInfo.phone || '',
         updatedAt: new Date().toISOString(),
       };
       if (shopKey) kycStorage[shopKey] = kycData;
-      kycStorage['latest_user_submission'] = kycData;
+      delete kycStorage['latest_user_submission'];
       localStorage.setItem('vic_vendor_kyc_storage', JSON.stringify(kycStorage));
     } catch { }
 
@@ -736,31 +779,21 @@ export class SellerOnboardingService {
     try {
       const revs = JSON.parse(localStorage.getItem('vic_admin_vendor_revisions') || '{}');
       const shopName = mergedShopInfo.shopName?.trim().toLowerCase();
-      for (const key of Object.keys(revs)) {
-        if (key === shopName || key.includes(shopName) || shopName.includes(key)) {
-          revs[key].status = 'RESUBMITTED';
-          revs[key].resubmitted = true;
-          revs[key].updatedAt = new Date().toISOString();
-        }
+      if (shopName && revs[shopName]) {
+        revs[shopName].status = 'RESUBMITTED';
+        revs[shopName].resubmitted = true;
+        revs[shopName].updatedAt = new Date().toISOString();
       }
       localStorage.setItem('vic_admin_vendor_revisions', JSON.stringify(revs));
     } catch { }
 
-    // Cập nhật trực tiếp dữ liệu của Vendor trong danh sách duyệt của Admin (không tạo đơn mới)
+    // Cập nhật trực tiếp dữ liệu của Vendor trong danh sách duyệt của Admin (chỉ khớp đúng tên shop)
     try {
       const rawApps = localStorage.getItem('vic_admin_vendor_applications_v2');
       if (rawApps) {
         const apps: any[] = JSON.parse(rawApps);
         const shopKey = (mergedShopInfo.shopName || '').trim().toLowerCase();
-        // Tìm hồ sơ đăng ký của người dùng trong danh sách Admin:
-        // Ưu tiên trùng tên shop, hoặc cờ isUserSubmitted, hoặc hồ sơ đang ở trạng thái chờ bổ sung (NEED_INFO / RESUBMITTED)
-        let app = apps.find((a) => shopKey && a.shop?.trim().toLowerCase() === shopKey);
-        if (!app) {
-          app = apps.find((a) => a.isUserSubmitted);
-        }
-        if (!app) {
-          app = apps.find((a) => a.status === 'NEED_INFO' || a.status === 'RESUBMITTED');
-        }
+        const app = apps.find((a) => shopKey && a.shop?.trim().toLowerCase() === shopKey);
         if (app) {
           app.status = 'RESUBMITTED';
           app.fresh = [...freshItems];
@@ -812,7 +845,7 @@ export class SellerOnboardingService {
     // Lưu vào draft local của seller
     this.application.set(payload);
     this.currentStatus.set('PENDING');
-    localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(payload));
+    this.safeSetDraft(payload);
     window.dispatchEvent(new Event('storage'));
 
     // Gọi API cập nhật lên backend: ưu tiên PUT /resubmit, fallback POST /register
@@ -853,7 +886,7 @@ export class SellerOnboardingService {
     };
     this.application.set(updated);
     this.currentStatus.set(status);
-    localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(updated));
+    this.safeSetDraft(updated);
   }
 }
 

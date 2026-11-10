@@ -27,6 +27,10 @@
       <b>{{ lowStockItems().length }}</b>
       <span>Sắp hết hàng</span>
     </a>
+    <a class="tile" routerLink="/seller/dashboard/reviews">
+      <b>{{ unrepliedReviewCount() }}</b>
+      <span>Đánh giá chưa trả lời</span>
+    </a>
     <a class="tile" routerLink="/seller/dashboard/qa">
       <b>{{ unrepliedQuestionCount() }}</b>
       <span>Câu hỏi chưa trả lời</span>
@@ -78,23 +82,23 @@
     <div class="kpis">
       <div class="kpi">
         <span>Doanh thu hôm nay</span>
-        <b>4.280.000đ</b>
-        <small>+12% so với hôm qua · đơn đã giao</small>
+        <b>{{ formatVnd(todayRevenue()) }}</b>
+        <small>{{ revenueGrowthPercent() >= 0 ? '+' : '' }}{{ revenueGrowthPercent() }}% · đơn hôm nay</small>
       </div>
       <div class="kpi">
         <span>Đơn hàng hôm nay</span>
-        <b>{{ orders().length + 2 }}</b>
+        <b>{{ totalOrdersToday() }}</b>
         <small>{{ pendingOrderCount() }} chờ xác nhận</small>
       </div>
       <div class="kpi">
         <span>Tỷ lệ hủy</span>
-        <b>3,2%</b>
+        <b>{{ cancellationRate() }}%</b>
         <small>30 ngày gần nhất</small>
       </div>
       <div class="kpi">
         <span>Đánh giá trung bình</span>
-        <b>4,8 ★</b>
-        <small>126 đánh giá</small>
+        <b>{{ averageRating() }} ★</b>
+        <small>{{ totalReviews() }} đánh giá</small>
       </div>
     </div>
 
@@ -102,11 +106,11 @@
     <div class="box">
       <h2>Doanh thu 7 ngày <span style="font-size: 13px; font-weight: 500; color: var(--mute)">triệu đồng, đơn DELIVERED</span></h2>
       <div class="chart" role="img" aria-label="Doanh thu 7 ngày gần nhất">
-        @for (v of revChart; track $index) {
+        @for (v of revChart(); track $index) {
         <div>
           <span>{{ v }}</span>
-          <i [style.height.%]="(v / 5) * 80"></i>
-          <span>{{ revDays[$index] }}</span>
+          <i [style.height.%]="(v / maxChartValue()) * 80"></i>
+          <span>{{ revDays()[$index] }}</span>
         </div>
         }
       </div>
@@ -116,12 +120,12 @@
   <!-- Cột phải -->
   <div>
     <div class="box">
-      <h2>Hoàn thiện gian hàng <span class="tag">2/4</span></h2>
-      <div class="bar"><i style="width: 50%"></i></div>
-      <div class="ck d"><s>✓</s>Hồ sơ shop</div>
-      <div class="ck d"><s>✓</s>Địa chỉ kho lấy hàng</div>
-      <div class="ck"><s></s>Đăng 5 sản phẩm (đã có {{ products().length }})</div>
-      <div class="ck"><s></s>Tạo voucher đầu tiên</div>
+      <h2>Hoàn thiện gian hàng <span class="tag">{{ completedOnboardingSteps() }}/4</span></h2>
+      <div class="bar"><i [style.width.%]="onboardingProgressWidth()"></i></div>
+      <div class="ck" [class.d]="hasShopProfile()"><s>{{ hasShopProfile() ? '✓' : '' }}</s>Hồ sơ shop</div>
+      <div class="ck" [class.d]="hasPickupAddress()"><s>{{ hasPickupAddress() ? '✓' : '' }}</s>Địa chỉ kho lấy hàng</div>
+      <div class="ck" [class.d]="hasFiveProducts()"><s>{{ hasFiveProducts() ? '✓' : '' }}</s>Đăng 5 sản phẩm (đã có {{ store.allProductCount() }})</div>
+      <div class="ck" [class.d]="hasFirstVoucher()"><s>{{ hasFirstVoucher() ? '✓' : '' }}</s>Tạo voucher đầu tiên</div>
     </div>
 
     <!-- Sắp hết hàng -->
@@ -141,17 +145,29 @@
 
     <!-- Cần phản hồi -->
     <div class="box">
-      <h2>Cần phản hồi <span class="tag">{{ unrepliedQuestionCount() + pendingReturnCount() }}</span></h2>
+      <h2>Cần phản hồi <span class="tag">{{ unrepliedReviewCount() + unrepliedQuestionCount() + pendingReturnCount() }}</span></h2>
+      @for (r of unrepliedReviews(); track r.id) {
+      <div class="row">
+        <div class="g">
+          <span class="m">Đánh giá · ★ {{ r.st }} sao ({{ r.p }})</span>
+          <b>{{ r.x || 'Khách hàng để lại đánh giá' }}</b>
+        </div>
+        <button class="btn sm" routerLink="/seller/dashboard/reviews">Phản hồi</button>
+      </div>
+      }
       @for (q of questions(); track q.id) {
       @if (!q.a) {
       <div class="row">
         <div class="g">
-          <span class="m">Hỏi đáp</span>
+          <span class="m">Hỏi đáp ({{ q.p }})</span>
           <b>{{ q.x }}</b>
         </div>
         <button class="btn sm" routerLink="/seller/dashboard/qa">Trả lời</button>
       </div>
       }
+      }
+      @if (unrepliedReviewCount() + unrepliedQuestionCount() + pendingReturnCount() === 0) {
+      <p style="color: var(--mute); margin: 0">Tất cả đánh giá và câu hỏi đều đã được phản hồi!</p>
       }
     </div>
   </div>

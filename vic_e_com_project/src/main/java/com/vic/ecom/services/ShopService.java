@@ -16,7 +16,6 @@ import com.vic.ecom.repository.ShopRepository;
 import com.vic.ecom.repository.ShopReviewRepository;
 import com.vic.ecom.repository.UserRepository;
 import com.vic.ecom.repository.VoucherRepository;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -40,38 +39,6 @@ public class ShopService {
     private final VoucherRepository voucherRepository;
     private final ShopReviewRepository shopReviewRepository;
     private final UserRepository userRepository;
-    private final org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
-
-    @PostConstruct
-    public void init() {
-        try {
-            jdbcTemplate.execute("ALTER TABLE shops ADD COLUMN IF NOT EXISTS follower_count BIGINT DEFAULT 0");
-            jdbcTemplate.execute("UPDATE shops SET follower_count = 0 WHERE follower_count IS NULL");
-        } catch (Exception ignored) {
-        }
-        try {
-            jdbcTemplate.execute("ALTER TABLE discount_campaigns ADD COLUMN IF NOT EXISTS name VARCHAR(255) DEFAULT 'Chương trình giảm giá'");
-            jdbcTemplate.execute("ALTER TABLE discount_campaigns ADD COLUMN IF NOT EXISTS type VARCHAR(20) DEFAULT 'FLASH_SALE'");
-            jdbcTemplate.execute("ALTER TABLE discount_campaigns ADD COLUMN IF NOT EXISTS discount_percent INT DEFAULT 10");
-            jdbcTemplate.execute("ALTER TABLE discount_campaigns ADD COLUMN IF NOT EXISTS product_count INT DEFAULT 1");
-            jdbcTemplate.execute("ALTER TABLE discount_campaigns ADD COLUMN IF NOT EXISTS start_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP");
-            jdbcTemplate.execute("ALTER TABLE discount_campaigns ADD COLUMN IF NOT EXISTS end_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP");
-            jdbcTemplate.execute("ALTER TABLE discount_campaigns ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'ACTIVE'");
-            jdbcTemplate.execute("ALTER TABLE discount_campaigns ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP");
-        } catch (Exception ignored) {
-        }
-        try {
-            jdbcTemplate.execute("DROP TABLE IF EXISTS shop_follows CASCADE");
-            jdbcTemplate.execute("DROP TABLE IF EXISTS shop_promotions CASCADE");
-        } catch (Exception ignored) {
-        }
-        try {
-            jdbcTemplate.execute("DELETE FROM shop_reviews WHERE customer_name IN ('Nguyễn Ngọc Mai', 'Hoàng Gia Bảo', 'Vũ Thanh Tâm', 'Đặng Khánh Linh')");
-            jdbcTemplate.execute("UPDATE shops SET description = '' WHERE description ILIKE '%Bắc Âu%' OR description ILIKE '%Lumi%'");
-            jdbcTemplate.execute("UPDATE shops SET tagline = '' WHERE tagline ILIKE '%Bắc Âu%' OR tagline ILIKE '%Scandinavian%'");
-        } catch (Exception ignored) {
-        }
-    }
 
     @Transactional(readOnly = true)
     public ShopResponse getShopById(Long id) {
@@ -296,11 +263,6 @@ public class ShopService {
     }
 
     private void ensureDefaultWebVouchers() {
-        try {
-            jdbcTemplate.execute("ALTER TABLE vouchers ALTER COLUMN shop_id DROP NOT NULL");
-        } catch (Exception ignored) {
-        }
-
         try {
             if (voucherRepository.findByShopIsNullAndCodeIgnoreCase("VICMARTNEW").isEmpty()) {
                 Voucher v = Voucher.builder()

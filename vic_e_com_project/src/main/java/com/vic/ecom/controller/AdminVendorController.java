@@ -4,10 +4,12 @@ import com.vic.ecom.dto.ApiResponse;
 import com.vic.ecom.dto.vendor.AdminVendorDtos.*;
 import com.vic.ecom.dto.vendor.VendorApprovalRequest;
 import com.vic.ecom.dto.vendor.VendorResponse;
+import com.vic.ecom.entity.Category;
 import com.vic.ecom.entity.Shop;
 import com.vic.ecom.entity.User;
 import com.vic.ecom.entity.Vendor;
 import com.vic.ecom.enums.ApprovalStatus;
+import com.vic.ecom.repository.CategoryRepository;
 import com.vic.ecom.repository.VendorRepository;
 import com.vic.ecom.services.VendorService;
 import jakarta.validation.Valid;
@@ -30,6 +32,7 @@ import java.util.stream.Collectors;
 public class AdminVendorController {
 
     private final VendorRepository vendorRepository;
+    private final CategoryRepository categoryRepository;
     private final VendorService vendorService;
 
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
@@ -135,15 +138,33 @@ public class AdminVendorController {
             }
         }
 
+        String primaryCategoryName = null;
+        if (v.getPrimaryCategoryId() != null) {
+            primaryCategoryName = categoryRepository.findById(v.getPrimaryCategoryId())
+                    .map(Category::getName)
+                    .orElse(null);
+        }
+
+        String ownerPhone = (s != null && s.getPhone() != null && !s.getPhone().isBlank())
+                ? s.getPhone()
+                : (u != null && u.getPhone() != null ? u.getPhone() : "—");
+        String ownerEmail = (s != null && s.getEmail() != null && !s.getEmail().isBlank())
+                ? s.getEmail()
+                : (u != null && u.getEmail() != null ? u.getEmail() : "—");
+
         return AdminVendorListItemDto.builder()
                 .id(v.getId())
                 .userId(u != null ? u.getId() : null)
                 .ownerName(u != null ? u.getFullName() : "—")
-                .ownerEmail(u != null ? u.getEmail() : "—")
-                .ownerPhone(u != null ? u.getPhone() : "—")
+                .ownerEmail(ownerEmail)
+                .ownerPhone(ownerPhone)
                 .businessName(v.getBusinessName())
                 .shopName(s != null ? s.getName() : v.getBusinessName())
                 .shopLogo(logo)
+                .shopDescription(s != null ? s.getDescription() : null)
+                .shopPhone(s != null ? s.getPhone() : null)
+                .shopEmail(s != null ? s.getEmail() : null)
+                .primaryCategoryName(primaryCategoryName)
                 .shopPickupAddress(s != null ? s.getPickupAddress() : "—")
                 .kycDocumentUrl(v.getKycDocumentUrl())
                 .approvalStatus(v.getApprovalStatus().name())

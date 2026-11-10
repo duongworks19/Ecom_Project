@@ -7,10 +7,16 @@ import {
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { Router, RouterLink } from '@angular/router';
+import { environment } from '../../../../../environments/environment';
 import { SellerDashboardStore } from '../../services/seller-dashboard.store';
 import { SellerOrdersApiService } from '../../services/seller-orders-api.service';
 import { SellerProductService } from '../../services/seller-product.service';
+import { SellerShopApiService } from '../../services/seller-shop-api.service';
+import { SellerVouchersApiService } from '../../services/seller-vouchers-api.service';
+import { SellerQaReviewsApiService } from '../../services/seller-qa-reviews-api.service';
+import { SellerReturnsApiService } from '../../services/seller-returns-api.service';
 import { OrderItem } from '../../models/seller-dashboard.model';
 import { SellerRejectOrderDialogComponent } from '../../components/seller-reject-order-dialog/seller-reject-order-dialog.component';
 
@@ -24,14 +30,21 @@ import { SellerRejectOrderDialogComponent } from '../../components/seller-reject
 })
 export class SellerOverviewComponent implements OnInit {
   readonly store = inject(SellerDashboardStore);
+  private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
   private readonly ordersApi = inject(SellerOrdersApiService);
   private readonly productService = inject(SellerProductService);
+  private readonly shopApi = inject(SellerShopApiService);
+  private readonly vouchersApi = inject(SellerVouchersApiService);
+  private readonly qaReviewsApi = inject(SellerQaReviewsApiService);
+  private readonly returnsApi = inject(SellerReturnsApiService);
 
   readonly products = this.store.products;
   readonly orders = this.store.orders;
   readonly questions = this.store.questions;
+  readonly reviews = this.store.reviews;
   readonly returns = this.store.returns;
+  readonly vouchers = this.store.vouchers;
 
   readonly totalTodoCount = this.store.totalTodoCount;
   readonly openOrdersCount = this.store.openOrdersCount;
@@ -40,9 +53,38 @@ export class SellerOverviewComponent implements OnInit {
   readonly pendingReturnCount = this.store.pendingReturnCount;
   readonly lowStockItems = this.store.lowStockItems;
   readonly unrepliedQuestionCount = this.store.unrepliedQuestionCount;
+  readonly unrepliedReviewCount = this.store.unrepliedReviewCount;
+  readonly unrepliedReviews = computed(() => this.reviews().filter((r) => !r.re));
 
-  readonly revChart = [1.2, 2.1, 1.8, 3.4, 4.6, 2.8, 3.2];
-  readonly revDays = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+  // Real KPI stats from Database (/api/seller/dashboard)
+  readonly todayRevenue = signal<number>(0);
+  readonly revenueGrowthPercent = signal<number>(0);
+  readonly totalOrdersToday = signal<number>(0);
+  readonly cancellationRate = signal<number>(0);
+  readonly averageRating = signal<number>(0);
+  readonly totalReviews = signal<number>(0);
+
+  // Real 7-day revenue chart from Database
+  readonly revChart = signal<number[]>([0, 0, 0, 0, 0, 0, 0]);
+  readonly revDays = signal<string[]>(['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN']);
+  readonly maxChartValue = computed(() => {
+    const max = Math.max(...this.revChart(), 1);
+    return max > 0 ? max : 1;
+  });
+
+  // Real Onboarding Checklist progress from Database
+  readonly hasShopProfile = computed(() => !!this.store.shopProfile()?.n?.trim());
+  readonly hasPickupAddress = computed(() => !!this.store.shopProfile()?.ad?.trim());
+  readonly hasFiveProducts = computed(() => this.store.allProductCount() >= 5);
+  readonly hasFirstVoucher = computed(() => this.vouchers().length > 0);
+  readonly completedOnboardingSteps = computed(
+    () =>
+      (this.hasShopProfile() ? 1 : 0) +
+      (this.hasPickupAddress() ? 1 : 0) +
+      (this.hasFiveProducts() ? 1 : 0) +
+      (this.hasFirstVoucher() ? 1 : 0)
+  );
+  readonly onboardingProgressWidth = computed(() => (this.completedOnboardingSteps() / 4) * 100);
 
   readonly filterOrder = signal<string>('ALL');
   readonly rejectModalOpen = signal<boolean>(false);
@@ -73,7 +115,7 @@ export class SellerOverviewComponent implements OnInit {
         if (parsed?.shopName?.trim()) return parsed.shopName.trim();
       }
     } catch { }
-    return 'Lumi Home Decor';
+    return 'Gian hàng của tôi';
   });
 
   readonly filteredOrders = computed(() => {
@@ -91,15 +133,82 @@ export class SellerOverviewComponent implements OnInit {
   }
 
   private refreshOverviewData(): void {
-    this.ordersApi.getOrders().subscribe({
-      next: (orders: any) => {
-        const list = orders?.data || orders;
-        if (Array.isArray(list)) this.store.orders.set(list);
+    this.http.get<any>(`${environment.apiUrl}/seller/dashboard`).subscribe({
+      next: (res) => {
+        const data = res?.data || res;
+        if (data?.stats) {
+          this.todayRevenue.set(Number(data.stats.todayRevenue) || 0);
+          this.revenueGrowthPercent.set(Number(data.stats.revenueGrowthPercent) || 0);
+          this.totalOrdersToday.set(Number(data.stats.totalOrdersToday) || 0);
+          this.cancellationRate.set(Number(data.stats.cancellationRate) || 0);
+          this.averageRating.set(Number(data.stats.averageRating) || 0);
+          this.totalReviews.set(Number(data.stats.totalReviews) || 0);
+        }
+        if (Array.isArray(data?.revenueChart7Days) && data.revenueChart7Days.length > 0) {
+          this.revChart.set(data.revenueChart7Days.map((p: any) => Number(p.valueInMillions) || 0));
+          this.revDays.set(data.revenueChart7Days.map((p: any) => p.label || ''));
+        }
+        if (data?.shopProfile) {
+          this.store.setShopProfile(data.shopProfile);
+        }
+        if (Array.isArray(data?.vouchers)) {
+          this.store.setVouchers(data.vouchers);
+        }
       },
       error: () => {},
     });
+
+    this.shopApi.getSellerProfile().subscribe({
+      next: (prof) => {
+        if (prof) this.store.setShopProfile(prof);
+      },
+      error: () => {},
+    });
+
+    this.ordersApi.getOrders().subscribe({
+      next: (orders: any) => {
+        const list = orders?.data || orders || [];
+        if (Array.isArray(list)) this.store.setOrders(list);
+      },
+      error: () => {},
+    });
+
     this.productService.getProducts().subscribe({
-      next: (prods) => { if (prods) this.store.products.set(prods); },
+      next: (prods) => {
+        if (Array.isArray(prods)) this.store.products.set(prods);
+      },
+      error: () => {},
+    });
+
+    this.vouchersApi.getVouchers().subscribe({
+      next: (res: any) => {
+        const list = res?.data || res || [];
+        if (Array.isArray(list)) this.store.setVouchers(list);
+      },
+      error: () => {},
+    });
+
+    this.qaReviewsApi.getReviews().subscribe({
+      next: (res: any) => {
+        const list = res?.data || res || [];
+        if (Array.isArray(list)) this.store.setReviews(list);
+      },
+      error: () => {},
+    });
+
+    this.qaReviewsApi.getQuestions().subscribe({
+      next: (res: any) => {
+        const list = res?.data || res || [];
+        if (Array.isArray(list)) this.store.setQuestions(list);
+      },
+      error: () => {},
+    });
+
+    this.returnsApi.getReturns().subscribe({
+      next: (res: any) => {
+        const list = res?.data || res || [];
+        if (Array.isArray(list)) this.store.setReturns(list);
+      },
       error: () => {},
     });
   }

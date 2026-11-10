@@ -19,6 +19,7 @@ import {
   UpsertCategoryRequest,
 } from '../../models/admin-category.model';
 import { AdminCategoryService } from '../../services/admin-category.service';
+import { ProductService } from '../../../../../core/services/product.service';
 import { findDescendants } from '../../utils/category-tree.util';
 import { CategoryTreePanelComponent } from '../../components/category-tree-panel/category-tree-panel.component';
 import { CategoryDetailPanelComponent } from '../../components/category-detail-panel/category-detail-panel.component';
@@ -42,6 +43,7 @@ import { CategoryStatusModalComponent } from '../../components/category-status-m
 })
 export class AdminCategoryPageComponent implements OnInit {
   private readonly categoryService = inject(AdminCategoryService);
+  private readonly productService = inject(ProductService);
 
   readonly summary = signal<CategorySummary>({
     totalCategories: 0,
@@ -122,6 +124,7 @@ export class AdminCategoryPageComponent implements OnInit {
           this.maxDepth.set(res.maxDepth || 3);
           this.allCategories.set(res.items || []);
           this.isLoading.set(false);
+          this.productService.refreshCategories();
 
           // Restore or pick selection
           if (res.items?.length) {

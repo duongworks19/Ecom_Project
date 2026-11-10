@@ -283,6 +283,13 @@ export class VendorApprovalService {
   }
 
   private initData(): void {
+    try {
+      const kycStorage = JSON.parse(localStorage.getItem('vic_vendor_kyc_storage') || '{}');
+      if (kycStorage && kycStorage['latest_user_submission']) {
+        delete kycStorage['latest_user_submission'];
+        localStorage.setItem('vic_vendor_kyc_storage', JSON.stringify(kycStorage));
+      }
+    } catch { }
     const saved = localStorage.getItem(APPLICATIONS_STORAGE_KEY);
     if (saved) {
       try {
@@ -325,17 +332,10 @@ export class VendorApprovalService {
         !!draft.adminFeedback ||
         (Array.isArray(draft.req) && draft.req.length > 0);
 
-      // Kiểm tra xem đơn của người dùng đã có trong danh sách duyệt chưa:
-      // 1. Trùng shopName
-      // 2. Cờ isUserSubmitted
-      // 3. Nếu là luồng bổ sung: tìm hồ sơ đang ở trạng thái NEED_INFO / RESUBMITTED
-      let existingIdx = this.applications.findIndex(
-        (item) => (shopName && item.shop.toLowerCase() === shopName.toLowerCase()) || item.isUserSubmitted
+      // Kiểm tra xem đơn của người dùng đã có trong danh sách duyệt chưa (chỉ khớp chính xác theo tên shop)
+      const existingIdx = this.applications.findIndex(
+        (item) => shopName && item.shop?.trim().toLowerCase() === shopName.toLowerCase()
       );
-
-      if (existingIdx < 0 && isRevisionFlow) {
-        existingIdx = this.applications.findIndex((item) => item.status === 'NEED_INFO' || item.status === 'RESUBMITTED');
-      }
 
       const frontUrl = draft.kycInfo?.idCardFrontUrl;
       const backUrl = draft.kycInfo?.idCardBackUrl;
@@ -394,6 +394,9 @@ export class VendorApprovalService {
         this.applications[existingIdx] = {
           ...existing,
           status: isResubmitted ? 'RESUBMITTED' : existing.status,
+          desc: draft.shopInfo?.description || existing.desc,
+          cat: draft.shopInfo?.primaryCategory || existing.cat,
+          phone: draft.contactInfo?.phone || existing.phone,
           docItems: updatedDocItems,
           docs: updatedDocItems.map((d) => d.name),
           req: existing.req || draft.req || (licenseUrl ? ['Giấy phép kinh doanh'] : undefined),
@@ -441,7 +444,39 @@ export class VendorApprovalService {
   }
 
   private persist(): void {
-    localStorage.setItem(APPLICATIONS_STORAGE_KEY, JSON.stringify(this.applications));
+    try {
+      // Loại bỏ các chuỗi ảnh base64 nặng trước khi ghi vào localStorage để tránh lỗi QuotaExceededError (5MB limit)
+      const lightApps = this.applications.map((app) => ({
+        ...app,
+        logo: app.logo && app.logo.startsWith('data:image') && app.logo.length > 2048 ? undefined : app.logo,
+        docItems: app.docItems?.map((d) => ({
+          ...d,
+          url: d.url && d.url.startsWith('data:image') && d.url.length > 2048 ? undefined : d.url,
+        })),
+      }));
+      localStorage.setItem(APPLICATIONS_STORAGE_KEY, JSON.stringify(lightApps));
+    } catch {
+      try {
+        localStorage.removeItem(APPLICATIONS_STORAGE_KEY);
+        localStorage.removeItem('vic_vendor_kyc_storage');
+      } catch {
+        // Ignore storage quota errors
+      }
+    }
+  }
+
+  private safeSetStorage(key: string, value: string): void {
+    try {
+      localStorage.setItem(key, value);
+    } catch {
+      try {
+        localStorage.removeItem(APPLICATIONS_STORAGE_KEY);
+        localStorage.removeItem('vic_vendor_kyc_storage');
+        localStorage.setItem(key, value);
+      } catch {
+        // Ignore storage quota errors
+      }
+    }
   }
 
   getRevisionsMap(): Record<string, VendorRevisionRecord> {
@@ -459,7 +494,7 @@ export class VendorApprovalService {
     if (record.shopName) {
       map[record.shopName.trim().toLowerCase()] = record;
     }
-    localStorage.setItem(REVISIONS_STORAGE_KEY, JSON.stringify(map));
+    this.safeSetStorage(REVISIONS_STORAGE_KEY, JSON.stringify(map));
   }
 
   clearRevision(vendorId: number, shopName?: string): void {
@@ -468,7 +503,7 @@ export class VendorApprovalService {
     if (shopName) {
       delete map[shopName.trim().toLowerCase()];
     }
-    localStorage.setItem(REVISIONS_STORAGE_KEY, JSON.stringify(map));
+    this.safeSetStorage(REVISIONS_STORAGE_KEY, JSON.stringify(map));
   }
 
   getVendors(params: { status?: string; q?: string } = {}): Observable<VendorApplication[]> {
@@ -696,7 +731,7 @@ export class VendorApprovalService {
     if (revs[String(id)]) {
       revs[String(id)].status = 'RESUBMITTED';
       revs[String(id)].resubmitted = true;
-      localStorage.setItem(REVISIONS_STORAGE_KEY, JSON.stringify(revs));
+      this.safeSetStorage(REVISIONS_STORAGE_KEY, JSON.stringify(revs));
     }
 
     this.syncBackToUserOnboarding('PENDING');
@@ -719,7 +754,7 @@ export class VendorApprovalService {
     if (feedback) draft.adminFeedback = feedback;
     if (reqItems) draft.req = reqItems;
     draft.updatedAt = new Date().toISOString();
-    localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft));
+    this.safeSetStorage(DRAFT_STORAGE_KEY, JSON.stringify(draft));
 
     window.dispatchEvent(new Event('storage'));
   }
@@ -793,11 +828,14 @@ export class VendorApprovalService {
       status = 'PENDING';
     }
 
-    // 1. Phân tích ảnh KYC thực tế từ backend hoặc JSON kycDocumentUrl
+    // 1. Phân tích ảnh KYC và thông tin bổ sung thực tế từ backend hoặc JSON kycDocumentUrl
     let frontUrl: string | undefined = undefined;
     let backUrl: string | undefined = undefined;
     let licenseUrl: string | undefined = undefined;
     let logoUrl: string | undefined = item.shopLogo || undefined;
+    let descText: string | undefined = item.shopDescription || undefined;
+    let catText: string | undefined = item.primaryCategoryName || undefined;
+    let phoneText: string | undefined = item.shopPhone || (item.ownerPhone && item.ownerPhone !== '—' ? item.ownerPhone : undefined);
 
     if (item.kycDocumentUrl) {
       const rawDoc = item.kycDocumentUrl.trim();
@@ -808,6 +846,9 @@ export class VendorApprovalService {
           backUrl = parsed.back || undefined;
           licenseUrl = parsed.license || undefined;
           if (!logoUrl && parsed.logo) logoUrl = parsed.logo;
+          if (!descText && parsed.description) descText = parsed.description;
+          if (!catText && parsed.primaryCategory) catText = parsed.primaryCategory;
+          if (!phoneText && parsed.phone) phoneText = parsed.phone;
         } catch {}
       } else if (rawDoc.includes(';') || rawDoc.includes(',') || rawDoc.includes('\n') || rawDoc.includes('|')) {
         const parts = rawDoc.split(/[;,\n|]+/).map((s) => s.trim()).filter(Boolean);
@@ -819,37 +860,28 @@ export class VendorApprovalService {
       }
     }
 
-    // 2. Tìm ảnh thực tế đã lưu từ LocalStorage khi người dùng đăng ký/bổ sung trên trình duyệt
+    // 2. Tìm ảnh thực tế đã lưu từ LocalStorage khi người dùng đăng ký/bổ sung trên trình duyệt (chỉ khớp đúng ID hoặc đúng tên shop/email của chính shop đó)
     try {
       const kycStorage = JSON.parse(localStorage.getItem('vic_vendor_kyc_storage') || '{}');
       const shopKey = (item.shopName || item.businessName || '').trim().toLowerCase();
       const emailKey = (item.ownerEmail || '').trim().toLowerCase();
-      const ownerKey = (item.ownerName || '').trim().toLowerCase();
 
-      let stored = kycStorage[String(item.id)] ||
-                   (shopKey ? kycStorage[shopKey] : undefined) ||
-                   (emailKey ? kycStorage[emailKey] : undefined) ||
-                   (ownerKey ? kycStorage[ownerKey] : undefined) ||
-                   kycStorage['latest_user_submission'];
-
-      if (!stored && shopKey) {
-        for (const k of Object.keys(kycStorage)) {
-          if (k.includes(shopKey) || shopKey.includes(k)) {
-            stored = kycStorage[k];
-            break;
-          }
-        }
-      }
+      const stored = kycStorage[String(item.id)] ||
+                     (shopKey ? kycStorage[shopKey] : undefined) ||
+                     (emailKey && emailKey !== '—' ? kycStorage[emailKey] : undefined);
 
       if (stored) {
         if (!frontUrl && stored.front) frontUrl = stored.front;
         if (!backUrl && stored.back) backUrl = stored.back;
         if (!licenseUrl && stored.license) licenseUrl = stored.license;
         if (!logoUrl && stored.logo) logoUrl = stored.logo;
+        if (!descText && stored.description) descText = stored.description;
+        if (!catText && stored.primaryCategory) catText = stored.primaryCategory;
+        if (!phoneText && stored.phone) phoneText = stored.phone;
       }
     } catch {}
 
-    // 3. Tìm từ draft của người dùng nếu có
+    // 3. Tìm từ draft của người dùng nếu trùng khớp chính xác tên shop hoặc email của shop đó
     try {
       const draftRaw = localStorage.getItem('vic_seller_onboarding_draft');
       if (draftRaw) {
@@ -858,14 +890,16 @@ export class VendorApprovalService {
         const dEmail = (draft.contactInfo?.email || '').trim().toLowerCase();
         const curShop = (item.shopName || item.businessName || '').trim().toLowerCase();
         const curEmail = (item.ownerEmail || '').trim().toLowerCase();
-        const isMatch = (dShop && (dShop === curShop || curShop.includes(dShop) || dShop.includes(curShop))) ||
-                        (dEmail && curEmail && dEmail === curEmail) ||
-                        item.isUserSubmitted;
+        const isMatch = (dShop && curShop && dShop === curShop) ||
+                        (dEmail && curEmail && curEmail !== '—' && dEmail === curEmail);
         if (isMatch) {
           if (!frontUrl && draft.kycInfo?.idCardFrontUrl) frontUrl = draft.kycInfo.idCardFrontUrl;
           if (!backUrl && draft.kycInfo?.idCardBackUrl) backUrl = draft.kycInfo.idCardBackUrl;
           if (!licenseUrl && draft.kycInfo?.businessLicenseUrl) licenseUrl = draft.kycInfo.businessLicenseUrl;
           if (!logoUrl && draft.shopInfo?.logoUrl) logoUrl = draft.shopInfo.logoUrl;
+          if (!descText && draft.shopInfo?.description) descText = draft.shopInfo.description;
+          if (!catText && draft.shopInfo?.primaryCategory) catText = draft.shopInfo.primaryCategory;
+          if (!phoneText && draft.contactInfo?.phone) phoneText = draft.contactInfo.phone;
         }
       }
     } catch {}
@@ -898,10 +932,11 @@ export class VendorApprovalService {
       id: item.id,
       shop: item.shopName || item.businessName,
       owner: item.ownerName || '',
-      email: item.ownerEmail || '',
-      phone: item.ownerPhone || '',
+      email: item.shopEmail || item.ownerEmail || '',
+      phone: phoneText || item.ownerPhone || '',
       model: item.businessName?.includes('Doanh nghiệp') ? 'Doanh nghiệp' : (item.businessName?.includes('Hộ kinh doanh') ? 'Hộ kinh doanh' : 'Cá nhân'),
-      cat: '',
+      cat: catText || '—',
+      desc: descText || '',
       pickup: item.shopPickupAddress || '',
       at: item.createdAt || '',
       status,
@@ -943,6 +978,10 @@ interface AdminVendorListItem {
   businessName: string;
   shopName?: string;
   shopLogo?: string;
+  shopDescription?: string;
+  shopPhone?: string;
+  shopEmail?: string;
+  primaryCategoryName?: string;
   shopPickupAddress?: string;
   kycDocumentUrl?: string;
   approvalStatus: string;

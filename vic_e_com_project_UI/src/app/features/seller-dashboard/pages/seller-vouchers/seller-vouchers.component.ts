@@ -41,21 +41,8 @@ export class SellerVouchersComponent implements OnInit {
     this.vouchersApi.getVouchers().subscribe({
       next: (res) => {
         const raw = res?.data || res || [];
-        if (Array.isArray(raw) && raw.length > 0) {
-          const mapped: VoucherItem[] = raw.map((item: any) => ({
-            id: item.id,
-            code: item.code,
-            t: item.discountType || item.t || 'PERCENT',
-            val: item.value != null ? Number(item.value) : (item.val || 0),
-            max: item.maxDiscount != null ? Number(item.maxDiscount) : (item.max || 0),
-            min: item.minOrderAmount != null ? Number(item.minOrderAmount) : (item.min || 0),
-            lim: item.usageLimit || item.lim || 100,
-            used: item.usedCount || item.used || 0,
-            from: item.startAt ? item.startAt.split('T')[0] : (item.from || ''),
-            to: item.endAt ? item.endAt.split('T')[0] : (item.to || ''),
-            st: (item.status || item.st || 'ACTIVE') as any,
-          }));
-          this.vouchers.set(mapped);
+        if (Array.isArray(raw)) {
+          this.store.setVouchers(raw);
         }
       },
       error: () => {},

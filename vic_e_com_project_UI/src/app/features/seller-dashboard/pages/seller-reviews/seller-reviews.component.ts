@@ -31,16 +31,8 @@ export class SellerReviewsComponent implements OnInit {
     this.qaReviewsApi.getReviews().subscribe({
       next: (res) => {
         const raw = res?.data || res || [];
-        if (Array.isArray(raw) && raw.length > 0) {
-          const mapped: ReviewItem[] = raw.map((item: any) => ({
-            id: item.id,
-            p: item.productName || item.productTitle || item.p || 'Sản phẩm',
-            who: item.customerName || item.userName || item.who || 'Khách hàng',
-            st: item.rating || item.st || 5,
-            x: item.content || item.comment || item.x || '',
-            re: item.reply || item.re || undefined,
-          }));
-          this.reviews.set(mapped);
+        if (Array.isArray(raw)) {
+          this.store.setReviews(raw);
         }
       },
       error: () => {},

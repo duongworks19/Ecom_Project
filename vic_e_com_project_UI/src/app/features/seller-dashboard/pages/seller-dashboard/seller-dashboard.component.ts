@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   HostListener,
   OnInit,
   computed,
@@ -8,13 +9,21 @@ import {
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { filter } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { environment } from '../../../../../environments/environment';
 import { AuthService } from '../../../../core/services/auth.service';
-import { SellerDashboardStore } from '../../services/seller-dashboard.store';
+import {
+  SellerDashboardStore,
+  SellerPageNotificationItem,
+} from '../../services/seller-dashboard.store';
 import { SellerShopApiService } from '../../services/seller-shop-api.service';
 import { SellerOrdersApiService } from '../../services/seller-orders-api.service';
 import { SellerReturnsApiService } from '../../services/seller-returns-api.service';
 import { SellerQaReviewsApiService } from '../../services/seller-qa-reviews-api.service';
+import { SellerVouchersApiService } from '../../services/seller-vouchers-api.service';
 import { SellerProductService } from '../../services/seller-product.service';
 import { SellerToastComponent } from '../../components/seller-toast/seller-toast.component';
 
@@ -83,11 +92,14 @@ function resolveShopName(profName?: string): string {
 export class SellerDashboardComponent implements OnInit {
   readonly store = inject(SellerDashboardStore);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly http = inject(HttpClient);
   private readonly authService = inject(AuthService);
   private readonly shopApi = inject(SellerShopApiService);
   private readonly ordersApi = inject(SellerOrdersApiService);
   private readonly returnsApi = inject(SellerReturnsApiService);
   private readonly qaReviewsApi = inject(SellerQaReviewsApiService);
+  private readonly vouchersApi = inject(SellerVouchersApiService);
   private readonly productService = inject(SellerProductService);
 
   readonly currentShopId = this.store.currentShopId;
@@ -102,6 +114,12 @@ export class SellerDashboardComponent implements OnInit {
   readonly unrepliedReviewCount = this.store.unrepliedReviewCount;
   readonly unrepliedQuestionCount = this.store.unrepliedQuestionCount;
 
+  // Page-specific Notifications from Store
+  readonly currentPageLabel = this.store.currentPageLabel;
+  readonly currentPageNotifications = this.store.currentPageNotifications;
+  readonly currentPageUnreadCount = this.store.currentPageUnreadCount;
+
+  readonly notifMenuOpen = signal<boolean>(false);
   readonly userMenuOpen = signal<boolean>(false);
   readonly logoLoadFailed = signal<boolean>(false);
   readonly uploadedFiles = signal<Record<string, string>>({});
@@ -139,6 +157,17 @@ export class SellerDashboardComponent implements OnInit {
       void this.router.navigateByUrl('/admin');
       return;
     }
+    this.store.setActivePageFromUrl(this.router.url);
+    this.router.events
+      .pipe(
+        filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe((e) => {
+        this.store.setActivePageFromUrl(e.urlAfterRedirects || e.url);
+        this.notifMenuOpen.set(false);
+      });
+
     this.detectApprovedRole();
     this.loadStoreInitialData();
   }
@@ -171,47 +200,88 @@ export class SellerDashboardComponent implements OnInit {
   private loadStoreInitialData(): void {
     this.shopApi.getSellerProfile().subscribe({
       next: (profile: any) => {
-        if (profile) this.store.shopProfile.set(profile);
+        if (profile) this.store.setShopProfile(profile);
       },
     });
     this.shopApi.getCurrentShop().subscribe({
-      next: (shop: any) => {
-        if (shop?.id) this.store.currentShopId.set(Number(shop.id));
+      next: (shopRes: any) => {
+        const shop = shopRes?.data || shopRes;
+        if (shop?.id) {
+          this.store.currentShopId.set(Number(shop.id));
+          this.store.setShopProfile(shop);
+        }
       },
     });
     this.productService.getProducts().subscribe({
       next: (prods: any) => {
-        if (prods) this.store.products.set(prods);
+        if (Array.isArray(prods)) this.store.products.set(prods);
       },
     });
     this.ordersApi.getOrders().subscribe({
       next: (orders: any) => {
-        const list = orders?.data || orders;
-        if (Array.isArray(list)) this.store.orders.set(list);
+        const list = orders?.data || orders || [];
+        if (Array.isArray(list)) this.store.setOrders(list);
       },
     });
     this.returnsApi.getReturns().subscribe({
       next: (returns: any) => {
-        const list = returns?.data || returns;
-        if (Array.isArray(list)) this.store.returns.set(list);
+        const list = returns?.data || returns || [];
+        if (Array.isArray(list)) this.store.setReturns(list);
       },
     });
     this.qaReviewsApi.getReviews().subscribe({
       next: (reviews: any) => {
-        const list = reviews?.data || reviews;
-        if (Array.isArray(list)) this.store.reviews.set(list);
+        const list = reviews?.data || reviews || [];
+        if (Array.isArray(list)) this.store.setReviews(list);
       },
     });
     this.qaReviewsApi.getQuestions().subscribe({
       next: (questions: any) => {
-        const list = questions?.data || questions;
-        if (Array.isArray(list)) this.store.questions.set(list);
+        const list = questions?.data || questions || [];
+        if (Array.isArray(list)) this.store.setQuestions(list);
       },
     });
+    this.vouchersApi.getVouchers().subscribe({
+      next: (vouchers: any) => {
+        const list = vouchers?.data || vouchers || [];
+        if (Array.isArray(list)) this.store.setVouchers(list);
+      },
+    });
+    this.http.get<any>(`${environment.apiUrl}/seller/campaigns`).subscribe({
+      next: (campaigns: any) => {
+        const list = campaigns?.data || campaigns || [];
+        if (Array.isArray(list)) this.store.setCampaigns(list);
+      },
+      error: () => {},
+    });
+  }
+
+  toggleNotifMenu(event?: MouseEvent): void {
+    if (event) event.stopPropagation();
+    this.userMenuOpen.set(false);
+    this.notifMenuOpen.update((v) => !v);
+  }
+
+  closeNotifMenu(): void {
+    this.notifMenuOpen.set(false);
+  }
+
+  onSelectNotification(item: SellerPageNotificationItem): void {
+    this.store.markNotificationRead(item.id);
+    this.closeNotifMenu();
+    if (item.route) {
+      void this.router.navigateByUrl(item.route);
+    }
+  }
+
+  onMarkAllPageNotificationsRead(event: MouseEvent): void {
+    event.stopPropagation();
+    this.store.markCurrentPageNotificationsRead();
   }
 
   toggleUserMenu(event?: MouseEvent): void {
     if (event) event.stopPropagation();
+    this.notifMenuOpen.set(false);
     this.userMenuOpen.update((v) => !v);
   }
 
@@ -232,6 +302,7 @@ export class SellerDashboardComponent implements OnInit {
   onDocumentClick(event: MouseEvent): void {
     const target = event.target as HTMLElement;
     if (!target.closest('.me-wrap')) this.closeUserMenu();
+    if (!target.closest('.notif-wrap')) this.closeNotifMenu();
   }
 
   onLogoError(): void {

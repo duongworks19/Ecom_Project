@@ -31,15 +31,8 @@ export class SellerQaComponent implements OnInit {
     this.qaReviewsApi.getQuestions().subscribe({
       next: (res) => {
         const raw = res?.data || res || [];
-        if (Array.isArray(raw) && raw.length > 0) {
-          const mapped: QuestionItem[] = raw.map((item: any) => ({
-            id: item.id,
-            p: item.productName || item.productTitle || item.p || 'Sản phẩm',
-            who: item.customerName || item.userName || item.who || 'Khách hàng',
-            x: item.content || item.question || item.x || '',
-            a: item.answer || item.reply || item.a || undefined,
-          }));
-          this.questions.set(mapped);
+        if (Array.isArray(raw)) {
+          this.store.setQuestions(raw);
         }
       },
       error: () => {},

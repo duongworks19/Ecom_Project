@@ -8,9 +8,59 @@
   <span class="sp"></span>
   <a [routerLink]="currentShopId() ? ['/shop', currentShopId()] : ['/shop']" class="pill hide-m">Xem shop như khách</a>
   <a routerLink="/" class="pill hide-m">Trang mua sắm</a>
-  <button class="pill bell" type="button" aria-label="Thông báo, 6 chưa đọc">
-    🔔<i>{{ totalTodoCount() }}</i>
-  </button>
+
+  <!-- Thông báo riêng theo từng trang đang mở -->
+  <div class="notif-wrap">
+    <button
+      class="pill bell"
+      type="button"
+      (click)="toggleNotifMenu($event)"
+      [attr.aria-expanded]="notifMenuOpen()"
+      [attr.aria-label]="'Thông báo trang ' + currentPageLabel() + ', ' + currentPageUnreadCount() + ' chưa đọc'"
+      [title]="'Thông báo · ' + currentPageLabel()">
+      🔔<i>{{ currentPageUnreadCount() }}</i>
+    </button>
+
+    @if (notifMenuOpen()) {
+    <div class="notif-dropdown" role="menu" aria-label="Danh sách thông báo theo trang">
+      <div class="notif-head">
+        <div>
+          <strong>Thông báo · {{ currentPageLabel() }}</strong>
+          <small>{{ currentPageUnreadCount() }} chưa đọc</small>
+        </div>
+        @if (currentPageUnreadCount() > 0) {
+        <button type="button" class="notif-read-all" (click)="onMarkAllPageNotificationsRead($event)">
+          Đọc tất cả
+        </button>
+        }
+      </div>
+
+      <div class="notif-list">
+        @if (currentPageNotifications().length > 0) {
+          @for (item of currentPageNotifications(); track item.id) {
+          <button
+            type="button"
+            class="notif-item"
+            [class.unread]="!item.read"
+            (click)="onSelectNotification(item)">
+            <span class="notif-dot" [class.active]="!item.read"></span>
+            <div class="notif-body">
+              <p>{{ item.title }}</p>
+              <small>{{ item.desc }}</small>
+              <em>{{ item.time }}</em>
+            </div>
+          </button>
+          }
+        } @else {
+          <div class="notif-empty">
+            Không có thông báo nào tại mục <b>{{ currentPageLabel() }}</b>.
+          </div>
+        }
+      </div>
+    </div>
+    }
+  </div>
+
   <div class="me-wrap">
     <button type="button" class="me" (click)="toggleUserMenu($event)" [attr.aria-expanded]="userMenuOpen()"
       [title]="'Tài khoản: ' + userAccountName() + ' · Gian hàng: ' + shopName()">

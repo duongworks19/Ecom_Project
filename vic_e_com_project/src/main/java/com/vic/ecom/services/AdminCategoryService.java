@@ -25,21 +25,9 @@ public class AdminCategoryService {
     private final ProductRepository products;
     private final JdbcTemplate jdbcTemplate;
 
-    private static final Set<String> SEED_SLUGS = Set.of(
-            "cong-nghe-dien-may", "dien-thoai-tablet", "laptop-may-tinh", "thiet-bi-am-thanh",
-            "thoi-trang-phu-kien", "thoi-trang-nam", "thoi-trang-nu", "giay-dep-tui-xach",
-            "nha-cua-noi-that", "noi-that-phong-khach", "noi-that-phong-ngu", "do-gia-dung-bep",
-            "lam-dep-cham-soc-da", "cham-soc-da-mat", "trang-diem", "nuoc-hoa-chinh-hang",
-            "the-thao-da-ngoai", "do-tap-gym-yoga", "da-ngoai-cam-trai",
-            "am-thuc-bach-hoa", "thuc-pham-dong-goi", "do-uong-tra-thao-moc",
-            "me-be-do-choi", "sua-dinh-duong-cho-be", "do-choi-giao-duc",
-            "sach-nghe-thuat", "sach-van-hoc-ky-nang", "dung-cu-ve-thu-cong"
-    );
-
     @Transactional
     public CategoryOverviewResponse list(String keyword, CategoryStatus status) {
         ensureSchema();
-        purgePreseededCategoriesIfAny();
 
         List<Category> all = categories.findAllByOrderByIdAsc();
         all.forEach(c -> {
@@ -287,28 +275,6 @@ public class AdminCategoryService {
             String s = base + "-" + i;
             boolean used = (exclude == null) ? categories.existsBySlug(s) : categories.existsBySlugAndIdNot(s, exclude);
             if (!used) return s;
-        }
-    }
-
-    /**
-     * Dọn sạch các danh mục mẫu sinh tự động trước đó nếu có trong DB,
-     * để trả lại trạng thái dữ liệu do người dùng tự tạo.
-     */
-    private void purgePreseededCategoriesIfAny() {
-        try {
-            List<Category> all = categories.findAll();
-            List<Category> seeded = all.stream()
-                    .filter(c -> c.getSlug() != null && SEED_SLUGS.contains(c.getSlug().trim().toLowerCase()))
-                    .toList();
-            if (!seeded.isEmpty()) {
-                log.info("Purging {} pre-seeded mock categories...", seeded.size());
-                List<Category> children = seeded.stream().filter(c -> c.getParentId() != null).toList();
-                List<Category> parents = seeded.stream().filter(c -> c.getParentId() == null).toList();
-                categories.deleteAll(children);
-                categories.deleteAll(parents);
-            }
-        } catch (Exception e) {
-            log.warn("Cannot purge pre-seeded categories: {}", e.getMessage());
         }
     }
 

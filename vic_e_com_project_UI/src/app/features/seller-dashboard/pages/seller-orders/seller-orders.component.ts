@@ -78,16 +78,7 @@ export class SellerOrdersComponent implements OnInit {
       next: (res) => {
         const list = res?.data || res || [];
         if (Array.isArray(list)) {
-          const mapped: OrderItem[] = list.map((item: any) => ({
-            c: item.orderCode || item.code || item.c || `VM${item.id}`,
-            n: item.customerName || item.n || 'Khách hàng',
-            k: item.itemCount || item.k || 1,
-            t: item.totalAmount || item.t || 0,
-            s: item.status || item.s || 'PENDING',
-            h: item.time || item.h || 'Vừa xong',
-            d: item.itemCount || item.d || 1,
-          }));
-          this.orders.set(mapped);
+          this.store.setOrders(list);
         }
         this.isLoading.set(false);
       },

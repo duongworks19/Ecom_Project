@@ -28,16 +28,6 @@ public class SellerDashboardService {
 
     private static final String IMG_LAMP_CLOUD =
             "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=300&q=80";
-    private static final String IMG_OAK_FRAME =
-            "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=300&q=80";
-    private static final String IMG_GLASS_VASE =
-            "https://images.unsplash.com/photo-1578500494198-246f612d3b3d?auto=format&fit=crop&w=300&q=80";
-    private static final String IMG_LAVENDER_CANDLE =
-            "https://images.unsplash.com/photo-1602874801007-bd458bb1b8b6?auto=format&fit=crop&w=300&q=80";
-    private static final String IMG_NORDIC_MIRROR =
-            "https://images.unsplash.com/photo-1618220179428-22790b461013?auto=format&fit=crop&w=300&q=80";
-    private static final String IMG_CERAMIC_TRAY =
-            "https://images.unsplash.com/photo-1610701596007-11502861dcfa?auto=format&fit=crop&w=300&q=80";
 
     private final ShopRepository shopRepository;
     private final VendorRepository vendorRepository;
@@ -92,68 +82,6 @@ public class SellerDashboardService {
         }
 
         return null;
-    }
-
-    private void seedShopDataIfNeeded(Shop shop) {
-        Long shopId = shop.getId();
-
-        // Xóa hoàn toàn các dữ liệu mẫu đã seed trước đây để chỉ hiển thị dữ liệu thực tế được nhập vào
-        try {
-            jdbcTemplate.execute("DELETE FROM shop_reviews WHERE customer_name IN ('Nguyễn Ngọc Mai', 'Hoàng Gia Bảo', 'Vũ Thanh Tâm', 'Đặng Khánh Linh', 'Trần Thu Hà', 'Phạm Ngọc Anh', 'Vũ Hải Yến')");
-            jdbcTemplate.execute("DELETE FROM shop_promotions WHERE name IN ('Flash Sale Góc Nhỏ Ấm Cúng — Tháng 10', 'Combo Nến Thơm & Bình Hoa Thu Đông')");
-        } catch (Exception ignored) {
-        }
-    }
-
-    private Product buildProduct(Shop shop, String name, String variant, String sku, String category, BigDecimal price, int stock, int soldCount, String color, String imageUrl) {
-        Product p = new Product();
-        p.setShop(shop);
-        p.setName(name);
-        p.setCategory(category);
-        p.setImageUrl(imageUrl);
-        p.setStatus(stock <= 10 ? "LOW_STOCK" : "VISIBLE");
-
-        ProductVariant pv = new ProductVariant();
-        pv.setVariantName(variant);
-        pv.setSku(sku);
-        pv.setPrice(price);
-        pv.setStockQty(stock);
-        pv.setSoldCount(soldCount);
-        pv.setThumbnailColor(color);
-        pv.setImageUrl(imageUrl);
-        pv.setLowStockThreshold(5);
-
-        p.addVariant(pv);
-        return p;
-    }
-
-    private Order buildOrder(Shop shop, User customer, String code, String customerName, String phone, String address, String summary, String image, BigDecimal amount, OrderStatus status) {
-        Order o = new Order();
-        o.setShopId(shop.getId());
-        o.setCustomer(customer);
-        o.setOrderCode(code);
-        o.setReceiverName(customerName);
-        o.setReceiverPhone(phone);
-        o.setShippingAddress(address);
-        o.setProductSummary(summary);
-        o.setProductImage(image);
-        o.setTotalAmount(amount);
-        o.setStatus(status);
-        return o;
-    }
-
-    private ShopReview buildReview(Shop shop, User customer, String customerName, String productName, String productImage, int rating, String comment, String createdAtLabel, String reply) {
-        ShopReview r = new ShopReview();
-        r.setShop(shop);
-        r.setCustomer(customer);
-        r.setCustomerName(customerName);
-        r.setProductName(productName);
-        r.setProductImage(productImage);
-        r.setRating(rating);
-        r.setComment(comment);
-        r.setCreatedAtLabel(createdAtLabel);
-        r.setReply(reply);
-        return r;
     }
 
     @Transactional
@@ -256,14 +184,26 @@ public class SellerDashboardService {
         int totalOrdersToday = (int) dbOrders.stream()
                 .filter(o -> o.getCreatedAt() != null && o.getCreatedAt().toLocalDate().isEqual(now.toLocalDate()))
                 .count();
-        BigDecimal avgRating = shop.getRatingAvg() != null ? shop.getRatingAvg() : BigDecimal.ZERO;
+
+        LocalDateTime thirtyDaysAgo = now.minusDays(30);
+        List<Order> ordersLast30Days = dbOrders.stream()
+                .filter(o -> o.getCreatedAt() != null && o.getCreatedAt().isAfter(thirtyDaysAgo))
+                .collect(Collectors.toList());
+        long cancelledOrdersCount = ordersLast30Days.stream().filter(o -> o.getStatus() == OrderStatus.CANCELLED).count();
+        double cancellationRate = ordersLast30Days.isEmpty() ? 0.0 :
+                Math.round(((double) cancelledOrdersCount / ordersLast30Days.size() * 100.0) * 10.0) / 10.0;
+
+        double avgRatingVal = reviews.isEmpty()
+                ? (shop.getRatingAvg() != null ? shop.getRatingAvg().doubleValue() : 0.0)
+                : reviews.stream().mapToInt(r -> r.getRating() != null ? r.getRating() : 5).average().orElse(0.0);
+        BigDecimal avgRating = BigDecimal.valueOf(Math.round(avgRatingVal * 10.0) / 10.0);
 
         SellerDashboardStatsDto stats = SellerDashboardStatsDto.builder()
                 .todayRevenue(todayRevenue)
                 .revenueGrowthPercent(0.0)
                 .totalOrdersToday(totalOrdersToday)
                 .orderGrowthCount(totalOrdersToday)
-                .cancellationRate(0.0)
+                .cancellationRate(cancellationRate)
                 .cancellationRateDiff(0.0)
                 .averageRating(avgRating)
                 .totalReviews(reviews.size())
@@ -292,19 +232,10 @@ public class SellerDashboardService {
             chart7Days.add(new SellerRevenuePointDto(day.format(dayFormatter), valInM, dayRev, dayOrders));
         }
 
-        double[] vals30 = {1.8, 2.2, 2.0, 2.9, 3.1, 2.7, 3.3, 3.0, 2.6, 3.5, 3.8, 3.2, 3.9, 4.1, 3.7, 3.4, 4.0, 4.4, 3.9, 4.2, 4.6, 4.1, 3.8, 4.5, 4.7, 4.3, 4.9, 4.4, 4.1, 4.8};
         List<SellerRevenuePointDto> chart30Days = new ArrayList<>();
-        for (int i = 0; i < vals30.length; i++) {
-            chart30Days.add(new SellerRevenuePointDto(
-                    String.valueOf(i + 1),
-                    vals30[i],
-                    BigDecimal.valueOf((long) (vals30[i] * 1_000_000)),
-                    (int) (vals30[i] * 5)
-            ));
-        }
 
-        int urgentTasks = pendingConfirmCount + preparingCount + refundCount + lowStock.size();
-        int completedSteps = 2 + (dbProducts.size() > 6 ? 1 : 0) + (dbVouchers.size() > 2 ? 1 : 0);
+        int urgentTasks = pendingConfirmCount + preparingCount + refundCount + lowStock.size() + unansweredReviewCount;
+        int completedSteps = 2 + (dbProducts.size() >= 5 ? 1 : 0) + (!dbVouchers.isEmpty() ? 1 : 0);
 
         return SellerDashboardResponse.builder()
                 .shopId(shopId)
@@ -313,9 +244,9 @@ public class SellerDashboardService {
                 .shopLogo(logo)
                 .adminApproved(isApproved)
                 .greetingTitle("Chào " + shopName.split(" ")[0] + ", hôm nay có " + urgentTasks + " việc cần xử lý")
-                .currentDateText("Thứ Tư, 14/10/2026 · Xử lý đơn mới trước 17:00 để giao trong ngày.")
+                .currentDateText("Xác nhận đơn mới trước 17:00 để bàn giao cho bưu tá đúng hẹn.")
                 .totalUrgentTasks(urgentTasks)
-                .unreadNotifications(6)
+                .unreadNotifications(urgentTasks)
                 .completedSteps(completedSteps)
                 .totalSteps(4)
                 .stats(stats)
@@ -793,6 +724,7 @@ public class SellerDashboardService {
                 actionText = "Chi tiết";
                 actionStyle = "outline";
                 nextAction = "VIEW_DETAIL";
+                break;
         }
 
         String createdAtFormatted = o.getCreatedAt() != null

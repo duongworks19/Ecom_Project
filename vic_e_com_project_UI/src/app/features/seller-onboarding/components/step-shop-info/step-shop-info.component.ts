@@ -28,20 +28,12 @@ export class StepShopInfoComponent implements OnInit {
   readonly nameCheckStatus = signal<'NONE' | 'AVAILABLE' | 'TAKEN'>('NONE');
   readonly nameCheckMessage = signal<string>('');
 
-  /* ponytail: chỉ hiển thị danh mục gốc; danh mục con không phải ngành hàng chính của shop. */
-  readonly categories = computed(() => this.productService.categories().filter((c) => c.parentId == null));
-  readonly legacyCategories = [
-    'Thời trang & Phụ kiện',
-    'Mỹ phẩm & Chăm sóc sắc đẹp',
-    'Điện thoại & Đồ công nghệ',
-    'Nhà cửa & Đời sống',
-    'Thực phẩm & Đồ uống',
-    'Mẹ & Bé',
-    'Sách & Văn phòng phẩm',
-    'Thể thao & Dã ngoại',
-  ];
+  /* Hiển thị toàn bộ danh mục đang hoạt động từ database */
+  readonly categories = computed(() => this.productService.categories());
 
   ngOnInit(): void {
+    this.productService.refreshCategories();
+
     this.nameCheckSubject.pipe(
       debounceTime(350),
       distinctUntilChanged()

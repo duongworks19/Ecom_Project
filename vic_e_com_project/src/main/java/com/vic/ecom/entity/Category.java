@@ -26,7 +26,7 @@ public class Category {
     @Column(nullable = false, length = 150, unique = true)
     private String slug;
 
-    @Convert(converter = com.vic.ecom.enums.CategoryStatusConverter.class)
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private CategoryStatus status = CategoryStatus.VISIBLE;
 }

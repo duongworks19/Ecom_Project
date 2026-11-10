@@ -33,11 +33,11 @@ export class SellerProfileComponent implements OnInit {
   readonly logoPreview = signal<string>('');
 
   readonly formShopProfile = {
-    n: 'Lumi Home Decor',
-    d: 'Đồ decor phong cách tối giản Bắc Âu.',
-    ph: '0912345678',
-    em: 'lumi@vicmart.vn',
-    ad: 'Số 12 Ngõ 88 Trần Thái Tông, Cầu Giấy, Hà Nội',
+    n: '',
+    d: '',
+    ph: '',
+    em: '',
+    ad: '',
     hr: '08:00 – 21:00',
     logo: '',
   };
@@ -53,7 +53,7 @@ export class SellerProfileComponent implements OnInit {
   readonly shopName = computed(() => {
     const profName = this.shopProfile()?.n?.trim();
     if (profName) return profName;
-    return 'Lumi Home Decor';
+    return 'Gian hàng của tôi';
   });
 
   readonly shopLogo = computed(() => {

@@ -19,6 +19,10 @@ public final class AdminVendorDtos {
         private String businessName;
         private String shopName;
         private String shopLogo;
+        private String shopDescription;
+        private String shopPhone;
+        private String shopEmail;
+        private String primaryCategoryName;
         private String shopPickupAddress;
         private String kycDocumentUrl;
         private String approvalStatus;

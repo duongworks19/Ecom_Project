@@ -103,16 +103,20 @@ export class ProductService {
     this.fetchDataFromApi();
   }
 
-  fetchDataFromApi() {
-    this.isLoading.set(true);
+  refreshCategories(): void {
     this.productApi.getCategories().subscribe({
       next: (apiCategories) => {
-        if (apiCategories && apiCategories.length > 0) {
+        if (Array.isArray(apiCategories)) {
           this.categories.set(apiCategories);
         }
       },
       error: () => {},
     });
+  }
+
+  fetchDataFromApi() {
+    this.isLoading.set(true);
+    this.refreshCategories();
 
     const productsUrl = `${this.apiUrl}/products`;
     this.http.get<any>(productsUrl).subscribe({

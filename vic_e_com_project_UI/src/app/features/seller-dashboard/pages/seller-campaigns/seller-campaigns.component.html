@@ -6,15 +6,23 @@
 </div>
 
 <div class="box">
-  @for (c of campaigns(); track c.id) {
-    <div class="row">
-      <div class="g">
-        <b>{{ c.n }}</b>
-        <span class="m">{{ c.t }} · {{ c.from }} đến {{ c.to }} · {{ c.k }} biến thể · Giảm {{ c.val }}{{ c.dt }}</span>
+  @if (campaigns().length > 0) {
+    @for (c of campaigns(); track c.id) {
+      <div class="row">
+        <div class="g">
+          <b>{{ c.n }}</b>
+          <span class="m">{{ c.t }} · {{ c.from }} đến {{ c.to }} · Giảm {{ c.val }}{{ c.dt }}</span>
+        </div>
+        <span class="tag" [class.ok]="c.st === 'ACTIVE'" [class.warn]="c.st === 'PAUSED'">
+          {{ c.st === 'ACTIVE' ? 'Đang chạy' : (c.st === 'PAUSED' ? 'Tạm dừng' : 'Đã kết thúc') }}
+        </span>
+        <button class="btn sm" (click)="toggleStatus(c)">
+          {{ c.st === 'ACTIVE' ? 'Tạm dừng' : 'Kích hoạt' }}
+        </button>
+        <button class="btn sm" (click)="deleteCampaign(c)">Xóa</button>
       </div>
-      <span class="tag" [class.ok]="c.st === 'ACTIVE'" [class.warn]="c.st === 'PAUSED'">
-        {{ c.st === 'ACTIVE' ? 'Đang chạy' : (c.st === 'PAUSED' ? 'Tạm dừng' : 'Đã kết thúc') }}
-      </span>
-    </div>
+    }
+  } @else {
+    <p style="color: var(--mute); margin: 0">Chưa có chương trình giảm giá nào trong cơ sở dữ liệu.</p>
   }
 </div>
