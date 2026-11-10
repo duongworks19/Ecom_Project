@@ -21,7 +21,9 @@ import org.springframework.web.bind.annotation.*;
 @PreAuthorize("hasRole('ADMIN')")
 @RequiredArgsConstructor
 public class AdminShipperController {
-    private final AdminShipperQueryService query; private final AdminShipperService service; private final ShipperProfileRepository profiles;
+    private final AdminShipperQueryService query;
+    private final AdminShipperService service;
+    private final ShipperProfileRepository profiles;
 
     @GetMapping
     public ResponseEntity<ApiResponse<Page<ListItem>>> list(@RequestParam(defaultValue = "") String keyword, @RequestParam(defaultValue = "ALL") String status, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "8") int size) {

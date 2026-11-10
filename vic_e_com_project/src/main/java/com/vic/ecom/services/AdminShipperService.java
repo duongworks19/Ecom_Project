@@ -24,10 +24,13 @@ public class AdminShipperService {
 
     @Transactional
     public Detail create(Create req) {
-        String email = normalizeEmail(req.email()), phone = CustomerAccountValidator.normalizePhone(req.phone());
+        String email = normalizeEmail(req.email()),
+                phone = CustomerAccountValidator.normalizePhone(req.phone()),
+                licensePlate = normalizeLicensePlate(req.licensePlate());
         validate(req.fullName(), phone, email, req.vehicleType(), req.licensePlate(), req.serviceArea());
         if (users.existsByEmail(email)) throw CustomerAccountException.conflict("EMAIL_ALREADY_EXISTS", "Email đã được sử dụng", "email");
         if (users.existsByPhone(phone)) throw CustomerAccountException.conflict("PHONE_ALREADY_EXISTS", "Số điện thoại đã được sử dụng", "phone");
+        if (profiles.existsByLicensePlate(licensePlate)) throw CustomerAccountException.conflict("LICENSE_PLATE_ALREADY_EXISTS", "Biển số xe đã được sử dụng", "licensePlate");
         String temp = TempPassword.generate(); User u = new User(); u.setFullName(req.fullName().trim()); u.setPhone(phone); u.setEmail(email); u.setRole(UserRole.SHIPPER); u.setStatus(UserStatus.ACTIVE); u.setMustChangePassword(true); u.setPasswordHash(encoder.encode(temp));
         try { users.save(u); ShipperProfile p = new ShipperProfile(); p.setUser(u); p.setVehicleType(req.vehicleType().trim()); p.setLicensePlate(req.licensePlate().trim().toUpperCase()); p.setServiceArea(req.serviceArea().trim()); p.setWorkStatus(ShipperWorkStatus.OFFLINE); profiles.save(p); if (Boolean.TRUE.equals(req.sendTempPasswordByEmail())) TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() { public void afterCommit() { mail.sendTemporaryPassword(email, temp, loginUrl); } }); return query.detail(p, Boolean.TRUE.equals(req.sendTempPasswordByEmail()) ? null : temp); }
         catch (DataIntegrityViolationException ex) { throw duplicateFromConstraint(ex); }
@@ -70,11 +73,45 @@ public class AdminShipperService {
         }
         purge.deleteAllOwnedData(profile.getId(), user.getId());
     }
-    private ShipperProfile require(Long id) { return profiles.findByUserId(id).filter(p -> p.getUser().getRole() == UserRole.SHIPPER).orElseThrow(() -> CustomerAccountException.notFound("SHIPPER_NOT_FOUND", "Không tìm thấy shipper")); }
-    private void saveLog(User target, String reason, String principal, AccountAction action) { if (reason != null && reason.trim().length() > 500) throw CustomerAccountException.unprocessable("INVALID_REASON", "Lý do tối đa 500 ký tự", "reason"); User admin = users.findByEmail(principal).orElseThrow(() -> CustomerAccountException.unauthorized("Unauthorized")); AccountLockLog log = new AccountLockLog(); log.setUser(target); log.setPerformedBy(admin); log.setAction(action); log.setReason(reason == null ? null : reason.trim()); locks.save(log); }
-    private String normalizeEmail(String email) { return email == null ? "" : email.trim().toLowerCase(); }
-    private void validate(String name, String phone, String email, String vehicle, String plate, String area) { if (!CustomerAccountValidator.isValidFullName(name)) invalid("fullName", "Họ tên không hợp lệ"); if (!CustomerAccountValidator.isValidVnPhone(phone)) invalid("phone", "Số điện thoại không hợp lệ"); if (!email.matches("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$") || email.length() > 255) invalid("email", "Email không hợp lệ"); if (blankMax(vehicle, 50)) invalid("vehicleType", "Loại xe không hợp lệ"); if (blankMax(plate, 20)) invalid("licensePlate", "Biển số không hợp lệ"); if (blankMax(area, 255)) invalid("serviceArea", "Khu vực phục vụ không hợp lệ"); }
-    private boolean blankMax(String s, int max) { return s == null || s.trim().isEmpty() || s.trim().length() > max; }
-    private void invalid(String field, String message) { throw CustomerAccountException.unprocessable("INVALID_" + field.toUpperCase(), message, field); }
-    private RuntimeException duplicateFromConstraint(DataIntegrityViolationException ex) { String m = ex.getMostSpecificCause().getMessage(); return CustomerAccountException.conflict(m != null && m.toLowerCase().contains("phone") ? "PHONE_ALREADY_EXISTS" : "EMAIL_ALREADY_EXISTS", "Thông tin đã được sử dụng", m != null && m.toLowerCase().contains("phone") ? "phone" : "email"); }
+
+    private ShipperProfile require(Long id) {
+        return profiles.findByUserId(id).filter(p -> p.getUser().getRole() == UserRole.SHIPPER).orElseThrow(() -> CustomerAccountException.notFound("SHIPPER_NOT_FOUND", "Không tìm thấy shipper"));
+    }
+
+    private void saveLog(User target, String reason, String principal, AccountAction action) {
+        if (reason != null && reason.trim().length() > 500) throw CustomerAccountException.unprocessable("INVALID_REASON", "Lý do tối đa 500 ký tự", "reason");
+        User admin = users.findByEmail(principal).orElseThrow(() -> CustomerAccountException.unauthorized("Unauthorized")); AccountLockLog log = new AccountLockLog(); log.setUser(target); log.setPerformedBy(admin);
+        log.setAction(action);
+        log.setReason(reason == null ? null : reason.trim()); locks.save(log);
+    }
+
+    private String normalizeEmail(String email) {
+        return email == null ? "" : email.trim().toLowerCase();
+    }
+
+    private String normalizeLicensePlate(String licensePlate) {
+        return licensePlate == null ? "" : licensePlate.trim().toUpperCase();
+    }
+
+    private void validate(String name, String phone, String email, String vehicle, String plate, String area) {
+        if (!CustomerAccountValidator.isValidFullName(name)) invalid("fullName", "Họ tên không hợp lệ");
+        if (!CustomerAccountValidator.isValidVnPhone(phone)) invalid("phone", "Số điện thoại không hợp lệ");
+        if (!email.matches("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$") || email.length() > 255) invalid("email", "Email không hợp lệ");
+        if (blankMax(vehicle, 50)) invalid("vehicleType", "Loại xe không hợp lệ");
+        if (blankMax(plate, 20)) invalid("licensePlate", "Biển số không hợp lệ");
+        if (blankMax(area, 255)) invalid("serviceArea", "Khu vực phục vụ không hợp lệ");
+    }
+
+    private boolean blankMax(String s, int max) {
+        return s == null || s.trim().isEmpty() || s.trim().length() > max;
+    }
+
+    private void invalid(String field, String message) {
+        throw CustomerAccountException.unprocessable("INVALID_" + field.toUpperCase(), message, field);
+    }
+
+    private RuntimeException duplicateFromConstraint(DataIntegrityViolationException ex) {
+        String m = ex.getMostSpecificCause().getMessage();
+        return CustomerAccountException.conflict(m != null && m.toLowerCase().contains("phone") ? "PHONE_ALREADY_EXISTS" : "EMAIL_ALREADY_EXISTS", "Thông tin đã được sử dụng", m != null && m.toLowerCase().contains("phone") ? "phone" : "email");
+    }
 }

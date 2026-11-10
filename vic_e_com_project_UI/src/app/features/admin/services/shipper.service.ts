@@ -167,6 +167,11 @@ export class MockShipperService extends ShipperService {
           new HttpErrorResponse({ status: 409, error: { field: 'phone', message: 'Số điện thoại đã được sử dụng' } })
       );
     }
+    if (this.shippers.some((s) => s.licensePlate.toLowerCase() === payload.licensePlate.trim().toLowerCase())) {
+      return throwError(
+        () => new HttpErrorResponse({ status: 409, error: { field: 'licensePlate', message: 'Biển số xe đã được sử dụng' } })
+      );
+    }
     const nextId = Math.max(0, ...this.shippers.map((s) => s.id)) + 1;
     const created: ShipperDetail = {
       id: nextId,

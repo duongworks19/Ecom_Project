@@ -95,6 +95,8 @@
             />
             @if (form.controls.licensePlate.touched && form.controls.licensePlate.hasError('required')) {
               <span class="field-error" role="alert">Vui lòng nhập biển số xe</span>
+            } @else if (form.controls.licensePlate.touched && form.controls.licensePlate.hasError('duplicate')) {
+              <span class="field-error" role="alert">{{ form.controls.licensePlate.getError('duplicate') }}</span>
             }
           </div>
         </div>
